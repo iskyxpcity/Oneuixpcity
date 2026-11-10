@@ -102,9 +102,7 @@ fun ExpressiveButton(
     val pressExpansion = rememberMaterialExpressivePressExpansion(actualInteractionSource, enabled)
     // Match the Home segmented buttons: the same 16dp side expansion also drives
     // the corner morph, so the outline fills the expanded shape throughout the spring.
-    val shapeProgress = if (pressMotionEnabled) {
-        (pressExpansion.value / 16f).coerceIn(0f, 1f)
-    } else 0f
+    val shapeProgress = (pressExpansion.value / 16f).coerceIn(0f, 1f)
     val actualShape = shape ?: alohaSegmentedShape(
         index = -1,
         count = 1,
@@ -128,7 +126,7 @@ fun ExpressiveButton(
             disabledElevation = 0.dp,
         ),
         border = outlineWidth.takeIf { it > 0f }?.let { BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant) },
-        content = { Spacer(Modifier.width(if (pressMotionEnabled) pressExpansion else 0.dp)); content(); Spacer(Modifier.width(if (pressMotionEnabled) pressExpansion else 0.dp)) },
+        content = content,
     )
 }
 
@@ -145,9 +143,7 @@ fun ExpressiveTextButton(
 ) {
     val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val pressExpansion = rememberMaterialExpressivePressExpansion(actualInteractionSource, enabled)
-    val shapeProgress = if (pressMotionEnabled) {
-        (pressExpansion.value / 16f).coerceIn(0f, 1f)
-    } else 0f
+    val shapeProgress = (pressExpansion.value / 16f).coerceIn(0f, 1f)
     val actualShape = shape ?: alohaSegmentedShape(
         index = -1,
         count = 1,
@@ -169,7 +165,7 @@ fun ExpressiveTextButton(
         shape = actualShape,
         colors = colors,
         interactionSource = actualInteractionSource,
-        content = { Spacer(Modifier.width(if (pressMotionEnabled) pressExpansion else 0.dp)); content(); Spacer(Modifier.width(if (pressMotionEnabled) pressExpansion else 0.dp)) },
+        content = content,
     )
 }
 
@@ -187,9 +183,7 @@ fun ExpressiveIconButton(
 ) {
     val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val pressExpansion = rememberMaterialExpressivePressExpansion(actualInteractionSource, enabled)
-    val shapeProgress = if (pressMotionEnabled) {
-        (pressExpansion.value / 16f).coerceIn(0f, 1f)
-    } else 0f
+    val shapeProgress = (pressExpansion.value / 16f).coerceIn(0f, 1f)
     val actualShape = shape ?: alohaSegmentedShape(
         index = -1,
         count = 1,
@@ -215,7 +209,7 @@ fun ExpressiveIconButton(
         enabled = enabled,
         colors = colors,
         interactionSource = actualInteractionSource,
-        content = { androidx.compose.foundation.layout.Row(verticalAlignment = Alignment.CenterVertically) { Spacer(Modifier.width(if (pressMotionEnabled) pressExpansion else 0.dp)); content(); Spacer(Modifier.width(if (pressMotionEnabled) pressExpansion else 0.dp)) } },
+        content = content,
     )
 }
 
