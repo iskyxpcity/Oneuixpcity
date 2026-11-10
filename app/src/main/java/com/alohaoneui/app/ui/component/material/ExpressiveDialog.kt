@@ -123,9 +123,9 @@ fun ExpressiveDialogActionButtons(
             buttonGroupContent = {
                 ExpressiveTextButton(
                     onClick = onDismiss,
-                    modifier = Modifier.animateWidth(dismissSource, compressionLimit = 0.dp),
+                    modifier = Modifier,
                     interactionSource = dismissSource,
-                    pressMotionEnabled = false,
+                    
                 ) { Text(dismissText) }
             },
             menuContent = { menuState ->
@@ -140,9 +140,9 @@ fun ExpressiveDialogActionButtons(
                 ExpressiveTextButton(
                     enabled = confirmEnabled,
                     onClick = onConfirm,
-                    modifier = Modifier.animateWidth(confirmSource, compressionLimit = 0.dp),
+                    modifier = Modifier,
                     interactionSource = confirmSource,
-                    pressMotionEnabled = false,
+                    
                 ) { Text(confirmText) }
             },
             menuContent = { menuState ->
