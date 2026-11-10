@@ -9,6 +9,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.text.KeyboardOptions
@@ -100,11 +102,12 @@ fun ExpressiveButton(
 ) {
     val actualShape = shape ?: alohaCornerShape(12.dp)
     val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
+    val pressExpansion = rememberMaterialExpressivePressExpansion(actualInteractionSource, enabled)
     val hasShadow = LocalMaterialShadowButtons.current
     val outlineWidth = LocalMaterialOutlineWidth.current
     Button(
         onClick = onClick,
-        modifier = if (pressMotionEnabled) modifier.materialExpressivePressMotion(actualInteractionSource, enabled) else modifier,
+        modifier = modifier,
         enabled = enabled,
         interactionSource = actualInteractionSource,
         shape = actualShape,
