@@ -250,7 +250,10 @@ fun ColorPaletteScreenMaterial(
                 options.chunked(4).forEachIndexed { rowIndex, rowOptions ->
                     ExpressiveButtonGroup(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+                        horizontalArrangement = Arrangement.spacedBy(
+                            ButtonGroupDefaults.ConnectedSpaceBetween,
+                            alignment = Alignment.CenterHorizontally,
+                        ),
                     ) {
                         rowOptions.forEachIndexed { index, (modes, label) ->
                             val interactionSource = modeInteractionSources[rowIndex * 4 + index]
@@ -271,10 +274,7 @@ fun ColorPaletteScreenMaterial(
                                         },
                                         modifier = Modifier
                                             .semantics { role = Role.RadioButton },
-                                        colors = ToggleButtonDefaults.colors(
-                                            checkedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                                            containerColor = MaterialTheme.colorScheme.surface,
-                                        ),
+                                        
                                         shapes = ToggleButtonShapes(
                                             shape = sourceShape,
                                             pressedShape = sourceShape,
@@ -535,7 +535,7 @@ fun ColorPaletteScreenMaterial(
                                         val pageScaleConfirmSource = remember { MutableInteractionSource() }
                                         ExpressiveButtonGroup(
                                             modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.End,
+                                            horizontalArrangement = Arrangement.Center,
                                             verticalAlignment = Alignment.CenterVertically,
                                         ) {
                                             customItem(
@@ -720,7 +720,7 @@ fun ColorPaletteScreenMaterial(
                                         val cornerConfirmSource = remember { MutableInteractionSource() }
                                         ExpressiveButtonGroup(
                                             modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.End,
+                                            horizontalArrangement = Arrangement.Center,
                                             verticalAlignment = Alignment.CenterVertically,
                                         ) {
                                             customItem(
@@ -910,7 +910,7 @@ fun ColorPaletteScreenMaterial(
                                         val outlineConfirmSource = remember { MutableInteractionSource() }
                                         ExpressiveButtonGroup(
                                             modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.End,
+                                            horizontalArrangement = Arrangement.Center,
                                             verticalAlignment = Alignment.CenterVertically,
                                         ) {
                                             customItem(
