@@ -37,13 +37,19 @@ fun ExpressiveToggleButton(
 ) {
     val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val pressExpansion = rememberMaterialExpressivePressExpansion(actualInteractionSource, enabled)
+    // Resting/selected state uses the smallest Aloha theme corner; a press
+    // morphs to the fully filled capsule shape through Material's pressed-shape transition.
+    val expressiveShapes = ToggleButtonDefaults.shapes(
+        shape = alohaCornerShape(4.dp),
+        pressedShape = alohaCornerShape(40.dp),
+    )
     ToggleButton(
         checked = checked,
         onCheckedChange = onCheckedChange,
         modifier = modifier,
         enabled = enabled,
         colors = colors,
-        shapes = shapes,
+        shapes = expressiveShapes,
         border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
             BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
         },
