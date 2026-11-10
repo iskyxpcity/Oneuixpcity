@@ -1,10 +1,8 @@
 package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -22,8 +20,8 @@ import kotlinx.coroutines.launch
  * Shared Material press motion.
  *
  * A tap completes the full expansion before retracting. Retargeting is only
- * used when a new press interrupts an existing return, so quick taps never
- * reverse halfway through the expansion.
+ * used when a new interaction interrupts an existing spring, so quick taps
+ * still complete the full expansion before returning.
  */
 @Composable
 internal fun rememberMaterialExpressivePressExpansion(
@@ -50,27 +48,26 @@ internal fun rememberMaterialExpressivePressExpansion(
                         motionJob = launch {
                             expansion.animateTo(
                                 expansionPerSide.value,
-                                tween(durationMillis = 190, easing = FastOutSlowInEasing),
+                                spring(dampingRatio = 0.45f, stiffness = 300f),
                             )
                         }
                     }
                     is PressInteraction.Release -> if (activePress == interaction.press) {
                         activePress = null
-                        // Do not cut off a short tap's expansion. Finish the
-                        // press phase, glide back most of the distance, then
-                        // use a restrained spring only for the final settle.
+                        // Let a short tap finish its spring expansion, then
+                        // return the entire distance with the same spring model.
                         val pressJob = motionJob
                         motionJob = launch {
                             pressJob?.join()
                             expansion.animateTo(
-                                expansionPerSide.value * 0.62f,
-                                tween(durationMillis = 175, easing = FastOutSlowInEasing),
+                                0f,
+                                spring(dampingRatio = 0.45f, stiffness = 300f),
                             )
                             expansion.animateTo(
                                 0f,
                                 spring(
-                                    dampingRatio = 0.34f,
-                                    stiffness = 220f,
+                                    dampingRatio = 0.45f,
+                                    stiffness = 300f,
                                 ),
                             )
                         }
@@ -81,14 +78,14 @@ internal fun rememberMaterialExpressivePressExpansion(
                         motionJob = launch {
                             pressJob?.join()
                             expansion.animateTo(
-                                expansionPerSide.value * 0.58f,
-                                tween(durationMillis = 155, easing = FastOutSlowInEasing),
+                                0f,
+                                spring(dampingRatio = 0.45f, stiffness = 300f),
                             )
                             expansion.animateTo(
                                 0f,
                                 spring(
-                                    dampingRatio = 0.36f,
-                                    stiffness = 230f,
+                                    dampingRatio = 0.45f,
+                                    stiffness = 300f,
                                 ),
                             )
                         }
