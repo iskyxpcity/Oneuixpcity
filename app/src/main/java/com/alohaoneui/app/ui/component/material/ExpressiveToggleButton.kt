@@ -3,9 +3,9 @@ package com.alohaoneui.app.ui.component.material
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.width
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
@@ -39,6 +39,7 @@ fun ExpressiveToggleButton(
     content: @Composable RowScope.() -> Unit,
 ) {
     val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
+    val haptic = LocalHapticFeedback.current
     val pressExpansion = rememberMaterialExpressivePressExpansion(actualInteractionSource, enabled)
     // Feed the same live expansion progress into the detail-row shape engine.
     // Selected buttons use one unified shape; only unselected buttons use
@@ -68,7 +69,7 @@ fun ExpressiveToggleButton(
     )
     ToggleButton(
         checked = checked,
-        onCheckedChange = onCheckedChange,
+        onCheckedChange = { value -> haptic.performHapticFeedback(HapticFeedbackType.VirtualKey); onCheckedChange(value) },
         modifier = modifier,
         enabled = enabled,
         colors = colors,
@@ -78,7 +79,7 @@ fun ExpressiveToggleButton(
         },
         elevation = if (LocalMaterialShadowButtons.current) ToggleButtonDefaults.elevation() else null,
         interactionSource = actualInteractionSource,
-        content = { Spacer(Modifier.width(if (pressMotionEnabled) pressExpansion else 0.dp)); content(); Spacer(Modifier.width(if (pressMotionEnabled) pressExpansion else 0.dp)) },
+        content = content,
     )
 }
 
