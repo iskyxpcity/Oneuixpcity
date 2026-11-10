@@ -244,7 +244,7 @@ private fun DeviceInfoSectionSelector(
                         ExpressiveToggleButton(
                             checked = selectedSection == index,
                             onCheckedChange = { checked -> if (checked) onSelect(index) },
-                            modifier = Modifier.animateWidth(interactionSource, compressionLimit = 0.dp)
+                            modifier = Modifier
                                 .semantics { role = Role.RadioButton },
                             shapes = when (index) {
                                 0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
@@ -252,7 +252,7 @@ private fun DeviceInfoSectionSelector(
                                 else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                             },
                             interactionSource = interactionSource,
-                            pressMotionEnabled = false,
+                            
                         ) {
                             MaterialText(
                                 text = label,
