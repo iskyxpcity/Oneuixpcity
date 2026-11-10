@@ -269,7 +269,7 @@ fun ColorPaletteScreenMaterial(
                                                 actions.onSetColorMode(modes.first())
                                             }
                                         },
-                                        modifier = Modifier.animateWidth(interactionSource)
+                                        modifier = Modifier.animateWidth(interactionSource, compressionLimit = 8.dp)
                                             .semantics { role = Role.RadioButton },
                                         colors = ToggleButtonDefaults.colors(
                                             checkedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
@@ -542,7 +542,7 @@ fun ColorPaletteScreenMaterial(
                                                 buttonGroupContent = {
                                                     ExpressiveTextButton(
                                                         onClick = { showPageScaleValueDialog = false },
-                                                        modifier = Modifier.animateWidth(pageScaleCancelSource),
+                                                        modifier = Modifier.animateWidth(pageScaleCancelSource, compressionLimit = 8.dp),
                                                         interactionSource = pageScaleCancelSource,
                                                         pressMotionEnabled = false,
                                                     ) { Text(stringResource(android.R.string.cancel)) }
@@ -565,7 +565,7 @@ fun ColorPaletteScreenMaterial(
                                                     showPageScaleValueDialog = false
                                                 }
                                                         },
-                                                        modifier = Modifier.animateWidth(pageScaleConfirmSource),
+                                                        modifier = Modifier.animateWidth(pageScaleConfirmSource, compressionLimit = 8.dp),
                                                         interactionSource = pageScaleConfirmSource,
                                                         pressMotionEnabled = false,
                                                     ) { Text(stringResource(android.R.string.ok)) }
@@ -727,7 +727,7 @@ fun ColorPaletteScreenMaterial(
                                                 buttonGroupContent = {
                                                     ExpressiveTextButton(
                                                         onClick = { showCornerValueDialog = false },
-                                                        modifier = Modifier.animateWidth(cornerCancelSource),
+                                                        modifier = Modifier.animateWidth(cornerCancelSource, compressionLimit = 8.dp),
                                                         interactionSource = cornerCancelSource,
                                                         pressMotionEnabled = false,
                                                     ) { Text(stringResource(android.R.string.cancel)) }
@@ -751,7 +751,7 @@ fun ColorPaletteScreenMaterial(
                                                     showCornerValueDialog = false
                                                 }
                                                         },
-                                                        modifier = Modifier.animateWidth(cornerConfirmSource),
+                                                        modifier = Modifier.animateWidth(cornerConfirmSource, compressionLimit = 8.dp),
                                                         interactionSource = cornerConfirmSource,
                                                         pressMotionEnabled = false,
                                                     ) { Text(stringResource(android.R.string.ok)) }
@@ -917,7 +917,7 @@ fun ColorPaletteScreenMaterial(
                                                 buttonGroupContent = {
                                                     ExpressiveTextButton(
                                                         onClick = { showOutlineValueDialog = false },
-                                                        modifier = Modifier.animateWidth(outlineCancelSource),
+                                                        modifier = Modifier.animateWidth(outlineCancelSource, compressionLimit = 8.dp),
                                                         interactionSource = outlineCancelSource,
                                                         pressMotionEnabled = false,
                                                     ) { Text(stringResource(android.R.string.cancel)) }
@@ -941,7 +941,7 @@ fun ColorPaletteScreenMaterial(
                                                     showOutlineValueDialog = false
                                                 }
                                                         },
-                                                        modifier = Modifier.animateWidth(outlineConfirmSource),
+                                                        modifier = Modifier.animateWidth(outlineConfirmSource, compressionLimit = 8.dp),
                                                         interactionSource = outlineConfirmSource,
                                                         pressMotionEnabled = false,
                                                     ) { Text(stringResource(android.R.string.ok)) }
