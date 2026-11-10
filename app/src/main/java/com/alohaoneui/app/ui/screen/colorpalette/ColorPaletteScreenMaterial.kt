@@ -268,7 +268,6 @@ fun ColorPaletteScreenMaterial(
                                         checked = currentColorMode in modes,
                                         onCheckedChange = {
                                             if (it) {
-                                                haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
                                                 actions.onSetColorMode(modes.first())
                                             }
                                         },
