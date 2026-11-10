@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
+import com.alohaoneui.app.ui.component.material.alohaSegmentedShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonColors
@@ -33,17 +34,21 @@ fun ExpressiveToggleButton(
     colors: ToggleButtonColors = expressiveToggleButtonColors(),
     interactionSource: MutableInteractionSource? = null,
     pressMotionEnabled: Boolean = true,
+    shapeIndex: Int = -1,
+    shapeCount: Int = 1,
     content: @Composable RowScope.() -> Unit,
 ) {
     val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val pressExpansion = rememberMaterialExpressivePressExpansion(actualInteractionSource, enabled)
-    // Drive corner interpolation from the same animated expansion value used
-    // to push neighboring buttons apart. Selected buttons rest at the maximum
-    // theme-linked corner; unselected buttons smoothly fill toward it while pressed.
-    val expansionProgress = (pressExpansion / 30.dp).coerceIn(0f, 1f)
-    val restingCorner = if (checked) 40.dp else 4.dp
-    val animatedCorner = restingCorner + (40.dp - restingCorner) * expansionProgress
-    val animatedShape = alohaCornerShape(animatedCorner)
+    // Reuse the exact segmented-corner rule used by detail option rows.
+    // It animates the four real corner radii, respects leading/middle/trailing
+    // geometry, and follows the user's global Material shape style and scale.
+    val animatedShape = alohaSegmentedShape(
+        index = shapeIndex,
+        count = shapeCount,
+        vertical = false,
+        pressed = pressMotionEnabled && pressExpansion > 0.1.dp,
+    )
     val expressiveShapes = shapes.copy(
         shape = animatedShape,
         pressedShape = animatedShape,
