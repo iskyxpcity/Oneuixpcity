@@ -613,26 +613,24 @@ fun alohaSegmentedShape(
         return radius * cornerScale
     }
 
-    val topStart by animateDpAsState(
-        targetValue = corner(if (first) 16.dp else 4.dp, if (count > 1 && (first || last)) 4.dp else 8.dp),
-        animationSpec = spring(dampingRatio = 0.72f, stiffness = 420f),
-        label = "alohaSegmentTopStart",
-    )
-    val topEnd by animateDpAsState(
-        targetValue = corner(if (if (vertical) first else last) 16.dp else 4.dp, if (count > 1 && (first || last)) 4.dp else 8.dp),
-        animationSpec = spring(dampingRatio = 0.72f, stiffness = 420f),
-        label = "alohaSegmentTopEnd",
-    )
-    val bottomEnd by animateDpAsState(
-        targetValue = corner(if (last) 16.dp else 4.dp, if (count > 1 && (first || last)) 4.dp else 8.dp),
-        animationSpec = spring(dampingRatio = 0.72f, stiffness = 420f),
-        label = "alohaSegmentBottomEnd",
-    )
-    val bottomStart by animateDpAsState(
-        targetValue = corner(if (if (vertical) last else first) 16.dp else 4.dp, if (count > 1 && (first || last)) 4.dp else 8.dp),
-        animationSpec = spring(dampingRatio = 0.72f, stiffness = 420f),
-        label = "alohaSegmentBottomStart",
-    )
+    fun resolvedCorner(rest: Dp, pressedValue: Dp, label: String): Dp {
+        val target = corner(rest, pressedValue)
+        return if (progress != null) {
+            // The shape uses the exact same frame-by-frame progress as layout expansion.
+            target
+        } else {
+            animateDpAsState(
+                targetValue = target,
+                animationSpec = spring(dampingRatio = 0.45f, stiffness = 300f),
+                label = label,
+            ).value
+        }
+    }
+    val outerPressedRadius = if (count > 1 && (first || last)) 4.dp else 8.dp
+    val topStart = resolvedCorner(if (first) 16.dp else 4.dp, outerPressedRadius, "alohaSegmentTopStart")
+    val topEnd = resolvedCorner(if (if (vertical) first else last) 16.dp else 4.dp, outerPressedRadius, "alohaSegmentTopEnd")
+    val bottomEnd = resolvedCorner(if (last) 16.dp else 4.dp, outerPressedRadius, "alohaSegmentBottomEnd")
+    val bottomStart = resolvedCorner(if (if (vertical) last else first) 16.dp else 4.dp, outerPressedRadius, "alohaSegmentBottomStart")
 
     return when (LocalMaterialShapeStyle.current) {
         1 -> CutCornerShape(topStart, topEnd, bottomEnd, bottomStart)
