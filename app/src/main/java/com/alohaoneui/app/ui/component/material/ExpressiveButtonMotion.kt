@@ -61,10 +61,6 @@ internal fun rememberMaterialExpressivePressExpansion(
                             pressJob?.join()
                             expansion.animateTo(
                                 0f,
-                                spring(dampingRatio = 0.45f, stiffness = 300f),
-                            )
-                            expansion.animateTo(
-                                0f,
                                 spring(
                                     dampingRatio = 0.45f,
                                     stiffness = 300f,
@@ -77,10 +73,6 @@ internal fun rememberMaterialExpressivePressExpansion(
                         val pressJob = motionJob
                         motionJob = launch {
                             pressJob?.join()
-                            expansion.animateTo(
-                                0f,
-                                spring(dampingRatio = 0.45f, stiffness = 300f),
-                            )
                             expansion.animateTo(
                                 0f,
                                 spring(
