@@ -269,7 +269,7 @@ fun ColorPaletteScreenMaterial(
                                                 actions.onSetColorMode(modes.first())
                                             }
                                         },
-                                        modifier = Modifier.animateWidth(interactionSource, compressionLimit = 0.dp)
+                                        modifier = Modifier
                                             .semantics { role = Role.RadioButton },
                                         colors = ToggleButtonDefaults.colors(
                                             checkedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
@@ -281,7 +281,7 @@ fun ColorPaletteScreenMaterial(
                                             checkedShape = sourceShape,
                                         ),
                                         interactionSource = interactionSource,
-                                        pressMotionEnabled = false,
+                                        
                                     ) {
                                         Icon(
                                             imageVector = when (modes.first()) {
@@ -544,7 +544,7 @@ fun ColorPaletteScreenMaterial(
                                                         onClick = { showPageScaleValueDialog = false },
                                                         modifier = Modifier.animateWidth(pageScaleCancelSource, compressionLimit = 0.dp),
                                                         interactionSource = pageScaleCancelSource,
-                                                        pressMotionEnabled = false,
+                                                        
                                                     ) { Text(stringResource(android.R.string.cancel)) }
                                                 },
                                                 menuContent = { state ->
@@ -567,7 +567,7 @@ fun ColorPaletteScreenMaterial(
                                                         },
                                                         modifier = Modifier.animateWidth(pageScaleConfirmSource, compressionLimit = 0.dp),
                                                         interactionSource = pageScaleConfirmSource,
-                                                        pressMotionEnabled = false,
+                                                        
                                                     ) { Text(stringResource(android.R.string.ok)) }
                                                 },
                                                 menuContent = { state ->
@@ -729,7 +729,7 @@ fun ColorPaletteScreenMaterial(
                                                         onClick = { showCornerValueDialog = false },
                                                         modifier = Modifier.animateWidth(cornerCancelSource, compressionLimit = 0.dp),
                                                         interactionSource = cornerCancelSource,
-                                                        pressMotionEnabled = false,
+                                                        
                                                     ) { Text(stringResource(android.R.string.cancel)) }
                                                 },
                                                 menuContent = { state ->
@@ -753,7 +753,7 @@ fun ColorPaletteScreenMaterial(
                                                         },
                                                         modifier = Modifier.animateWidth(cornerConfirmSource, compressionLimit = 0.dp),
                                                         interactionSource = cornerConfirmSource,
-                                                        pressMotionEnabled = false,
+                                                        
                                                     ) { Text(stringResource(android.R.string.ok)) }
                                                 },
                                                 menuContent = { state ->
@@ -919,7 +919,7 @@ fun ColorPaletteScreenMaterial(
                                                         onClick = { showOutlineValueDialog = false },
                                                         modifier = Modifier.animateWidth(outlineCancelSource, compressionLimit = 0.dp),
                                                         interactionSource = outlineCancelSource,
-                                                        pressMotionEnabled = false,
+                                                        
                                                     ) { Text(stringResource(android.R.string.cancel)) }
                                                 },
                                                 menuContent = { state ->
@@ -943,7 +943,7 @@ fun ColorPaletteScreenMaterial(
                                                         },
                                                         modifier = Modifier.animateWidth(outlineConfirmSource, compressionLimit = 0.dp),
                                                         interactionSource = outlineConfirmSource,
-                                                        pressMotionEnabled = false,
+                                                        
                                                     ) { Text(stringResource(android.R.string.ok)) }
                                                 },
                                                 menuContent = { state ->
