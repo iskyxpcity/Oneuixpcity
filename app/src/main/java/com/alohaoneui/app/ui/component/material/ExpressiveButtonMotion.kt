@@ -1,6 +1,7 @@
 package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -47,7 +48,7 @@ internal fun rememberMaterialExpressivePressExpansion(
                         motionJob = launch {
                             expansion.animateTo(
                                 expansionPerSide.value,
-                                tween(durationMillis = 210),
+                                tween(durationMillis = 260, easing = FastOutSlowInEasing),
                             )
                         }
                     }
@@ -59,15 +60,15 @@ internal fun rememberMaterialExpressivePressExpansion(
                             pressMotion?.join()
                             // Most of the return is controlled and fluid.
                             expansion.animateTo(
-                                expansionPerSide.value * 0.28f,
-                                tween(durationMillis = 180),
+                                expansionPerSide.value * 0.42f,
+                                tween(durationMillis = 210, easing = FastOutSlowInEasing),
                             )
                             // The final 28% carries the visible spring settle.
                             expansion.animateTo(
                                 0f,
                                 spring(
-                                    dampingRatio = 0.48f,
-                                    stiffness = Spring.StiffnessMediumLow,
+                                    dampingRatio = 0.32f,
+                                    stiffness = 260f,
                                 ),
                             )
                         }
@@ -78,14 +79,14 @@ internal fun rememberMaterialExpressivePressExpansion(
                         motionJob = launch {
                             pressMotion?.join()
                             expansion.animateTo(
-                                expansionPerSide.value * 0.24f,
-                                tween(durationMillis = 150),
+                                expansionPerSide.value * 0.38f,
+                                tween(durationMillis = 180, easing = FastOutSlowInEasing),
                             )
                             expansion.animateTo(
                                 0f,
                                 spring(
-                                    dampingRatio = 0.58f,
-                                    stiffness = Spring.StiffnessMediumLow,
+                                    dampingRatio = 0.38f,
+                                    stiffness = 300f,
                                 ),
                             )
                         }
