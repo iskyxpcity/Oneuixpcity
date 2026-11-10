@@ -200,7 +200,10 @@ fun StatusComboStyleOneCategoryControls(
         UiMode.Material -> {
             ExpressiveButtonGroup(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+                horizontalArrangement = Arrangement.spacedBy(
+                    ButtonGroupDefaults.ConnectedSpaceBetween,
+                    alignment = Alignment.CenterHorizontally,
+                ),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 tabs.forEachIndexed { index, label ->
@@ -667,7 +670,10 @@ private fun StyleOneRoleColorDialog(
                     val colorTabSources = remember { List(2) { MutableInteractionSource() } }
                     ExpressiveButtonGroup(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+                        horizontalArrangement = Arrangement.spacedBy(
+                    ButtonGroupDefaults.ConnectedSpaceBetween,
+                    alignment = Alignment.CenterHorizontally,
+                ),
                     ) {
                         colorTabLabels.forEachIndexed { index, label ->
                             val interactionSource = colorTabSources[index]
