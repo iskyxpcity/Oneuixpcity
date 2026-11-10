@@ -235,7 +235,10 @@ private fun DeviceInfoSectionSelector(
     when (LocalUiMode.current) {
         UiMode.Material -> ExpressiveButtonGroup(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+            horizontalArrangement = Arrangement.spacedBy(
+                ButtonGroupDefaults.ConnectedSpaceBetween,
+                alignment = Alignment.CenterHorizontally,
+            ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             options.forEachIndexed { index, label ->
