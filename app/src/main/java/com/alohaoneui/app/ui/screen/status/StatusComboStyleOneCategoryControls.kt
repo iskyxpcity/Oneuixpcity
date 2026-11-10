@@ -215,7 +215,7 @@ fun StatusComboStyleOneCategoryControls(
                                         selectedTab = index
                                     }
                                 },
-                                modifier = Modifier.animateWidth(interactionSource)
+                                modifier = Modifier.animateWidth(interactionSource, compressionLimit = 8.dp)
                                     .semantics { role = Role.RadioButton },
                                 shapes = when (index) {
                                     0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
@@ -676,7 +676,7 @@ private fun StyleOneRoleColorDialog(
                                     ExpressiveToggleButton(
                                         checked = onDark == (index == 0),
                                         onCheckedChange = { checked -> if (checked) onDark = index == 0 },
-                                        modifier = Modifier.animateWidth(interactionSource),
+                                        modifier = Modifier.animateWidth(interactionSource, compressionLimit = 8.dp),
                                         shapes = if (index == 0) {
                                             ButtonGroupDefaults.connectedLeadingButtonShapes()
                                         } else {
