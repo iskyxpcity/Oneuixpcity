@@ -14,14 +14,16 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 /**
  * Shared Material press motion.
  *
- * Short taps complete the full expansion before retracting. A long press
- * retracts immediately on release from its current spring position.
+ * Short taps remain visibly pressed for a brief minimum interval, without
+ * forcing the expansion spring to finish. Long presses retract immediately
+ * on release from their current spring position.
  */
 @Composable
 internal fun rememberMaterialExpressivePressExpansion(
@@ -60,18 +62,18 @@ internal fun rememberMaterialExpressivePressExpansion(
                         val pressJob = motionJob
                         motionJob = launch {
                             if (heldForMillis < longPressTimeoutMillis) {
-                                // Short tap: finish the complete expansion before retracting.
-                                pressJob?.join()
-                            } else {
-                                // Long press: stop waiting and spring back immediately from
-                                // the current expansion value when the finger is released.
-                                pressJob?.cancel()
+                                // Short tap: preserve a brief 100 ms pressed response,
+                                // but do not wait for the expansion spring to reach its peak.
+                                delay(100L)
                             }
+                            // Both tap and long press return from the current animated
+                            // value; long press does so immediately on release.
+                            pressJob?.cancel()
                             expansion.animateTo(
                                 0f,
                                 spring(
                                     dampingRatio = 0.35f,
-                                    stiffness = 350f,
+                                    stiffness = 150f,
                                 ),
                             )
                         }
@@ -84,7 +86,7 @@ internal fun rememberMaterialExpressivePressExpansion(
                                 0f,
                                 spring(
                                     dampingRatio = 0.35f,
-                                    stiffness = 350f,
+                                    stiffness = 150f,
                                 ),
                             )
                         }
