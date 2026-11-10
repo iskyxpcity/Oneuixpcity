@@ -49,7 +49,8 @@ import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
  * Project-wide Material 3 Expressive button-group container.
  *
  * Use [ButtonGroupScope.customItem] for existing Aloha-styled buttons and add
- * Modifier.animateWidth(interactionSource) to each child. Pass that same
+ * Modifier.animateWidth(interactionSource, compressionLimit) to each child.
+ * The shared expansion ratio is intentionally stronger than Material's 15% default. Pass that same
  * interaction source into the child button and disable its standalone scale
  * motion so the official width expansion/compression remains the only press
  * animation in the group.
@@ -58,7 +59,7 @@ import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 @Composable
 fun ExpressiveButtonGroup(
     modifier: Modifier = Modifier,
-    expandedRatio: Float = ButtonGroupDefaults.ExpandedRatio,
+    expandedRatio: Float = 0.30f,
     horizontalArrangement: Arrangement.Horizontal = ButtonGroupDefaults.HorizontalArrangement,
     verticalAlignment: Alignment.Vertical = Alignment.Top,
     overflowIndicator: @Composable (ButtonGroupMenuState) -> Unit = { menuState ->
