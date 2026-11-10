@@ -2,6 +2,7 @@ package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -613,24 +614,28 @@ fun alohaSegmentedShape(
         return radius * cornerScale
     }
 
-    fun resolvedCorner(rest: Dp, pressedValue: Dp, label: String): Dp {
-        val target = corner(rest, pressedValue)
-        return if (progress != null) {
-            // The shape uses the exact same frame-by-frame progress as layout expansion.
-            target
-        } else {
-            animateDpAsState(
-                targetValue = target,
-                animationSpec = spring(dampingRatio = 0.45f, stiffness = 300f),
-                label = label,
-            ).value
-        }
-    }
     val outerPressedRadius = if (count > 1 && (first || last)) 4.dp else 8.dp
-    val topStart = resolvedCorner(if (first) 16.dp else 4.dp, outerPressedRadius, "alohaSegmentTopStart")
-    val topEnd = resolvedCorner(if (if (vertical) first else last) 16.dp else 4.dp, outerPressedRadius, "alohaSegmentTopEnd")
-    val bottomEnd = resolvedCorner(if (last) 16.dp else 4.dp, outerPressedRadius, "alohaSegmentBottomEnd")
-    val bottomStart = resolvedCorner(if (if (vertical) last else first) 16.dp else 4.dp, outerPressedRadius, "alohaSegmentBottomStart")
+    val cornerAnimation = if (progress != null) snap() else spring(dampingRatio = 0.45f, stiffness = 300f)
+    val topStart by animateDpAsState(
+        targetValue = corner(if (first) 16.dp else 4.dp, outerPressedRadius),
+        animationSpec = cornerAnimation,
+        label = "alohaSegmentTopStart",
+    )
+    val topEnd by animateDpAsState(
+        targetValue = corner(if (if (vertical) first else last) 16.dp else 4.dp, outerPressedRadius),
+        animationSpec = cornerAnimation,
+        label = "alohaSegmentTopEnd",
+    )
+    val bottomEnd by animateDpAsState(
+        targetValue = corner(if (last) 16.dp else 4.dp, outerPressedRadius),
+        animationSpec = cornerAnimation,
+        label = "alohaSegmentBottomEnd",
+    )
+    val bottomStart by animateDpAsState(
+        targetValue = corner(if (if (vertical) last else first) 16.dp else 4.dp, outerPressedRadius),
+        animationSpec = cornerAnimation,
+        label = "alohaSegmentBottomStart",
+    )
 
     return when (LocalMaterialShapeStyle.current) {
         1 -> CutCornerShape(topStart, topEnd, bottomEnd, bottomStart)
