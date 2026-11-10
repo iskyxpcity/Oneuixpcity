@@ -44,26 +44,26 @@ internal fun rememberMaterialExpressivePressExpansion(
                 when (interaction) {
                     is PressInteraction.Press -> {
                         activePress = interaction
+                        // Retarget from the current animated value instead of waiting
+                        // for a previous phase to finish. This avoids the pause on quick taps.
                         motionJob?.cancel()
                         motionJob = launch {
                             expansion.animateTo(
                                 expansionPerSide.value,
-                                tween(durationMillis = 260, easing = FastOutSlowInEasing),
+                                tween(durationMillis = 230, easing = FastOutSlowInEasing),
                             )
                         }
                     }
                     is PressInteraction.Release -> if (activePress == interaction.press) {
                         activePress = null
-                        val pressMotion = motionJob
+                        // Interrupt at the current position and preserve the motion
+                        // continuity; the spring is reserved for the final settle.
+                        motionJob?.cancel()
                         motionJob = launch {
-                            // Do not cut a quick tap's expansion short.
-                            pressMotion?.join()
-                            // Most of the return is controlled and fluid.
                             expansion.animateTo(
-                                expansionPerSide.value * 0.42f,
-                                tween(durationMillis = 210, easing = FastOutSlowInEasing),
+                                expansionPerSide.value * 0.34f,
+                                tween(durationMillis = 190, easing = FastOutSlowInEasing),
                             )
-                            // The final 28% carries the visible spring settle.
                             expansion.animateTo(
                                 0f,
                                 spring(
@@ -75,12 +75,11 @@ internal fun rememberMaterialExpressivePressExpansion(
                     }
                     is PressInteraction.Cancel -> if (activePress == interaction.press) {
                         activePress = null
-                        val pressMotion = motionJob
+                        motionJob?.cancel()
                         motionJob = launch {
-                            pressMotion?.join()
                             expansion.animateTo(
-                                expansionPerSide.value * 0.38f,
-                                tween(durationMillis = 180, easing = FastOutSlowInEasing),
+                                expansionPerSide.value * 0.30f,
+                                tween(durationMillis = 170, easing = FastOutSlowInEasing),
                             )
                             expansion.animateTo(
                                 0f,
