@@ -638,10 +638,19 @@ fun alohaSegmentedShape(
         label = "alohaSegmentBottomStart",
     )
 
+    // An underdamped spring can briefly overshoot below its target when the
+    // global corner scale changes (including a transition to 0.dp). CornerBasedShape
+    // validates resolved radii before AlohaPathShape.createOutline() can clamp them,
+    // so sanitize every animated value before constructing any CornerBasedShape.
+    val safeTopStart = topStart.coerceAtLeast(0.dp)
+    val safeTopEnd = topEnd.coerceAtLeast(0.dp)
+    val safeBottomEnd = bottomEnd.coerceAtLeast(0.dp)
+    val safeBottomStart = bottomStart.coerceAtLeast(0.dp)
+
     return when (LocalMaterialShapeStyle.current) {
-        1 -> CutCornerShape(topStart, topEnd, bottomEnd, bottomStart)
-        2, 3, 4, 5, 6 -> AlohaPathShape(LocalMaterialShapeStyle.current, densityScale, topStart, topEnd, bottomEnd, bottomStart)
-        else -> RoundedCornerShape(topStart, topEnd, bottomEnd, bottomStart)
+        1 -> CutCornerShape(safeTopStart, safeTopEnd, safeBottomEnd, safeBottomStart)
+        2, 3, 4, 5, 6 -> AlohaPathShape(LocalMaterialShapeStyle.current, densityScale, safeTopStart, safeTopEnd, safeBottomEnd, safeBottomStart)
+        else -> RoundedCornerShape(safeTopStart, safeTopEnd, safeBottomEnd, safeBottomStart)
     }
 }
 
