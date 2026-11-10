@@ -39,7 +39,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Devices
 import androidx.compose.material.icons.outlined.ExpandLess
@@ -83,6 +82,8 @@ import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.material.TonalCard
 import com.alohaoneui.app.ui.component.material.ExpressiveToggleButton
 import com.alohaoneui.app.ui.component.material.ExpressiveButtonGroup
+import com.alohaoneui.app.ui.component.material.alohaCornerShape
+import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -495,9 +496,9 @@ private fun CpuFrequencyGrid(entries: List<CpuFrequencyEntry>) {
                         modifier = Modifier
                             .weight(1f)
                             .height(58.dp)
-                            .clip(RoundedCornerShape(12.dp))
+                            .clip(alohaCornerShape(12.dp))
                             .background(deviceTileColor())
-                            .border(1.dp, deviceTileOutlineColor(), RoundedCornerShape(12.dp))
+                            .then(LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let { Modifier.border(it.dp, deviceTileOutlineColor(), alohaCornerShape(12.dp)) } ?: Modifier)
                             .padding(horizontal = 3.dp, vertical = 8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
@@ -528,9 +529,9 @@ private fun CpuFrequencyGrid(entries: List<CpuFrequencyEntry>) {
 @Composable
 private fun DeviceValueTile(title: String, value: String, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.clip(RoundedCornerShape(14.dp))
+        modifier = modifier.clip(alohaCornerShape(14.dp))
             .background(deviceTileColor())
-            .border(1.dp, deviceTileOutlineColor(), RoundedCornerShape(14.dp))
+            .then(LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let { Modifier.border(it.dp, deviceTileOutlineColor(), alohaCornerShape(14.dp)) } ?: Modifier)
             .padding(horizontal = 12.dp, vertical = 11.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
