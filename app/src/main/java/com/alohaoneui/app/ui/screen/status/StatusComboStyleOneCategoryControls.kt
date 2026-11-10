@@ -215,7 +215,7 @@ fun StatusComboStyleOneCategoryControls(
                                         selectedTab = index
                                     }
                                 },
-                                modifier = Modifier.animateWidth(interactionSource, compressionLimit = 0.dp)
+                                modifier = Modifier
                                     .semantics { role = Role.RadioButton },
                                 shapes = when (index) {
                                     0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
@@ -223,7 +223,7 @@ fun StatusComboStyleOneCategoryControls(
                                     else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                                 },
                                 interactionSource = interactionSource,
-                                pressMotionEnabled = false,
+                                
                             ) { Text(text = label) }
                         },
                         menuContent = { menuState ->
@@ -676,14 +676,14 @@ private fun StyleOneRoleColorDialog(
                                     ExpressiveToggleButton(
                                         checked = onDark == (index == 0),
                                         onCheckedChange = { checked -> if (checked) onDark = index == 0 },
-                                        modifier = Modifier.animateWidth(interactionSource, compressionLimit = 0.dp),
+                                        modifier = Modifier,
                                         shapes = if (index == 0) {
                                             ButtonGroupDefaults.connectedLeadingButtonShapes()
                                         } else {
                                             ButtonGroupDefaults.connectedTrailingButtonShapes()
                                         },
                                         interactionSource = interactionSource,
-                                        pressMotionEnabled = false,
+                                        
                                     ) {
                                         Text(label)
                                     }
