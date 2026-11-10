@@ -63,14 +63,14 @@ internal fun rememberMaterialExpressivePressExpansion(
                         motionJob = launch {
                             pressJob?.join()
                             expansion.animateTo(
-                                expansionPerSide.value * 0.28f,
-                                tween(durationMillis = 150, easing = FastOutSlowInEasing),
+                                expansionPerSide.value * 0.62f,
+                                tween(durationMillis = 175, easing = FastOutSlowInEasing),
                             )
                             expansion.animateTo(
                                 0f,
                                 spring(
-                                    dampingRatio = 0.48f,
-                                    stiffness = 280f,
+                                    dampingRatio = 0.34f,
+                                    stiffness = 220f,
                                 ),
                             )
                         }
@@ -81,14 +81,14 @@ internal fun rememberMaterialExpressivePressExpansion(
                         motionJob = launch {
                             pressJob?.join()
                             expansion.animateTo(
-                                expansionPerSide.value * 0.24f,
-                                tween(durationMillis = 130, easing = FastOutSlowInEasing),
+                                expansionPerSide.value * 0.58f,
+                                tween(durationMillis = 155, easing = FastOutSlowInEasing),
                             )
                             expansion.animateTo(
                                 0f,
                                 spring(
-                                    dampingRatio = 0.52f,
-                                    stiffness = 300f,
+                                    dampingRatio = 0.36f,
+                                    stiffness = 230f,
                                 ),
                             )
                         }
