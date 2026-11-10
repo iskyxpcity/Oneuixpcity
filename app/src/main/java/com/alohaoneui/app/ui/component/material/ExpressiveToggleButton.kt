@@ -37,12 +37,17 @@ fun ExpressiveToggleButton(
 ) {
     val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val pressExpansion = rememberMaterialExpressivePressExpansion(actualInteractionSource, enabled)
-    // Preserve the connected leading/middle/trailing geometry supplied by the
-    // group for the resting state. Selection and active press/long-press use the
-    // maximum theme-linked corner radius.
+    // Drive corner interpolation from the same animated expansion value used
+    // to push neighboring buttons apart. Selected buttons rest at the maximum
+    // theme-linked corner; unselected buttons smoothly fill toward it while pressed.
+    val expansionProgress = (pressExpansion / 30.dp).coerceIn(0f, 1f)
+    val restingCorner = if (checked) 40.dp else 4.dp
+    val animatedCorner = restingCorner + (40.dp - restingCorner) * expansionProgress
+    val animatedShape = alohaCornerShape(animatedCorner)
     val expressiveShapes = shapes.copy(
-        pressedShape = alohaCornerShape(40.dp),
-        checkedShape = alohaCornerShape(40.dp),
+        shape = animatedShape,
+        pressedShape = animatedShape,
+        checkedShape = animatedShape,
     )
     ToggleButton(
         checked = checked,
