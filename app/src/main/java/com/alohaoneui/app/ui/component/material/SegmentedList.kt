@@ -2,6 +2,7 @@ package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -615,7 +616,7 @@ fun alohaSegmentedShape(
     }
 
     val outerPressedRadius = if (count > 1 && (first || last)) 4.dp else 8.dp
-    val cornerAnimation = if (progress != null) snap() else spring(dampingRatio = 0.45f, stiffness = 300f)
+    val cornerAnimation: FiniteAnimationSpec<Dp> = if (progress != null) snap() else spring(dampingRatio = 0.45f, stiffness = 300f)
     val topStart by animateDpAsState(
         targetValue = corner(if (first) 16.dp else 4.dp, outerPressedRadius),
         animationSpec = cornerAnimation,
