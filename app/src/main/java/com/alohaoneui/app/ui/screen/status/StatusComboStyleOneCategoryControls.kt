@@ -44,7 +44,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
@@ -192,7 +191,6 @@ fun StatusComboStyleOneCategoryControls(
         stringResource(R.string.status_combo_style_one_tab_size),
         stringResource(R.string.status_combo_style_one_tab_color),
     )
-    val tabHaptic = LocalHapticFeedback.current
     val tabInteractionSources = remember(tabs.size) {
         List(tabs.size) { MutableInteractionSource() }
     }
@@ -214,7 +212,6 @@ fun StatusComboStyleOneCategoryControls(
                                 checked = selectedTab == index,
                                 onCheckedChange = { checked ->
                                     if (checked) {
-                                        tabHaptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
                                         selectedTab = index
                                     }
                                 },
