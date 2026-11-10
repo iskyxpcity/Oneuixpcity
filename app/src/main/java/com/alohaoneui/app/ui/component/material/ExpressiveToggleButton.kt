@@ -3,6 +3,8 @@ package com.alohaoneui.app.ui.component.material
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -87,7 +89,16 @@ fun ExpressiveToggleButton(
             )
         } else null,
         interactionSource = actualInteractionSource,
-        content = content,
+        content = {
+            // Only segmented/group members expand horizontally. Standalone
+            // toggles (shapeCount == 1) keep their measured width unchanged.
+            val groupExpansion = if (shapeCount > 1 && pressMotionEnabled) {
+                (pressExpansion.value * 0.30f).coerceAtLeast(0f)
+            } else 0f
+            Spacer(Modifier.width(groupExpansion.dp))
+            content()
+            Spacer(Modifier.width(groupExpansion.dp))
+        },
     )
 }
 
