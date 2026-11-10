@@ -583,40 +583,54 @@ fun alohaOneUISegmentedColors(): ListItemColors = ListItemDefaults.segmentedColo
  * vertical=true joins rows top-to-bottom; false joins selection buttons left-to-right.
  */
 @Composable
-fun alohaSegmentedShape(index: Int, count: Int, vertical: Boolean = true, pressed: Boolean = false): CornerBasedShape {
+fun alohaSegmentedShape(
+    index: Int,
+    count: Int,
+    vertical: Boolean = true,
+    pressed: Boolean = false,
+    pressProgress: Float? = null,
+): CornerBasedShape {
     val single = count == 1 || index == -1
     val first = single || index == 0
     val last = single || index == count - 1
-    // The setting exposes a 0.0..2.0 scale. Preserve the full range so values
-    // above 1.0 enlarge corner geometry instead of silently behaving like 1.0.
+    // Keep the exact detail-row corner geometry and active theme scale. The optional
+    // progress path interpolates each real corner continuously with the button's
+    // width expansion instead of switching the whole shape at a pressed threshold.
     val cornerScale = LocalMaterialCornerScale.current.coerceIn(0f, 2f)
     val densityScale = LocalDensity.current.density
-    // Outer items morph into the middle item's 4dp geometry. Middle items
-    // contract to the requested 8dp pressed radius. Both targets remain linked to the live theme scale.
     val pressedRadius = when {
         !pressed -> null
         count > 1 && (first || last) -> 4.dp
         else -> 8.dp
     }
+    val progress = pressProgress?.coerceIn(0f, 1f)
+    fun corner(rest: Dp, pressedValue: Dp): Dp {
+        val radius = if (progress != null) {
+            rest + (pressedValue - rest) * progress
+        } else {
+            pressedRadius ?: rest
+        }
+        return radius * cornerScale
+    }
 
     val topStart by animateDpAsState(
-        targetValue = (pressedRadius ?: if (first) 16.dp else 4.dp) * cornerScale,
-        animationSpec = spring(dampingRatio = 0.45f, stiffness = 300f),
+        targetValue = corner(if (first) 16.dp else 4.dp, if (count > 1 && (first || last)) 4.dp else 8.dp),
+        animationSpec = spring(dampingRatio = 0.72f, stiffness = 420f),
         label = "alohaSegmentTopStart",
     )
     val topEnd by animateDpAsState(
-        targetValue = (pressedRadius ?: if (if (vertical) first else last) 16.dp else 4.dp) * cornerScale,
-        animationSpec = spring(dampingRatio = 0.45f, stiffness = 300f),
+        targetValue = corner(if (if (vertical) first else last) 16.dp else 4.dp, if (count > 1 && (first || last)) 4.dp else 8.dp),
+        animationSpec = spring(dampingRatio = 0.72f, stiffness = 420f),
         label = "alohaSegmentTopEnd",
     )
     val bottomEnd by animateDpAsState(
-        targetValue = (pressedRadius ?: if (last) 16.dp else 4.dp) * cornerScale,
-        animationSpec = spring(dampingRatio = 0.45f, stiffness = 300f),
+        targetValue = corner(if (last) 16.dp else 4.dp, if (count > 1 && (first || last)) 4.dp else 8.dp),
+        animationSpec = spring(dampingRatio = 0.72f, stiffness = 420f),
         label = "alohaSegmentBottomEnd",
     )
     val bottomStart by animateDpAsState(
-        targetValue = (pressedRadius ?: if (if (vertical) last else first) 16.dp else 4.dp) * cornerScale,
-        animationSpec = spring(dampingRatio = 0.45f, stiffness = 300f),
+        targetValue = corner(if (if (vertical) last else first) 16.dp else 4.dp, if (count > 1 && (first || last)) 4.dp else 8.dp),
+        animationSpec = spring(dampingRatio = 0.72f, stiffness = 420f),
         label = "alohaSegmentBottomStart",
     )
 
