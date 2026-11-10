@@ -1736,4 +1736,5 @@
 - 按钮组邻项行为按要求改为只被撑开、不被挤压：相关 `ButtonGroupScope.animateWidth` 的 `compressionLimit` 从 `8.dp` 调整为 `0.dp`（状态栏分类按钮、Material颜色调色板、首页设备工具按钮、通用弹窗按钮组）。
 - 仍需以CI编译和真机触控观感确认；代码提交不等同于真机动画验收。
 
-- **实现方案更正（同日后续提交）**：Material3 `animateWidth` 的 `compressionLimit=0.dp` 会同时阻止邻项压缩与被按项增长，不能满足“只扩张”。因此已撤掉这些按钮组的 `animateWidth`，改由按钮自身 `materialExpressivePressMotion` 扩张至 1.085 倍再回弹；相邻项布局宽度保持不变，避免挤压文字。前述 0.dp 仅为过渡提交，不作为最终方案。
+- **实现方案再次更正（按用户确认的详情选项卡效果）**：移除仅视觉缩放方案，`ExpressiveButtonMotion.kt` 改为共享 `rememberMaterialExpressivePressExpansion`，将按压扩张值作为按钮内容左右真实 `Spacer` 宽度动画（每侧默认 12dp），按钮背景/圆角/描边/阴影仍由 Material3 原控件和 Aloha 主题提供；按钮的测量宽度随动画增加，ButtonGroup 兄弟项应由布局自然向两侧移动，不主动压缩邻项。`ExpressiveButton`、`ExpressiveTextButton`、`ExpressiveIconButton`、`ExpressiveToggleButton` 已接入。InteractionSource 的 Press 持续到 Release/Cancel，因此短按与长按均维持扩张，松开后使用低刚度弹簧回弹。提交：`ee87d97e`、`e44930d1`、`acc9e152`、`584681fc`。
+- **当前验证状态**：Actions run #2915（run id `42792884869`，提交 `584681fc`）待启动/排队；此前本轮中间提交构建已被新提交取消。还未获得新方案 APK 和真机视觉验收结果，不能提前宣称已构建通过或动画完全符合参考。测试分支与 PR #31 保持未合并 main。
