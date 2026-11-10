@@ -98,9 +98,19 @@ fun ExpressiveButton(
     pressMotionEnabled: Boolean = true,
     content: @Composable RowScope.() -> Unit,
 ) {
-    val actualShape = shape ?: alohaCornerShape(12.dp)
     val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val pressExpansion = rememberMaterialExpressivePressExpansion(actualInteractionSource, enabled)
+    // Match the Home segmented buttons: the same 16dp side expansion also drives
+    // the corner morph, so the outline fills the expanded shape throughout the spring.
+    val shapeProgress = if (pressMotionEnabled) {
+        (pressExpansion.value / 16f).coerceIn(0f, 1f)
+    } else 0f
+    val actualShape = shape ?: alohaSegmentedShape(
+        index = -1,
+        count = 1,
+        vertical = false,
+        pressProgress = shapeProgress,
+    )
     val hasShadow = LocalMaterialShadowButtons.current
     val outlineWidth = LocalMaterialOutlineWidth.current
     Button(
@@ -133,9 +143,17 @@ fun ExpressiveTextButton(
     pressMotionEnabled: Boolean = true,
     content: @Composable RowScope.() -> Unit,
 ) {
-    val actualShape = shape ?: alohaCornerShape(12.dp)
     val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val pressExpansion = rememberMaterialExpressivePressExpansion(actualInteractionSource, enabled)
+    val shapeProgress = if (pressMotionEnabled) {
+        (pressExpansion.value / 16f).coerceIn(0f, 1f)
+    } else 0f
+    val actualShape = shape ?: alohaSegmentedShape(
+        index = -1,
+        count = 1,
+        vertical = false,
+        pressProgress = shapeProgress,
+    )
     val outlineWidth = LocalMaterialOutlineWidth.current
     val styledModifier = modifier
         .then(
@@ -167,9 +185,17 @@ fun ExpressiveIconButton(
     pressMotionEnabled: Boolean = true,
     content: @Composable () -> Unit,
 ) {
-    val actualShape = shape ?: alohaCornerShape(40.dp)
     val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val pressExpansion = rememberMaterialExpressivePressExpansion(actualInteractionSource, enabled)
+    val shapeProgress = if (pressMotionEnabled) {
+        (pressExpansion.value / 16f).coerceIn(0f, 1f)
+    } else 0f
+    val actualShape = shape ?: alohaSegmentedShape(
+        index = -1,
+        count = 1,
+        vertical = false,
+        pressProgress = shapeProgress,
+    )
     val outlineWidth = LocalMaterialOutlineWidth.current
     val styledModifier = modifier
         .then(
