@@ -1,5 +1,6 @@
 package com.alohaoneui.app.ui.component.material
 
+import android.os.SystemClock
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.interaction.Interaction
@@ -8,6 +9,7 @@ import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Job
@@ -18,9 +20,8 @@ import kotlinx.coroutines.launch
 /**
  * Shared Material press motion.
  *
- * A tap completes the full expansion before retracting. Retargeting is only
- * used when a new interaction interrupts an existing spring, so quick taps
- * still complete the full expansion before returning.
+ * Short taps complete the full expansion before retracting. A long press
+ * retracts immediately on release from its current spring position.
  */
 @Composable
 internal fun rememberMaterialExpressivePressExpansion(
@@ -29,54 +30,61 @@ internal fun rememberMaterialExpressivePressExpansion(
     expansionPerSide: Dp = 16.dp,
 ): Dp {
     val expansion = remember(interactionSource) { Animatable(0f) }
-    LaunchedEffect(interactionSource, enabled, expansionPerSide) {
+    val longPressTimeoutMillis = LocalViewConfiguration.current.longPressTimeoutMillis
+    LaunchedEffect(interactionSource, enabled, expansionPerSide, longPressTimeoutMillis) {
         if (!enabled) {
             expansion.snapTo(0f)
             return@LaunchedEffect
         }
         coroutineScope {
             var activePress: PressInteraction.Press? = null
+            var pressStartedAt = 0L
             var motionJob: Job? = null
             interactionSource.interactions.collect { interaction: Interaction ->
                 when (interaction) {
                     is PressInteraction.Press -> {
                         activePress = interaction
-                        // Retarget from the current animated value instead of waiting
-                        // for a previous phase to finish. This avoids the pause on quick taps.
+                        pressStartedAt = SystemClock.uptimeMillis()
+                        // Start expansion immediately from the current animated value.
                         motionJob?.cancel()
                         motionJob = launch {
                             expansion.animateTo(
                                 expansionPerSide.value,
-                                spring(dampingRatio = 0.35f, stiffness = 800f),
+                                spring(dampingRatio = 0.35f, stiffness = 350f),
                             )
                         }
                     }
                     is PressInteraction.Release -> if (activePress == interaction.press) {
                         activePress = null
-                        // Let a short tap finish its spring expansion, then
-                        // return the entire distance with the same spring model.
+                        val heldForMillis = SystemClock.uptimeMillis() - pressStartedAt
                         val pressJob = motionJob
                         motionJob = launch {
-                            pressJob?.join()
+                            if (heldForMillis < longPressTimeoutMillis) {
+                                // Short tap: finish the complete expansion before retracting.
+                                pressJob?.join()
+                            } else {
+                                // Long press: stop waiting and spring back immediately from
+                                // the current expansion value when the finger is released.
+                                pressJob?.cancel()
+                            }
                             expansion.animateTo(
                                 0f,
                                 spring(
                                     dampingRatio = 0.35f,
-                                    stiffness = 800f,
+                                    stiffness = 350f,
                                 ),
                             )
                         }
                     }
                     is PressInteraction.Cancel -> if (activePress == interaction.press) {
                         activePress = null
-                        val pressJob = motionJob
+                        motionJob?.cancel()
                         motionJob = launch {
-                            pressJob?.join()
                             expansion.animateTo(
                                 0f,
                                 spring(
                                     dampingRatio = 0.35f,
-                                    stiffness = 800f,
+                                    stiffness = 350f,
                                 ),
                             )
                         }
