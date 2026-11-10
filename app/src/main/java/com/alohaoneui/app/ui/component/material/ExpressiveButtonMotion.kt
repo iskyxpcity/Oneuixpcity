@@ -21,15 +21,15 @@ import kotlinx.coroutines.launch
 /**
  * Shared Material press motion.
  *
- * A short tap must not cancel the expansion halfway through: finish the press
- * phase first, then retract smoothly, and reserve spring motion for the final
- * return to the resting size. Long presses use the exact same sequence.
+ * A tap completes the full expansion before retracting. Retargeting is only
+ * used when a new press interrupts an existing return, so quick taps never
+ * reverse halfway through the expansion.
  */
 @Composable
 internal fun rememberMaterialExpressivePressExpansion(
     interactionSource: InteractionSource,
     enabled: Boolean = true,
-    expansionPerSide: Dp = 30.dp,
+    expansionPerSide: Dp = 16.dp,
 ): Dp {
     val expansion = remember(interactionSource) { Animatable(0f) }
     LaunchedEffect(interactionSource, enabled, expansionPerSide) {
@@ -50,42 +50,45 @@ internal fun rememberMaterialExpressivePressExpansion(
                         motionJob = launch {
                             expansion.animateTo(
                                 expansionPerSide.value,
-                                tween(durationMillis = 230, easing = FastOutSlowInEasing),
+                                tween(durationMillis = 190, easing = FastOutSlowInEasing),
                             )
                         }
                     }
                     is PressInteraction.Release -> if (activePress == interaction.press) {
                         activePress = null
-                        // Interrupt at the current position and preserve the motion
-                        // continuity; the spring is reserved for the final settle.
-                        motionJob?.cancel()
+                        // Do not cut off a short tap's expansion. Finish the
+                        // press phase, glide back most of the distance, then
+                        // use a restrained spring only for the final settle.
+                        val pressJob = motionJob
                         motionJob = launch {
+                            pressJob?.join()
                             expansion.animateTo(
-                                expansionPerSide.value * 0.34f,
-                                tween(durationMillis = 190, easing = FastOutSlowInEasing),
+                                expansionPerSide.value * 0.28f,
+                                tween(durationMillis = 150, easing = FastOutSlowInEasing),
                             )
                             expansion.animateTo(
                                 0f,
                                 spring(
-                                    dampingRatio = 0.32f,
-                                    stiffness = 260f,
+                                    dampingRatio = 0.42f,
+                                    stiffness = 320f,
                                 ),
                             )
                         }
                     }
                     is PressInteraction.Cancel -> if (activePress == interaction.press) {
                         activePress = null
-                        motionJob?.cancel()
+                        val pressJob = motionJob
                         motionJob = launch {
+                            pressJob?.join()
                             expansion.animateTo(
-                                expansionPerSide.value * 0.30f,
-                                tween(durationMillis = 170, easing = FastOutSlowInEasing),
+                                expansionPerSide.value * 0.24f,
+                                tween(durationMillis = 130, easing = FastOutSlowInEasing),
                             )
                             expansion.animateTo(
                                 0f,
                                 spring(
-                                    dampingRatio = 0.38f,
-                                    stiffness = 300f,
+                                    dampingRatio = 0.46f,
+                                    stiffness = 340f,
                                 ),
                             )
                         }
