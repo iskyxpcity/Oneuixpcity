@@ -1769,3 +1769,13 @@
 - 主页设备信息按钮组、状态栏三合一分类按钮组与调色板模式按钮组的 spacedBy 均明确设置 Alignment.CenterHorizontally；调色板的三个数值弹窗操作组从 End 调整为 Center。其余未显式指定的按钮组沿用 ExpressiveButtonGroup 默认居中排列。
 - 本轮源码提交依次为：68f6ef5（独立按钮仅形变）、f676523（调色板按钮组居中与主题动态色）、0ca2615（状态栏按钮组居中）、ef19fd8（图标按钮内容槽类型修正）。均仅提交到 test/material3-expressive-button-motion-20261109，未修改 main。
 - 这是按用户澄清对上一轮实现的纠正；仍需等待最新 HEAD 的 Actions 完整构建与签名校验，并检查是否存在其它显式靠右排列的 Material 按钮组或自定义固定颜色组。真机视觉验收尚未完成。
+
+
+## 2026-11-10：补齐 Material 按钮阴影与统一点击触觉
+
+- 用户指出按钮仍缺少主题按钮阴影联动与点击震动。本轮将两项行为纳入共享 Material 按钮组件，不要求每个页面重复实现。
+- ExpressiveButton 保留主题开关控制的 Button elevation：默认 2dp、按压 3dp、禁用 0dp；点击统一触发 VirtualKey 触觉反馈。
+- ExpressiveTextButton 与 ExpressiveIconButton 增加跟随 LocalMaterialShadowButtons 的动态阴影：常态 2dp、按压 3dp、关闭主题阴影时 0dp；阴影使用当前动态形状，随按钮形变同步。两类按钮点击统一触发 VirtualKey 触觉反馈。
+- ExpressiveToggleButton 增加共享点击触觉反馈，沿用主题按钮阴影开关控制 ToggleButton elevation；移除其内容左右 Spacer 扩张，确保独立/组内 toggle 不再通过内容槽强制增加宽度，形状仍由 Spring 进度驱动。
+- 删除状态栏分类切换与调色板模式切换中原有的重复局部震动，避免共享组件触发后双震；下拉菜单项等非共享按钮保留原有触觉逻辑。
+- 代码提交：1cf0fb6（共享普通/文字/图标按钮阴影与触觉）、54a3044（ToggleButton 触觉、主题阴影与去除宽度扩张），随后清理页面重复触觉。均仅在测试分支，尚未完成 Actions 编译与真机验收。
