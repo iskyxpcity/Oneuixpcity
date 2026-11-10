@@ -24,7 +24,7 @@ import kotlinx.coroutines.flow.collect
 internal fun rememberMaterialExpressivePressExpansion(
     interactionSource: InteractionSource,
     enabled: Boolean = true,
-    expansionPerSide: Dp = 12.dp,
+    expansionPerSide: Dp = 30.dp,
 ): Dp {
     val expansion = remember(interactionSource) { Animatable(0f) }
     LaunchedEffect(interactionSource, enabled, expansionPerSide) {
@@ -39,7 +39,7 @@ internal fun rememberMaterialExpressivePressExpansion(
                     activePress = interaction
                     expansion.animateTo(
                         expansionPerSide.value,
-                        spring(dampingRatio = 0.72f, stiffness = Spring.StiffnessLow),
+                        spring(dampingRatio = 0.42f, stiffness = Spring.StiffnessMedium),
                     )
                 }
                 is PressInteraction.Release -> if (activePress == interaction.press) {
