@@ -1735,3 +1735,5 @@
 - 修复短按时扩张动画被松手事件立即反向打断：统一按压动效改用 `Animatable` 和 Interaction 收集，按下后完整执行扩张至 `1.085f`，Release/Cancel 排队处理并弹簧回到 `1f`；低刚度弹簧保留较舒展的播放过程。
 - 按钮组邻项行为按要求改为只被撑开、不被挤压：相关 `ButtonGroupScope.animateWidth` 的 `compressionLimit` 从 `8.dp` 调整为 `0.dp`（状态栏分类按钮、Material颜色调色板、首页设备工具按钮、通用弹窗按钮组）。
 - 仍需以CI编译和真机触控观感确认；代码提交不等同于真机动画验收。
+
+- **实现方案更正（同日后续提交）**：Material3 `animateWidth` 的 `compressionLimit=0.dp` 会同时阻止邻项压缩与被按项增长，不能满足“只扩张”。因此已撤掉这些按钮组的 `animateWidth`，改由按钮自身 `materialExpressivePressMotion` 扩张至 1.085 倍再回弹；相邻项布局宽度保持不变，避免挤压文字。前述 0.dp 仅为过渡提交，不作为最终方案。
