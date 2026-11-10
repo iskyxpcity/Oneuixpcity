@@ -24,10 +24,10 @@ internal fun Modifier.materialExpressivePressMotion(
 ): Modifier {
     val pressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (enabled && pressed) 1.045f else 1f,
+        targetValue = if (enabled && pressed) 1.085f else 1f,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium,
+            dampingRatio = 0.72f,
+            stiffness = Spring.StiffnessLow,
         ),
         label = "materialExpressiveButtonPress",
     )
