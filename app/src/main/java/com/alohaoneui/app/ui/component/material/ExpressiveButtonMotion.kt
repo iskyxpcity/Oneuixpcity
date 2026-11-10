@@ -52,7 +52,7 @@ internal fun rememberMaterialExpressivePressExpansion(
                         motionJob = launch {
                             expansion.animateTo(
                                 expansionPerSide.value,
-                                spring(dampingRatio = 0.35f, stiffness = 100f),
+                                spring(dampingRatio = 0.35f, stiffness = 300f),
                             )
                         }
                     }
