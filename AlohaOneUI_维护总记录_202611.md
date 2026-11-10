@@ -1747,3 +1747,14 @@
 - 已在测试分支 `test/material3-expressive-button-motion-20261109` 修复：四个弹簧动画值在传入 `CutCornerShape`、`AlohaPathShape`、`RoundedCornerShape` 之前统一执行 `coerceAtLeast(0.dp)`。不更改弹簧参数、目标圆角、全局缩放范围或视觉设计，只阻止弹簧过冲产生非法负圆角。
 - 产品源码提交：`243e73e115775ba0f322e456436d566c0320c7cc`（`fix: clamp animated Material corner radii before shape creation`）。`main` 未修改。
 - 当前尚未核验该提交对应的 GitHub Actions 构建结果，也未生成/验收新的 APK；不能宣称设备闪退已经实测消除。下一步必须检查最新 Actions 编译与签名步骤，若失败按日志继续修复；构建成功后再核对 APK 包名、版本、签名与 SHA-256，并在设备上复测圆角滑块拖动、松手及 0/最大值边界。
+
+## 2026-11-10：Material 全项目按钮统一主页按压形态
+
+- 用户确认圆角滑块负半径闪退已在设备上消失；本轮继续以主页“设备状态信息”中的三个分段按钮作为 Material 按钮交互基准。
+- 已检查主页实现：`HomeDeviceTools.kt` 使用 `ExpressiveButtonGroup` + `ExpressiveToggleButton`；按钮按压通过共享 `rememberMaterialExpressivePressExpansion` 向左右各扩展 16dp，并将扩展进度传入 `alohaSegmentedShape(index = -1, count = 1, vertical = false, pressProgress = ...)`，让按钮宽度扩展与四角形态同步过渡。
+- 已核对多个页面的按钮接入路径：状态栏时间格式编辑、三合一样式设置、其他功能、电源菜单操作、SystemUI 详情和状态栏网速设置等页面通过 `AlohaOneUIActionButton` 进入 Material 共用 `ExpressiveButton`；主页与状态栏“三合一样式一”中的分段选择按钮已经直接使用 `ExpressiveButtonGroup` / `ExpressiveToggleButton`。设置页等大量 `SegmentedListItem` 是列表行/详情项，不应误改成操作按钮。
+- 发现此前共用的 `ExpressiveButton`、`ExpressiveTextButton`、`ExpressiveIconButton` 虽然复用了主页的 16dp Spring 横向扩展，但默认 Shape 仍分别为固定 12dp/40dp 圆角，没有像主页按钮一样把同一扩展进度同步给 `alohaSegmentedShape`；因此按压时只有宽度变化，框体形态没有完整跟随。
+- 已统一修复 `app/src/main/java/com/alohaoneui/app/ui/component/material/ExpressiveControls.kt`：三个共用 Material 按钮组件在未显式传入自定义 Shape 时，均使用与主页一致的单按钮 `alohaSegmentedShape(index = -1, count = 1, vertical = false)`，并将 `pressExpansion.value / 16f` 限制在 `0..1` 后传入 `pressProgress`。保留显式自定义 Shape、现有点击回调、按钮颜色、阴影/描边设置和 Miuix 分支，不更改业务行为。
+- 产品源码提交：`7882cbe9d122c16fc2a5ea49f3d04142b97b9a4a`（`fix: match shared Material buttons to Home press shape motion`），仅写入 `test/material3-expressive-button-motion-20261109`，`main` 未修改。
+- 本轮已完成共享按钮层的第一批统一，并核查了上述页面接入点；尚不能宣称项目所有页面的每一种按钮/第三方控件都已完成逐项核验。后续需继续扫描其余 Material 页面与自定义控件，检查是否绕过共用按钮组件，以及不同按钮组是否保留主页的联动、形状、按压/回弹与颜色语义。
+- 当前尚未核验本次提交对应的 GitHub Actions 构建、签名与 APK；没有新的 APK 可交付。下一步检查最新 HEAD 的 Actions，修复构建问题并验收后，再逐页继续排查遗漏的按钮实现。
