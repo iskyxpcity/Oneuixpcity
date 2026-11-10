@@ -1,6 +1,7 @@
 package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
@@ -44,6 +45,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
@@ -109,9 +112,10 @@ fun ExpressiveButton(
         pressProgress = shapeProgress,
     )
     val hasShadow = LocalMaterialShadowButtons.current
+    val haptic = LocalHapticFeedback.current
     val outlineWidth = LocalMaterialOutlineWidth.current
     Button(
-        onClick = onClick,
+        onClick = { haptic.performHapticFeedback(HapticFeedbackType.VirtualKey); onClick() },
         modifier = modifier,
         enabled = enabled,
         interactionSource = actualInteractionSource,
@@ -150,7 +154,11 @@ fun ExpressiveTextButton(
         pressProgress = shapeProgress,
     )
     val outlineWidth = LocalMaterialOutlineWidth.current
+    val hasShadow = LocalMaterialShadowButtons.current
+    val haptic = LocalHapticFeedback.current
+    val shadowElevation by animateDpAsState(if (hasShadow && pressExpansion.value > 0.1f) 3.dp else if (hasShadow) 2.dp else 0.dp, label = "textButtonShadow")
     val styledModifier = modifier
+        .then(if (hasShadow) Modifier.shadow(shadowElevation, actualShape) else Modifier)
         .then(
             outlineWidth.takeIf { it > 0f }?.let {
                 Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, actualShape)
@@ -158,7 +166,7 @@ fun ExpressiveTextButton(
         )
         .clip(actualShape)
     TextButton(
-        onClick = onClick,
+        onClick = { haptic.performHapticFeedback(HapticFeedbackType.VirtualKey); onClick() },
         modifier = styledModifier,
         enabled = enabled,
         shape = actualShape,
@@ -190,11 +198,13 @@ fun ExpressiveIconButton(
         pressProgress = shapeProgress,
     )
     val outlineWidth = LocalMaterialOutlineWidth.current
+    val hasShadow = LocalMaterialShadowButtons.current
+    val haptic = LocalHapticFeedback.current
+    val shadowElevation by animateDpAsState(if (hasShadow && pressExpansion.value > 0.1f) 3.dp else if (hasShadow) 2.dp else 0.dp, label = "iconButtonShadow")
     val styledModifier = modifier
+        .then(if (hasShadow) Modifier.shadow(shadowElevation, actualShape) else Modifier)
         .then(
-            if (framed && LocalMaterialShadowButtons.current) {
-                Modifier.shadow(2.dp, actualShape)
-            } else Modifier
+            Modifier
         )
         .then(
             if (framed && outlineWidth > 0f) {
@@ -203,7 +213,7 @@ fun ExpressiveIconButton(
         )
         .clip(actualShape)
     IconButton(
-        onClick = onClick,
+        onClick = { haptic.performHapticFeedback(HapticFeedbackType.VirtualKey); onClick() },
         modifier = styledModifier,
         enabled = enabled,
         colors = colors,
