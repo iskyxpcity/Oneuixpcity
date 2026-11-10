@@ -43,12 +43,24 @@ fun ExpressiveToggleButton(
     // Reuse the exact segmented-corner rule used by detail option rows.
     // It animates the four real corner radii, respects leading/middle/trailing
     // geometry, and follows the user's global Material shape style and scale.
-    val animatedShape = alohaSegmentedShape(
-        index = shapeIndex,
-        count = shapeCount,
-        vertical = false,
-        pressed = pressMotionEnabled && pressExpansion > 0.1.dp,
-    )
+    // A selected option is a single visual pill, regardless of its position
+    // in the connected group. Only unselected options retain leading/middle/
+    // trailing geometry; their pressed morph follows the shared detail-row rule.
+    val animatedShape = if (checked) {
+        alohaSegmentedShape(
+            index = -1,
+            count = 1,
+            vertical = false,
+            pressed = false,
+        )
+    } else {
+        alohaSegmentedShape(
+            index = shapeIndex,
+            count = shapeCount,
+            vertical = false,
+            pressed = pressMotionEnabled && pressExpansion > 0.1.dp,
+        )
+    }
     val expressiveShapes = shapes.copy(
         shape = animatedShape,
         pressedShape = animatedShape,
