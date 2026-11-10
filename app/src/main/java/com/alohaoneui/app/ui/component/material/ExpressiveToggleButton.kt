@@ -3,6 +3,8 @@ package com.alohaoneui.app.ui.component.material
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -34,10 +36,11 @@ fun ExpressiveToggleButton(
     content: @Composable RowScope.() -> Unit,
 ) {
     val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
+    val pressExpansion = rememberMaterialExpressivePressExpansion(actualInteractionSource, enabled)
     ToggleButton(
         checked = checked,
         onCheckedChange = onCheckedChange,
-        modifier = if (pressMotionEnabled) modifier.materialExpressivePressMotion(actualInteractionSource, enabled) else modifier,
+        modifier = modifier,
         enabled = enabled,
         colors = colors,
         shapes = shapes,
@@ -46,7 +49,7 @@ fun ExpressiveToggleButton(
         },
         elevation = if (LocalMaterialShadowButtons.current) ToggleButtonDefaults.elevation() else null,
         interactionSource = actualInteractionSource,
-        content = content,
+        content = { Spacer(Modifier.width(if (pressMotionEnabled) pressExpansion else 0.dp)); content(); Spacer(Modifier.width(if (pressMotionEnabled) pressExpansion else 0.dp)) },
     )
 }
 
