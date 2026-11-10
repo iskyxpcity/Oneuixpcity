@@ -100,8 +100,7 @@ fun ExpressiveButton(
 ) {
     val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val pressExpansion = rememberMaterialExpressivePressExpansion(actualInteractionSource, enabled)
-    // Match the Home segmented buttons: the same 16dp side expansion also drives
-    // the corner morph, so the outline fills the expanded shape throughout the spring.
+    // Standalone buttons morph their themed outline only; width remains unchanged.
     val shapeProgress = (pressExpansion.value / 16f).coerceIn(0f, 1f)
     val actualShape = shape ?: alohaSegmentedShape(
         index = -1,
@@ -209,7 +208,7 @@ fun ExpressiveIconButton(
         enabled = enabled,
         colors = colors,
         interactionSource = actualInteractionSource,
-        content = content,
+        content = { content() },
     )
 }
 
