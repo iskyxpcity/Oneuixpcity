@@ -253,7 +253,8 @@ private fun DeviceInfoSectionSelector(
                                 else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                             },
                             interactionSource = interactionSource,
-                            
+                            shapeIndex = index,
+                            shapeCount = options.size,
                         ) {
                             MaterialText(
                                 text = label,
