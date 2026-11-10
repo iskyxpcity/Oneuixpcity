@@ -1738,3 +1738,12 @@
 
 - **实现方案再次更正（按用户确认的详情选项卡效果）**：移除仅视觉缩放方案，`ExpressiveButtonMotion.kt` 改为共享 `rememberMaterialExpressivePressExpansion`，将按压扩张值作为按钮内容左右真实 `Spacer` 宽度动画（每侧默认 12dp），按钮背景/圆角/描边/阴影仍由 Material3 原控件和 Aloha 主题提供；按钮的测量宽度随动画增加，ButtonGroup 兄弟项应由布局自然向两侧移动，不主动压缩邻项。`ExpressiveButton`、`ExpressiveTextButton`、`ExpressiveIconButton`、`ExpressiveToggleButton` 已接入。InteractionSource 的 Press 持续到 Release/Cancel，因此短按与长按均维持扩张，松开后使用低刚度弹簧回弹。提交：`ee87d97e`、`e44930d1`、`acc9e152`、`584681fc`。
 - **当前验证状态**：Actions run #2915（run id `42792884869`，提交 `584681fc`）待启动/排队；此前本轮中间提交构建已被新提交取消。还未获得新方案 APK 和真机视觉验收结果，不能提前宣称已构建通过或动画完全符合参考。测试分支与 PR #31 保持未合并 main。
+
+## 2026-11-10：修复 Material 全局圆角滑块松手闪退
+
+- 用户反馈：在 Material 主题中调整全局“圆角大小”滑块，尤其松开滑块时应用闪退；上传诊断日志显示异常为 `IllegalArgumentException: Corner size in Px can't be negative`，其中一个角半径约为 `-0.11019009px`。日志没有出现 `OutOfMemoryError`，因此没有证据支持内存泄漏判断。
+- 根因已由源码调用链确认：`SegmentedList.kt` 的 `alohaSegmentedShape()` 对四个角分别使用欠阻尼 `spring(dampingRatio = 0.45f, stiffness = 300f)`。全局圆角缩放值变化时，动画目标可能降至 `0.dp`；弹簧回弹会短暂越过零点，产生负的 `Dp` 值。
+- 闪退触发点：列表行使用该 Shape 作为 Material 3 `SegmentedListItem` 的形状，并将同一形状用于 `Modifier.shadow()` / `Modifier.border()`。Compose 的 `CornerBasedShape` 会在进入自定义 `AlohaPathShape.createOutline()` 之前解析并验证 CornerSize，因此自定义轮廓生成器内部原有的半径限制无法拦截这个负值。
+- 已在测试分支 `test/material3-expressive-button-motion-20261109` 修复：四个弹簧动画值在传入 `CutCornerShape`、`AlohaPathShape`、`RoundedCornerShape` 之前统一执行 `coerceAtLeast(0.dp)`。不更改弹簧参数、目标圆角、全局缩放范围或视觉设计，只阻止弹簧过冲产生非法负圆角。
+- 产品源码提交：`243e73e115775ba0f322e456436d566c0320c7cc`（`fix: clamp animated Material corner radii before shape creation`）。`main` 未修改。
+- 当前尚未核验该提交对应的 GitHub Actions 构建结果，也未生成/验收新的 APK；不能宣称设备闪退已经实测消除。下一步必须检查最新 Actions 编译与签名步骤，若失败按日志继续修复；构建成功后再核对 APK 包名、版本、签名与 SHA-256，并在设备上复测圆角滑块拖动、松手及 0/最大值边界。
