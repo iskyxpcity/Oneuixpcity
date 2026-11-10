@@ -581,7 +581,7 @@ fun alohaOneUISegmentedColors(): ListItemColors = ListItemDefaults.segmentedColo
 
 /**
  * Segmented-row corner rule:
- * 16dp outer / 4dp inner corners, animated with dampingRatio=0.4 and stiffness=200.
+ * 25dp outer / 4dp inner corners, animated with dampingRatio=0.4 and stiffness=200.
  * vertical=true joins rows top-to-bottom; false joins selection buttons left-to-right.
  */
 @Composable
@@ -618,22 +618,22 @@ fun alohaSegmentedShape(
     val outerPressedRadius = if (count > 1 && (first || last)) 4.dp else 8.dp
     val cornerAnimation: FiniteAnimationSpec<Dp> = if (progress != null) snap() else spring(dampingRatio = 0.45f, stiffness = 300f)
     val topStart by animateDpAsState(
-        targetValue = corner(if (first) 20.dp else 4.dp, outerPressedRadius),
+        targetValue = corner(if (first) 25.dp else 4.dp, outerPressedRadius),
         animationSpec = cornerAnimation,
         label = "alohaSegmentTopStart",
     )
     val topEnd by animateDpAsState(
-        targetValue = corner(if (if (vertical) first else last) 20.dp else 4.dp, outerPressedRadius),
+        targetValue = corner(if (if (vertical) first else last) 25.dp else 4.dp, outerPressedRadius),
         animationSpec = cornerAnimation,
         label = "alohaSegmentTopEnd",
     )
     val bottomEnd by animateDpAsState(
-        targetValue = corner(if (last) 20.dp else 4.dp, outerPressedRadius),
+        targetValue = corner(if (last) 25.dp else 4.dp, outerPressedRadius),
         animationSpec = cornerAnimation,
         label = "alohaSegmentBottomEnd",
     )
     val bottomStart by animateDpAsState(
-        targetValue = corner(if (if (vertical) last else first) 20.dp else 4.dp, outerPressedRadius),
+        targetValue = corner(if (if (vertical) last else first) 25.dp else 4.dp, outerPressedRadius),
         animationSpec = cornerAnimation,
         label = "alohaSegmentBottomStart",
     )
