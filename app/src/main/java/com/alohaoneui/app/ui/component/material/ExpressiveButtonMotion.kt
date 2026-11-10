@@ -69,8 +69,8 @@ internal fun rememberMaterialExpressivePressExpansion(
                             expansion.animateTo(
                                 0f,
                                 spring(
-                                    dampingRatio = 0.42f,
-                                    stiffness = 320f,
+                                    dampingRatio = 0.62f,
+                                    stiffness = 360f,
                                 ),
                             )
                         }
@@ -87,8 +87,8 @@ internal fun rememberMaterialExpressivePressExpansion(
                             expansion.animateTo(
                                 0f,
                                 spring(
-                                    dampingRatio = 0.46f,
-                                    stiffness = 340f,
+                                    dampingRatio = 0.66f,
+                                    stiffness = 380f,
                                 ),
                             )
                         }
