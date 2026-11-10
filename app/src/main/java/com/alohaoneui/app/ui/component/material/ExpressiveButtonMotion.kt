@@ -8,24 +8,28 @@ import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.runtime.remember
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collect
 
 /**
- * Shared Material 3 Expressive press response.
- * A press always completes its expansion before the spring returns to rest,
- * even when the pointer is released before the expansion animation finishes.
+ * Width-based Material press feedback. The animated value is inserted as real
+ * leading/trailing content spacing so the button's surface expands in layout,
+ * fills its shape, and pushes siblings apart instead of scaling over them.
+ * Press interactions include pointer long-press: the expansion remains active
+ * until Release/Cancel, then springs back.
  */
 @Composable
-internal fun Modifier.materialExpressivePressMotion(
+internal fun rememberMaterialExpressivePressExpansion(
     interactionSource: InteractionSource,
     enabled: Boolean = true,
-): Modifier {
-    val scale = androidx.compose.runtime.remember(interactionSource) { Animatable(1f) }
-    LaunchedEffect(interactionSource, enabled) {
+    expansionPerSide: Dp = 12.dp,
+): Dp {
+    val expansion = remember(interactionSource) { Animatable(0f) }
+    LaunchedEffect(interactionSource, enabled, expansionPerSide) {
         if (!enabled) {
-            scale.snapTo(1f)
+            expansion.snapTo(0f)
             return@LaunchedEffect
         }
         var activePress: PressInteraction.Press? = null
@@ -33,27 +37,21 @@ internal fun Modifier.materialExpressivePressMotion(
             when (interaction) {
                 is PressInteraction.Press -> {
                     activePress = interaction
-                    // This call is intentionally awaited: Release is handled only
-                    // after the full expansion has reached its target.
-                    scale.animateTo(1.085f, spring(dampingRatio = 0.72f, stiffness = Spring.StiffnessLow))
+                    expansion.animateTo(
+                        expansionPerSide.value,
+                        spring(dampingRatio = 0.72f, stiffness = Spring.StiffnessLow),
+                    )
                 }
-                is PressInteraction.Release -> {
-                    if (activePress == interaction.press) {
-                        activePress = null
-                        scale.animateTo(1f, spring(dampingRatio = 0.72f, stiffness = Spring.StiffnessLow))
-                    }
+                is PressInteraction.Release -> if (activePress == interaction.press) {
+                    activePress = null
+                    expansion.animateTo(0f, spring(dampingRatio = 0.72f, stiffness = Spring.StiffnessLow))
                 }
-                is PressInteraction.Cancel -> {
-                    if (activePress == interaction.press) {
-                        activePress = null
-                        scale.animateTo(1f, spring(dampingRatio = 0.72f, stiffness = Spring.StiffnessLow))
-                    }
+                is PressInteraction.Cancel -> if (activePress == interaction.press) {
+                    activePress = null
+                    expansion.animateTo(0f, spring(dampingRatio = 0.72f, stiffness = Spring.StiffnessLow))
                 }
             }
         }
     }
-    return graphicsLayer {
-        scaleX = scale.value
-        scaleY = scale.value
-    }
+    return expansion.value.dp
 }
