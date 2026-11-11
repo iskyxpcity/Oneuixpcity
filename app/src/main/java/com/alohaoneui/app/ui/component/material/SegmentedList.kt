@@ -265,226 +265,6 @@ private class AlohaPathShape private constructor(
         }
     }
 
-    private data class WaveFrame(
-        val x: Float,
-        val y: Float,
-        val tangentX: Float,
-        val tangentY: Float,
-    )
-
-    private data class WaveSample(
-        val x: Float,
-        val y: Float,
-        val derivativeX: Float,
-        val derivativeY: Float,
-    )
-
-    /**
-     * Appends a PH-quintic-derived G² corner approximation. The normalized control polygon is
-     * (0,0), (c,0), (c,0), (1,1-c), (1,1-c), (1,1), where
-     * c = 3(6-sqrt(2))/17. Compose Path exposes cubic segments, so the quintic
-     * is approximated by eight short cubic Hermite spans using its analytic
-     * position and tangent. This keeps the corner smooth without per-frame
-     * numerical solving or trigonometric work.
-     *
-     * orientation: 0=top-right, 1=bottom-right, 2=bottom-left, 3=top-left.
-     */
-    private fun appendPhQuinticCorner(
-        path: Path,
-        originX: Float,
-        originY: Float,
-        radius: Float,
-        orientation: Int,
-    ) {
-        fun mapX(x: Float, y: Float): Float = when (orientation) {
-            1 -> -y
-            2 -> -x
-            3 -> y
-            else -> x
-        }
-        fun mapY(x: Float, y: Float): Float = when (orientation) {
-            1 -> x
-            2 -> -y
-            3 -> -x
-            else -> y
-        }
-
-        // Six normalized values per span: C1.x/y, C2.x/y, endpoint.x/y.
-        // The eight cubic Hermite spans are generated once in the companion object.
-        val spans = PH_QUINTIC_CUBIC_SPANS
-        var offset = 0
-        while (offset < spans.size) {
-            val c1x = spans[offset]
-            val c1y = spans[offset + 1]
-            val c2x = spans[offset + 2]
-            val c2y = spans[offset + 3]
-            val endX = spans[offset + 4]
-            val endY = spans[offset + 5]
-            path.cubicTo(
-                originX + radius * mapX(c1x, c1y),
-                originY + radius * mapY(c1x, c1y),
-                originX + radius * mapX(c2x, c2y),
-                originY + radius * mapY(c2x, c2y),
-                originX + radius * mapX(endX, endY),
-                originY + radius * mapY(endX, endY),
-            )
-            offset += 6
-        }
-    }
-
-    private fun roundedRectWaveFrameAt(
-        distance: Float,
-        width: Float,
-        height: Float,
-        topLeft: Float,
-        topRight: Float,
-        bottomRight: Float,
-        bottomLeft: Float,
-    ): WaveFrame {
-        val topLength = (width - topLeft - topRight).coerceAtLeast(0f)
-        val rightLength = (height - topRight - bottomRight).coerceAtLeast(0f)
-        val bottomLength = (width - bottomRight - bottomLeft).coerceAtLeast(0f)
-        val leftLength = (height - bottomLeft - topLeft).coerceAtLeast(0f)
-        val topRightArc = topRight * (kotlin.math.PI.toFloat() / 2f)
-        val bottomRightArc = bottomRight * (kotlin.math.PI.toFloat() / 2f)
-        val bottomLeftArc = bottomLeft * (kotlin.math.PI.toFloat() / 2f)
-        val topLeftArc = topLeft * (kotlin.math.PI.toFloat() / 2f)
-        var d = distance.coerceAtLeast(0f)
-
-        if (d < topLength) return WaveFrame(topLeft + d, 0f, 1f, 0f)
-        d -= topLength
-        if (d < topRightArc && topRight > 0f) {
-            val angle = -kotlin.math.PI.toFloat() / 2f + d / topRight
-            val cos = kotlin.math.cos(angle)
-            val sin = kotlin.math.sin(angle)
-            return WaveFrame(
-                width - topRight + topRight * cos,
-                topRight + topRight * sin,
-                -sin,
-                cos,
-            )
-        }
-        d -= topRightArc
-        if (d < rightLength) return WaveFrame(width, topRight + d, 0f, 1f)
-        d -= rightLength
-        if (d < bottomRightArc && bottomRight > 0f) {
-            val angle = d / bottomRight
-            val cos = kotlin.math.cos(angle)
-            val sin = kotlin.math.sin(angle)
-            return WaveFrame(
-                width - bottomRight + bottomRight * cos,
-                height - bottomRight + bottomRight * sin,
-                -sin,
-                cos,
-            )
-        }
-        d -= bottomRightArc
-        if (d < bottomLength) return WaveFrame(width - bottomRight - d, height, -1f, 0f)
-        d -= bottomLength
-        if (d < bottomLeftArc && bottomLeft > 0f) {
-            val angle = kotlin.math.PI.toFloat() / 2f + d / bottomLeft
-            val cos = kotlin.math.cos(angle)
-            val sin = kotlin.math.sin(angle)
-            return WaveFrame(
-                bottomLeft + bottomLeft * cos,
-                height - bottomLeft + bottomLeft * sin,
-                -sin,
-                cos,
-            )
-        }
-        d -= bottomLeftArc
-        if (d < leftLength) return WaveFrame(0f, height - bottomLeft - d, 0f, -1f)
-        d -= leftLength
-        if (d < topLeftArc && topLeft > 0f) {
-            val angle = kotlin.math.PI.toFloat() + d / topLeft
-            val cos = kotlin.math.cos(angle)
-            val sin = kotlin.math.sin(angle)
-            return WaveFrame(
-                topLeft + topLeft * cos,
-                topLeft + topLeft * sin,
-                -sin,
-                cos,
-            )
-        }
-        return WaveFrame(topLeft, 0f, 1f, 0f)
-    }
-
-    private fun appendWavyPerimeter(
-        path: Path,
-        width: Float,
-        height: Float,
-        topLeft: Float,
-        topRight: Float,
-        bottomRight: Float,
-        bottomLeft: Float,
-        densityScale: Float,
-    ) {
-        val topLength = (width - topLeft - topRight).coerceAtLeast(0f)
-        val rightLength = (height - topRight - bottomRight).coerceAtLeast(0f)
-        val bottomLength = (width - bottomRight - bottomLeft).coerceAtLeast(0f)
-        val leftLength = (height - bottomLeft - topLeft).coerceAtLeast(0f)
-        val cornerSum = topLeft + topRight + bottomRight + bottomLeft
-        val perimeter = topLength + rightLength + bottomLength + leftLength +
-            cornerSum * (kotlin.math.PI.toFloat() / 2f)
-        val minDimension = minOf(width, height)
-        if (perimeter <= 0.5f || minDimension <= 0f) {
-            path.addRoundRect(androidx.compose.ui.geometry.RoundRect(0f, 0f, width, height))
-            return
-        }
-
-        var smallestCorner = minDimension * 0.05f
-        if (topLeft > 0f) smallestCorner = minOf(smallestCorner, topLeft)
-        if (topRight > 0f) smallestCorner = minOf(smallestCorner, topRight)
-        if (bottomRight > 0f) smallestCorner = minOf(smallestCorner, bottomRight)
-        if (bottomLeft > 0f) smallestCorner = minOf(smallestCorner, bottomLeft)
-        // A small gear-like ripple: fixed physical amplitude and equal arc-length
-        // pitch keep every tooth the same size on straight edges and corner arcs.
-        // Fewer, simpler half-wave spans also reduce outline construction work.
-        val amplitude = minOf(
-            0.55f * densityScale,
-            minDimension * 0.012f,
-            smallestCorner * 0.075f,
-        ).coerceAtLeast(0f)
-        val wavePitch = (22f * densityScale).coerceAtLeast(1f)
-        val waveCount = (perimeter / wavePitch).toInt().coerceIn(3, 24)
-        val segments = waveCount * 2
-        val step = perimeter / segments
-        val angularFrequency = (2f * kotlin.math.PI.toFloat() * waveCount) / perimeter
-
-        fun sample(index: Int): WaveSample {
-            val frame = roundedRectWaveFrameAt(
-                index * step, width, height, topLeft, topRight, bottomRight, bottomLeft,
-            )
-            // A plain, low-amplitude sinusoidal ripple; no harmonic overshoot.
-            val sign = if (index % 2 == 0) 1f else -1f
-            val displacementDerivative = amplitude * angularFrequency * sign
-            val normalX = frame.tangentY
-            val normalY = -frame.tangentX
-            return WaveSample(
-                frame.x,
-                frame.y,
-                frame.tangentX + normalX * displacementDerivative,
-                frame.tangentY + normalY * displacementDerivative,
-            )
-        }
-
-        val first = sample(0)
-        path.moveTo(first.x, first.y)
-        for (index in 0 until segments) {
-            val start = sample(index)
-            val end = sample(index + 1)
-            path.cubicTo(
-                start.x + start.derivativeX * step / 3f,
-                start.y + start.derivativeY * step / 3f,
-                end.x - end.derivativeX * step / 3f,
-                end.y - end.derivativeY * step / 3f,
-                end.x,
-                end.y,
-            )
-        }
-        path.close()
-    }
-
     private fun createAlohaOutline(
         size: Size,
         layoutDirection: LayoutDirection,
@@ -559,16 +339,6 @@ private class AlohaPathShape private constructor(
                 if (tl > 0f) appendPhQuinticCorner(path, 0f, tl, tl, 3)
                 else path.lineTo(0f, 0f)
             }
-            4 -> {
-                // Wavy is generated along the complete rounded-rectangle perimeter.
-                // The periodic normal displacement continues through all four arcs,
-                // rather than stopping at each straight edge.
-                if (w <= 0f || h <= 0f) {
-                    path.addRoundRect(androidx.compose.ui.geometry.RoundRect(0f, 0f, w, h))
-                } else {
-                    appendWavyPerimeter(path, w, h, tl, tr, br, bl, densityScale)
-                }
-            }
             5 -> {
                 path.moveTo(tl, 0f)
                 path.lineTo(w - tr, 0f)
@@ -617,8 +387,11 @@ fun alohaCornerShape(radius: androidx.compose.ui.unit.Dp): CornerBasedShape {
     val densityScale = LocalDensity.current.density
     return when (style) {
         1 -> remember(style, scaledRadius) { CutCornerShape(scaledRadius) }
-        2, 3, 4, 5, 6 -> remember(style, scaledRadius, densityScale) {
+        2, 3, 5, 6 -> remember(style, scaledRadius, densityScale) {
             AlohaPathShape(style, densityScale, scaledRadius, scaledRadius, scaledRadius, scaledRadius)
+        }
+        4 -> remember(style, scaledRadius, densityScale) {
+            WavyShape(densityScale, scaledRadius, scaledRadius, scaledRadius, scaledRadius)
         }
         else -> remember(style, scaledRadius) { RoundedCornerShape(scaledRadius) }
     }
@@ -711,7 +484,8 @@ fun alohaSegmentedShape(
 
     return when (LocalMaterialShapeStyle.current) {
         1 -> CutCornerShape(safeTopStart, safeTopEnd, safeBottomEnd, safeBottomStart)
-        2, 3, 4, 5, 6 -> AlohaPathShape(LocalMaterialShapeStyle.current, densityScale, safeTopStart, safeTopEnd, safeBottomEnd, safeBottomStart)
+        2, 3, 5, 6 -> AlohaPathShape(LocalMaterialShapeStyle.current, densityScale, safeTopStart, safeTopEnd, safeBottomEnd, safeBottomStart)
+        4 -> WavyShape(densityScale, safeTopStart, safeTopEnd, safeBottomEnd, safeBottomStart)
         else -> RoundedCornerShape(safeTopStart, safeTopEnd, safeBottomEnd, safeBottomStart)
     }
 }
