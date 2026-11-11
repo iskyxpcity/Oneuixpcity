@@ -1804,3 +1804,13 @@
 - 额外兼容性修正：将 groupExpansionPerSide 参数放在原有 overflowIndicator 参数之后、content 之前，避免改变 ExpressiveButtonGroup 既有前置参数的 Kotlin 位置参数顺序。提交 b3087b7f；测试分支内完成，main 未修改。
 
 - 最终收敛：为避免给全项目按钮组 API 增加可变参数，12dp 上限改为 ExpressiveControls.kt 内部私有常量 MaterialButtonGroupExpansionPerSide；ExpressiveButtonGroup 只负责向组作用域提供该常量，不向页面暴露独立配置项。这样所有页面共用同一个固定主题值，原有 ExpressiveButtonGroup 函数签名保持不变。提交 0118cf12，覆盖前一条关于公开 groupExpansionPerSide 参数的记录。
+
+
+## 2026-11-10：修复非首页按钮组未扩张
+
+- 用户反馈仅首页按钮组出现横向扩张。回查所有 `ExpressiveButtonGroup` 实际调用点，发现首页 `HomeDeviceTools.kt` 的 `ExpressiveToggleButton` 显式传入 `shapeIndex/shapeCount`；其他页面（包括 `StatusComboStyleOneCategoryControls.kt`、`ColorPaletteScreenMaterial.kt`）依赖 `ButtonGroup` 提供的形状，未传这两个可选参数。
+- 根因是 `ExpressiveToggleButton.kt` 错误地使用 `shapeCount > 1` 判断是否属于按钮组。未显式传 `shapeCount` 的合法组内按钮默认值为 1，因此虽然处于 `ExpressiveButtonGroup` 的统一作用域内，仍被挡掉横向扩张。这正是首页有效、其他页面无效的原因。
+- 已删除 `shapeCount > 1` 门槛：是否处于按钮组由 `LocalMaterialButtonGroupExpansionPerSide` 作用域决定；只要在统一 `ExpressiveButtonGroup` 内且 `pressMotionEnabled` 开启，就使用统一每侧 12dp 上限乘以既有按压进度。`shapeIndex/shapeCount` 只负责形状分段，不再兼任组成员检测。
+- 保留组外默认 0dp，因此独立按钮不横向扩大；保留扩张 Spring 300f/0.35f、回缩 Spring 100f/0.35f、内部16dp按压动画目标、Material动态颜色、阴影和触觉反馈；不改 Miuix。
+- 修复提交：922f0f7a（`fix: expand every toggle inside shared Material button groups`），仅测试分支 `test/material3-expressive-button-motion-20261109`。
+- `ExpressiveButtonGroup` 的已定位调用点包含首页设备信息分组、状态栏三合一分类页、颜色主题页，以及功能页的移动操作文本按钮组。后三类需要分别按其控件类型和现有动画策略验证；本次针对缺失 `shapeCount` 的 ToggleButton 组修复。尚未取得本提交对应 Actions 构建结果，不能提前宣称 APK 构建通过。
