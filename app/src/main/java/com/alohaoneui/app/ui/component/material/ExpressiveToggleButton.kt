@@ -93,7 +93,7 @@ fun ExpressiveToggleButton(
             // Only segmented/group members expand horizontally. Standalone
             // toggles (shapeCount == 1) keep their measured width unchanged.
             val groupExpansion = if (shapeCount > 1 && pressMotionEnabled) {
-                (pressExpansion.value * 0.30f).coerceAtLeast(0f)
+                (pressExpansion.value * 0.75f).coerceAtLeast(0f)
             } else 0f
             Spacer(Modifier.width(groupExpansion.dp))
             content()
