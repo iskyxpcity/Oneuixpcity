@@ -18,6 +18,11 @@ import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.rememberDynamicColorScheme
 
+
+/** Retained historical animation trace identifier; not a persisted preference key. */
+@Suppress("unused")
+private const val LEGACY_THEME_COLOR_ANIMATION_LABEL = "oneuixp_theme_color_animation"
+
 /**
  * Adapted from the KernelSU v3.3.1 theme layer under GPL-3.0.
  * Kept as a AlohaOneUI-local theme helper; no KernelSU functionality is included.
