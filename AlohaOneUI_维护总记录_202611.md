@@ -1802,3 +1802,5 @@
 - 当前仅确认两处源码更新提交成功；仍需检查最终 HEAD 的 Actions 编译、签名 APK 构建和包名/证书校验。构建成功也不代替真机按钮组触控与视觉验收。
 
 - 额外兼容性修正：将 groupExpansionPerSide 参数放在原有 overflowIndicator 参数之后、content 之前，避免改变 ExpressiveButtonGroup 既有前置参数的 Kotlin 位置参数顺序。提交 b3087b7f；测试分支内完成，main 未修改。
+
+- 最终收敛：为避免给全项目按钮组 API 增加可变参数，12dp 上限改为 ExpressiveControls.kt 内部私有常量 MaterialButtonGroupExpansionPerSide；ExpressiveButtonGroup 只负责向组作用域提供该常量，不向页面暴露独立配置项。这样所有页面共用同一个固定主题值，原有 ExpressiveButtonGroup 函数签名保持不变。提交 0118cf12，覆盖前一条关于公开 groupExpansionPerSide 参数的记录。
