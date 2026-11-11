@@ -248,6 +248,67 @@ private data class AlohaG2Profile(
     }
 }
 
+/**
+ * Precomputes a cubic-Hermite approximation of the canonical PH quintic once.
+ * Runtime Shape creation only rotates and scales these fixed normalized controls.
+ */
+private fun createAlohaPhQuinticCubicSpans(): FloatArray {
+    val c = 0.80925643f
+    val count = 12
+    val dt = 1f / count
+    val result = FloatArray(count * 6)
+
+    fun x(t: Float): Float {
+        val u = 1f - t
+        val u2 = u * u
+        val t2 = t * t
+        val b1 = 5f * u2 * u2 * t
+        val b2 = 10f * u2 * u * t2
+        val b3 = 10f * u2 * t * t2
+        val b4 = 5f * u * t2 * t2
+        val b5 = t2 * t2 * t
+        return c * (b1 + b2) + b3 + b4 + b5
+    }
+    fun y(t: Float): Float {
+        val u = 1f - t
+        val u2 = u * u
+        val t2 = t * t
+        val b3 = 10f * u2 * t * t2
+        val b4 = 5f * u * t2 * t2
+        val b5 = t2 * t2 * t
+        return (1f - c) * (b3 + b4) + b5
+    }
+    fun dx(t: Float): Float {
+        val u = 1f - t
+        val u2 = u * u
+        val t2 = t * t
+        return 5f * c * u2 * u2 + 30f * (1f - c) * u2 * t2
+    }
+    fun dy(t: Float): Float {
+        val u = 1f - t
+        val u2 = u * u
+        val t2 = t * t
+        return 30f * (1f - c) * u2 * t2 + 5f * c * t2 * t2
+    }
+
+    for (index in 0 until count) {
+        val t0 = index * dt
+        val t1 = (index + 1) * dt
+        val c1x = x(t0) + dx(t0) * dt / 3f
+        val c1y = y(t0) + dy(t0) * dt / 3f
+        val c2x = x(t1) - dx(t1) * dt / 3f
+        val c2y = y(t1) - dy(t1) * dt / 3f
+        val offset = index * 6
+        result[offset] = c1x
+        result[offset + 1] = c1y
+        result[offset + 2] = c2x
+        result[offset + 3] = c2y
+        result[offset + 4] = x(t1)
+        result[offset + 5] = y(t1)
+    }
+    return result
+}
+
 private class AlohaPathShape private constructor(
     private val style: Int,
     private val densityScale: Float,
@@ -326,6 +387,7 @@ private class AlohaPathShape private constructor(
 
     private companion object {
         private const val PH_QUINTIC_CORNER_CONTROL = 0.80925643f
+        private val PH_QUINTIC_CUBIC_SPANS = createAlohaPhQuinticCubicSpans()
 
         // Bounded process-wide LRU: reuse equal outlines across rows/components,
         // while limiting retained Path objects when users explore many radii.
@@ -333,8 +395,6 @@ private class AlohaPathShape private constructor(
             override fun removeEldestEntry(eldest: MutableMap.MutableEntry<OutlineKey, Outline>?): Boolean = size > 768
         }
     }
-
-    private data class GeometryPoint(val x: Float, val y: Float)
 
     private data class WaveFrame(
         val x: Float,
@@ -368,10 +428,6 @@ private class AlohaPathShape private constructor(
         radius: Float,
         orientation: Int,
     ) {
-        val c = PH_QUINTIC_CORNER_CONTROL
-        val spans = 12
-        val dt = 1f / spans
-
         fun mapX(x: Float, y: Float): Float = when (orientation) {
             1 -> -y
             2 -> -x
@@ -384,55 +440,27 @@ private class AlohaPathShape private constructor(
             3 -> -x
             else -> y
         }
-        fun point(t: Float): GeometryPoint {
-            val u = 1f - t
-            val u2 = u * u
-            val t2 = t * t
-            val b1 = 5f * u2 * u2 * t
-            val b2 = 10f * u2 * u * t2
-            val b3 = 10f * u2 * t * t2
-            val b4 = 5f * u * t2 * t2
-            val b5 = t2 * t2 * t
-            return GeometryPoint(
-                c * (b1 + b2) + b3 + b4 + b5,
-                (1f - c) * (b3 + b4) + b5,
-            )
-        }
-        fun derivative(t: Float): GeometryPoint {
-            val u = 1f - t
-            val u2 = u * u
-            val t2 = t * t
-            val first = 5f * c * u2 * u2
-            val middle = 30f * (1f - c) * u2 * t2
-            val last = 5f * c * t2 * t2
-            return GeometryPoint(first + middle, middle + last)
-        }
-        fun absoluteX(p: GeometryPoint): Float = originX + radius * mapX(p.x, p.y)
-        fun absoluteY(p: GeometryPoint): Float = originY + radius * mapY(p.x, p.y)
 
-        for (index in 0 until spans) {
-            val t0 = index * dt
-            val t1 = (index + 1) * dt
-            val p0 = point(t0)
-            val p1 = point(t1)
-            val d0 = derivative(t0)
-            val d1 = derivative(t1)
-            val control1 = GeometryPoint(
-                p0.x + d0.x * dt / 3f,
-                p0.y + d0.y * dt / 3f,
-            )
-            val control2 = GeometryPoint(
-                p1.x - d1.x * dt / 3f,
-                p1.y - d1.y * dt / 3f,
-            )
+        // Six normalized values per span: C1.x/y, C2.x/y, endpoint.x/y.
+        // The 12 cubic Hermite spans are generated once in the companion object.
+        val spans = PH_QUINTIC_CUBIC_SPANS
+        var offset = 0
+        while (offset < spans.size) {
+            val c1x = spans[offset]
+            val c1y = spans[offset + 1]
+            val c2x = spans[offset + 2]
+            val c2y = spans[offset + 3]
+            val endX = spans[offset + 4]
+            val endY = spans[offset + 5]
             path.cubicTo(
-                originX + radius * mapX(control1.x, control1.y),
-                originY + radius * mapY(control1.x, control1.y),
-                originX + radius * mapX(control2.x, control2.y),
-                originY + radius * mapY(control2.x, control2.y),
-                absoluteX(p1),
-                absoluteY(p1),
+                originX + radius * mapX(c1x, c1y),
+                originY + radius * mapY(c1x, c1y),
+                originX + radius * mapX(c2x, c2y),
+                originY + radius * mapY(c2x, c2y),
+                originX + radius * mapX(endX, endY),
+                originY + radius * mapY(endX, endY),
             )
+            offset += 6
         }
     }
 
@@ -557,36 +585,32 @@ private class AlohaPathShape private constructor(
         val angularFrequency = (2f * kotlin.math.PI.toFloat() * waveCount) / perimeter
         val harmonicScale = 1f / 1.22f
 
-        fun sample(distance: Float): WaveSample {
+        fun sample(index: Int): WaveSample {
+            val distance = index * step
             val frame = roundedRectWaveFrameAt(
                 distance, width, height, topLeft, topRight, bottomRight, bottomLeft,
             )
-            val phase = angularFrequency * distance
-            val sin1 = kotlin.math.sin(phase)
-            val cos1 = kotlin.math.cos(phase)
-            val sin3 = kotlin.math.sin(3f * phase)
-            val cos3 = kotlin.math.cos(3f * phase)
-            val displacement = amplitude * (sin1 + 0.22f * sin3) * harmonicScale
+            // Every segment ends at a zero crossing (half-wave interval), so
+            // the wave displacement is exactly zero there. The harmonic blend
+            // is folded into the analytic slope; no per-point trig is required.
+            val sign = if (index % 2 == 0) 1f else -1f
             val displacementDerivative = amplitude * angularFrequency *
-                (cos1 + 0.66f * cos3) * harmonicScale
+                (1f + 0.66f) / 1.22f * sign
             val normalX = frame.tangentY
             val normalY = -frame.tangentX
-            val tangentScale = 1f + displacement * frame.curvature
             return WaveSample(
-                frame.x + normalX * displacement,
-                frame.y + normalY * displacement,
-                frame.tangentX * tangentScale + normalX * displacementDerivative,
-                frame.tangentY * tangentScale + normalY * displacementDerivative,
+                frame.x,
+                frame.y,
+                frame.tangentX + normalX * displacementDerivative,
+                frame.tangentY + normalY * displacementDerivative,
             )
         }
 
-        val first = sample(0f)
+        val first = sample(0)
         path.moveTo(first.x, first.y)
         for (index in 0 until segments) {
-            val startDistance = index * step
-            val endDistance = (index + 1) * step
-            val start = sample(startDistance)
-            val end = sample(endDistance)
+            val start = sample(index)
+            val end = sample(index + 1)
             path.cubicTo(
                 start.x + start.derivativeX * step / 3f,
                 start.y + start.derivativeY * step / 3f,
