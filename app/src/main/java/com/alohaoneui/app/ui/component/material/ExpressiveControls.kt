@@ -35,6 +35,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -45,6 +47,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -53,17 +56,21 @@ import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 
 /**
+ * The group container is the single source of truth for horizontal press expansion.
+ * Standalone buttons receive zero and therefore never change their measured width.
+ */
+internal val LocalMaterialButtonGroupExpansionPerSide = compositionLocalOf { 0.dp }
+
+/**
  * Project-wide Material 3 Expressive button-group container.
- *
- * Each child button owns its own width-based press expansion. The animated
- * leading/trailing content changes the child's measured width, allowing the
- * ButtonGroup layout to move adjacent buttons apart without compressing them.
+ * All group members read the same per-side expansion limit from this scope.
  */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ExpressiveButtonGroup(
     modifier: Modifier = Modifier.fillMaxWidth(),
     expandedRatio: Float = 0.30f,
+    groupExpansionPerSide: Dp = 12.dp,
     horizontalArrangement: Arrangement.Horizontal = Arrangement.Center,
     verticalAlignment: Alignment.Vertical = Alignment.Top,
     overflowIndicator: @Composable (ButtonGroupMenuState) -> Unit = { menuState ->
@@ -77,14 +84,18 @@ fun ExpressiveButtonGroup(
     },
     content: ButtonGroupScope.() -> Unit,
 ) {
-    ButtonGroup(
-        overflowIndicator = overflowIndicator,
-        modifier = modifier,
-        expandedRatio = expandedRatio,
-        horizontalArrangement = horizontalArrangement,
-        verticalAlignment = verticalAlignment,
-        content = content,
-    )
+    CompositionLocalProvider(
+        LocalMaterialButtonGroupExpansionPerSide provides groupExpansionPerSide.coerceAtLeast(0.dp),
+    ) {
+        ButtonGroup(
+            overflowIndicator = overflowIndicator,
+            modifier = modifier,
+            expandedRatio = expandedRatio,
+            horizontalArrangement = horizontalArrangement,
+            verticalAlignment = verticalAlignment,
+            content = content,
+        )
+    }
 }
 
 /**
