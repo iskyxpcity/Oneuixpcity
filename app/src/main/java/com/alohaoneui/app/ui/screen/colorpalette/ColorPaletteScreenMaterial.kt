@@ -1046,6 +1046,7 @@ fun ColorPaletteScreenMaterial(
             Spacer(modifier = Modifier.height(16.dp + navBars.calculateBottomPadding() + captionBar.calculateBottomPadding()))
         }
     }
+    }
 }
 
 @SuppressLint("ConfigurationScreenWidthHeight")
