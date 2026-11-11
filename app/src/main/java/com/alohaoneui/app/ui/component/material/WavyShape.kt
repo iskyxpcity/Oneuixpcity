@@ -176,8 +176,8 @@ internal class WavyShape private constructor(
                     val s = sin(angle)
                     frame[0] = width - bottomRight + bottomRight * c
                     frame[1] = height - bottomRight + bottomRight * s
-                    frame[2] = s
-                    frame[3] = -c
+                    frame[2] = c
+                    frame[3] = s
                     return
                 }
                 d -= brArc
@@ -195,8 +195,8 @@ internal class WavyShape private constructor(
                     val s = sin(angle)
                     frame[0] = bottomLeft + bottomLeft * c
                     frame[1] = height - bottomLeft + bottomLeft * s
-                    frame[2] = s
-                    frame[3] = -c
+                    frame[2] = c
+                    frame[3] = s
                     return
                 }
                 d -= blArc
@@ -214,8 +214,8 @@ internal class WavyShape private constructor(
                     val s = sin(angle)
                     frame[0] = topLeft + topLeft * c
                     frame[1] = topLeft + topLeft * s
-                    frame[2] = s
-                    frame[3] = -c
+                    frame[2] = c
+                    frame[3] = s
                 } else {
                     frame[0] = topLeft
                     frame[1] = 0f
