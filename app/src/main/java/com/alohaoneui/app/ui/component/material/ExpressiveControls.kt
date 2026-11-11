@@ -47,7 +47,6 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -59,6 +58,7 @@ import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
  * The group container is the single source of truth for horizontal press expansion.
  * Standalone buttons receive zero and therefore never change their measured width.
  */
+private val MaterialButtonGroupExpansionPerSide = 12.dp
 internal val LocalMaterialButtonGroupExpansionPerSide = compositionLocalOf { 0.dp }
 
 /**
@@ -81,11 +81,10 @@ fun ExpressiveButtonGroup(
             Icon(Icons.Default.MoreHoriz, contentDescription = "More options")
         }
     },
-    groupExpansionPerSide: Dp = 12.dp,
     content: ButtonGroupScope.() -> Unit,
 ) {
     CompositionLocalProvider(
-        LocalMaterialButtonGroupExpansionPerSide provides groupExpansionPerSide.coerceAtLeast(0.dp),
+        LocalMaterialButtonGroupExpansionPerSide provides MaterialButtonGroupExpansionPerSide,
     ) {
         ButtonGroup(
             overflowIndicator = overflowIndicator,
