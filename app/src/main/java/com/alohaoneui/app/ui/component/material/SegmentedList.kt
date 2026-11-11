@@ -407,8 +407,6 @@ private class AlohaPathShape private constructor(
         }
         fun absoluteX(p: GeometryPoint): Float = originX + radius * mapX(p.x, p.y)
         fun absoluteY(p: GeometryPoint): Float = originY + radius * mapY(p.x, p.y)
-        fun tangentX(p: GeometryPoint): Float = radius * mapX(p.x, p.y)
-        fun tangentY(p: GeometryPoint): Float = radius * mapY(p.x, p.y)
 
         for (index in 0 until spans) {
             val t0 = index * dt
@@ -540,13 +538,16 @@ private class AlohaPathShape private constructor(
             return
         }
 
-        val positiveCornerRadii = listOf(topLeft, topRight, bottomRight, bottomLeft).filter { it > 0f }
-        val smallestCorner = positiveCornerRadii.minOrNull() ?: (minDimension * 0.05f)
+        var smallestCorner = minDimension * 0.05f
+        if (topLeft > 0f) smallestCorner = minOf(smallestCorner, topLeft)
+        if (topRight > 0f) smallestCorner = minOf(smallestCorner, topRight)
+        if (bottomRight > 0f) smallestCorner = minOf(smallestCorner, bottomRight)
+        if (bottomLeft > 0f) smallestCorner = minOf(smallestCorner, bottomLeft)
         val amplitude = minOf(
             1.6f * densityScale,
             minDimension * 0.045f,
             smallestCorner * 0.22f,
-        ).coerceAtLeast(0.25f * densityScale)
+        ).coerceAtLeast(0f)
         val waveCount = (perimeter / (18f * densityScale).coerceAtLeast(1f))
             .toInt().coerceIn(3, 32)
         val segments = waveCount * 2
