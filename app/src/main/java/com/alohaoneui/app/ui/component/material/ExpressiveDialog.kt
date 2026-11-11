@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.MaterialTheme
@@ -97,8 +98,8 @@ fun ExpressiveConfirmDialog(
 }
 
 /**
- * Keep side-by-side dialog actions in one official expressive group so the
- * pressed action expands while its neighbor compresses.
+ * Keep side-by-side dialog actions in the shared expressive group so the
+ * pressed action expands and pushes its neighbor using the home button motion.
  */
 @Composable
 fun ExpressiveDialogActionButtons(
@@ -116,7 +117,10 @@ fun ExpressiveDialogActionButtons(
     val dismissSource = androidx.compose.runtime.remember { MutableInteractionSource() }
     val confirmSource = androidx.compose.runtime.remember { MutableInteractionSource() }
     ExpressiveButtonGroup(
-        horizontalArrangement = Arrangement.End,
+        horizontalArrangement = Arrangement.spacedBy(
+            ButtonGroupDefaults.ConnectedSpaceBetween,
+            alignment = Alignment.CenterHorizontally,
+        ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         customItem(
@@ -125,7 +129,8 @@ fun ExpressiveDialogActionButtons(
                     onClick = onDismiss,
                     modifier = Modifier,
                     interactionSource = dismissSource,
-                    
+                    shapeIndex = 0,
+                    shapeCount = 2,
                 ) { Text(dismissText) }
             },
             menuContent = { menuState ->
@@ -142,7 +147,8 @@ fun ExpressiveDialogActionButtons(
                     onClick = onConfirm,
                     modifier = Modifier,
                     interactionSource = confirmSource,
-                    
+                    shapeIndex = 1,
+                    shapeCount = 2,
                 ) { Text(confirmText) }
             },
             menuContent = { menuState ->
