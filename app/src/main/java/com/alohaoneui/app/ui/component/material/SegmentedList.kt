@@ -124,7 +124,7 @@ private val LocalSegmentedShapeConfig = compositionLocalOf<SegmentedShapeConfig?
  */
 private fun createAlohaPhQuinticCubicSpans(): FloatArray {
     val c = 0.80925643f
-    val count = 12
+    val count = 4
     val dt = 1f / count
     val result = FloatArray(count * 6)
 
@@ -283,7 +283,7 @@ private class AlohaPathShape private constructor(
      * Appends a canonical PH quintic G² corner. The normalized control polygon is
      * (0,0), (c,0), (c,0), (1,1-c), (1,1-c), (1,1), where
      * c = 3(6-sqrt(2))/17. Compose Path exposes cubic segments, so the quintic
-     * is approximated by 12 short cubic Hermite spans using its analytic
+     * is approximated by four short cubic Hermite spans using its analytic
      * position and tangent. This keeps the corner smooth without per-frame
      * numerical solving or trigonometric work.
      *
@@ -310,7 +310,7 @@ private class AlohaPathShape private constructor(
         }
 
         // Six normalized values per span: C1.x/y, C2.x/y, endpoint.x/y.
-        // The 12 cubic Hermite spans are generated once in the companion object.
+        // The four cubic Hermite spans are generated once in the companion object.
         val spans = PH_QUINTIC_CUBIC_SPANS
         var offset = 0
         while (offset < spans.size) {
