@@ -309,7 +309,7 @@ fun ColorPaletteScreenMaterial(
                 }
                 SegmentedColumn(
                     modifier = Modifier.padding(vertical = 4.dp),
-                    content = listOf(
+                    content = remember(colorStyle, colorSpec, actions) { listOf(
                         {
                             val styles = PaletteStyle.entries
                             SegmentedChoiceOptionsItem(
@@ -335,6 +335,7 @@ fun ColorPaletteScreenMaterial(
                             )
                         }
                     )
+                }
                 )
 
                 SegmentedColumn(
