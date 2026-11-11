@@ -138,10 +138,7 @@ fun ColorPaletteScreenMaterial(
     state: ColorPaletteUiState,
     actions: ColorPaletteScreenActions,
 ) {
-    val topAppBarState = rememberTopAppBarState()
-    val scrollBehavior = remember(topAppBarState) {
-        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topAppBarState)
-    }
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val uiState = state.uiState
     val currentColorMode = state.currentColorMode
     val currentKeyColor = uiState.keyColor
