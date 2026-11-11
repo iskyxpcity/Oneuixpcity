@@ -542,8 +542,9 @@ private class AlohaPathShape private constructor(
                 path.cubicTo(0f, tl * smooth, tl * smooth, 0f, tl, 0f)
             }
             3 -> {
-                // Canonical G² PH quintic corner (Farouki, 2014).
-                // Its curvature is zero where it meets each straight edge.
+                // PH quintic G² corner profile (Farouki, 2014), approximated by
+                // cached cubic spans. The source curve has zero endpoint curvature;
+                // the high-resolution approximation closely preserves that transition.
                 // Four rotated/reflected copies preserve asymmetric corner radii.
                 path.moveTo(tl, 0f)
                 path.lineTo(w - tr, 0f)
