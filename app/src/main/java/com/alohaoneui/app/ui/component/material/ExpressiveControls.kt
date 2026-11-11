@@ -70,7 +70,6 @@ internal val LocalMaterialButtonGroupExpansionPerSide = compositionLocalOf { 0.d
 fun ExpressiveButtonGroup(
     modifier: Modifier = Modifier.fillMaxWidth(),
     expandedRatio: Float = 0.30f,
-    groupExpansionPerSide: Dp = 12.dp,
     horizontalArrangement: Arrangement.Horizontal = Arrangement.Center,
     verticalAlignment: Alignment.Vertical = Alignment.Top,
     overflowIndicator: @Composable (ButtonGroupMenuState) -> Unit = { menuState ->
@@ -82,6 +81,7 @@ fun ExpressiveButtonGroup(
             Icon(Icons.Default.MoreHoriz, contentDescription = "More options")
         }
     },
+    groupExpansionPerSide: Dp = 12.dp,
     content: ButtonGroupScope.() -> Unit,
 ) {
     CompositionLocalProvider(
