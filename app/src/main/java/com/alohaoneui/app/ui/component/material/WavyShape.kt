@@ -164,15 +164,15 @@ internal class WavyShape private constructor(
                     val angle = -quarterPi + d / tr
                     val c = cos(angle)
                     val s = sin(angle)
-                    frame[0] = inset + shapeWidth - tr + topRight * c
-                    frame[1] = tr + tr * s
+                    frame[0] = inset + shapeWidth - tr + tr * c
+                    frame[1] = inset + tr + tr * s
                     frame[2] = c
                     frame[3] = s
                     return
                 }
                 d -= trArc
                 if (d < right) {
-                    frame[0] = width
+                    frame[0] = inset + shapeWidth
                     frame[1] = inset + tr + d
                     frame[2] = 1f
                     frame[3] = 0f
@@ -183,8 +183,8 @@ internal class WavyShape private constructor(
                     val angle = d / br
                     val c = cos(angle)
                     val s = sin(angle)
-                    frame[0] = width - br + br * c
-                    frame[1] = shapeHeight - br + bottomRight * s
+                    frame[0] = inset + shapeWidth - br + br * c
+                    frame[1] = inset + shapeHeight - br + br * s
                     frame[2] = c
                     frame[3] = s
                     return
@@ -232,7 +232,6 @@ internal class WavyShape private constructor(
                     frame[3] = -1f
                 }
             }
-
             for (index in 0 until sampleCount) {
                 frameAt(index * step)
                 val offset = amplitude * profile[index % profile.size]
