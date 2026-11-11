@@ -90,14 +90,16 @@ fun ExpressiveToggleButton(
         } else null,
         interactionSource = actualInteractionSource,
         content = {
-            // Only segmented/group members expand horizontally. Standalone
-            // toggles (shapeCount == 1) keep their measured width unchanged.
+            // The group container supplies the one shared expansion limit.
+            // Outside ExpressiveButtonGroup the CompositionLocal is 0.dp,
+            // so standalone toggles only morph their themed shape.
+            val groupExpansionPerSide = LocalMaterialButtonGroupExpansionPerSide.current
             val groupExpansion = if (shapeCount > 1 && pressMotionEnabled) {
-                (pressExpansion.value * 0.75f).coerceAtLeast(0f)
-            } else 0f
-            Spacer(Modifier.width(groupExpansion.dp))
+                groupExpansionPerSide * shapeProgress
+            } else 0.dp
+            Spacer(Modifier.width(groupExpansion))
             content()
-            Spacer(Modifier.width(groupExpansion.dp))
+            Spacer(Modifier.width(groupExpansion))
         },
     )
 }
