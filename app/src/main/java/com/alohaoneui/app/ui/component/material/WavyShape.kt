@@ -12,6 +12,7 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Independent Wavy geometry engine.
@@ -80,28 +81,18 @@ internal class WavyShape private constructor(
         val bl = if (layoutDirection == LayoutDirection.Ltr) bs else be
         val key = Key(density, size.width, size.height, layoutDirection, tl, tr, br, bl)
 
-        synchronized(cache) {
-            cache[key]?.let { return it }
-        }
+        cache[key]?.let { return it }
         val outline = buildOutline(size.width, size.height, tl, tr, br, bl, density)
-        synchronized(cache) {
-            cache[key]?.let { return it }
-            cache[key] = outline
-        }
-        return outline
+        val existing = cache.putIfAbsent(key, outline)
+        if (cache.size > 512) cache.clear()
+        return existing ?: outline
     }
 
     private companion object {
-        // Eight evenly spaced samples form a smooth, repeatable scallop cycle.
-        // A static table avoids per-point trigonometric work during path construction.
-        private val profile = floatArrayOf(
-            0f, 0.7071068f, 1f, 0.7071068f,
-            0f, -0.7071068f, -1f, -0.7071068f,
-        )
-        private val cache = object : LinkedHashMap<Key, Outline>(96, 0.75f, true) {
-            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Key, Outline>?): Boolean =
-                size > 384
-        }
+        // Four samples per scallop preserve a rounded gear-like wave while
+        // cutting path vertices in half. Values are shared by every component.
+        private val profile = floatArrayOf(0f, 1f, 0f, -1f)
+        private val cache = ConcurrentHashMap<Key, Outline>(128)
 
         private fun buildOutline(
             width: Float,
@@ -116,7 +107,7 @@ internal class WavyShape private constructor(
                 return Outline.Rounded(RoundRect(0f, 0f, width, height))
             }
 
-            val amplitude = (0.72f * density).coerceAtMost(min(width, height) * 0.018f)
+            val amplitude = (0.58f * density).coerceAtMost(min(width, height) * 0.018f)
             // Keep the full wave inside the component bounds. The centerline is inset
             // by one amplitude, so outward crests reach the bounds without clipping.
             val inset = amplitude
@@ -142,8 +133,8 @@ internal class WavyShape private constructor(
 
             // Fixed physical wave scale: corners do not shrink the ripple and every
             // side uses the same wavelength and amplitude.
-            val waveCount = (perimeter / (12f * density).coerceAtLeast(1f))
-                .toInt().coerceIn(8, 40)
+            val waveCount = (perimeter / (8f * density).coerceAtLeast(1f))
+                .toInt().coerceIn(12, 48)
             val sampleCount = waveCount * profile.size
             val step = perimeter / sampleCount
             val frame = FloatArray(4)
