@@ -222,7 +222,8 @@ fun StatusComboStyleOneCategoryControls(
                                     else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
                                 },
                                 interactionSource = interactionSource,
-                                
+                                shapeIndex = index,
+                                shapeCount = tabs.size,
                             ) { Text(text = label) }
                         },
                         menuContent = { menuState ->
@@ -685,7 +686,8 @@ private fun StyleOneRoleColorDialog(
                                             ButtonGroupDefaults.connectedTrailingButtonShapes()
                                         },
                                         interactionSource = interactionSource,
-                                        
+                                        shapeIndex = index,
+                                        shapeCount = colorTabLabels.size,
                                     ) {
                                         Text(label)
                                     }

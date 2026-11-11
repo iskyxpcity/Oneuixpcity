@@ -929,9 +929,10 @@ private fun MaterialPowerActionRow(
                                         )
                                     )
                                 },
-                                modifier = Modifier.animateWidth(moveUpInteraction),
+                                modifier = Modifier,
                                 interactionSource = moveUpInteraction,
-                                pressMotionEnabled = false,
+                                shapeIndex = 0,
+                                shapeCount = 2,
                             ) {
                                 Text(stringResource(R.string.alohaoneui_moveUp))
                             }
@@ -962,9 +963,10 @@ private fun MaterialPowerActionRow(
                                         )
                                     )
                                 },
-                                modifier = Modifier.animateWidth(moveDownInteraction),
+                                modifier = Modifier,
                                 interactionSource = moveDownInteraction,
-                                pressMotionEnabled = false,
+                                shapeIndex = 1,
+                                shapeCount = 2,
                             ) {
                                 Text(stringResource(R.string.alohaoneui_moveDown))
                             }

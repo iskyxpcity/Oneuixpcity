@@ -280,7 +280,8 @@ fun ColorPaletteScreenMaterial(
                                             checkedShape = sourceShape,
                                         ),
                                         interactionSource = interactionSource,
-                                        
+                                        shapeIndex = index,
+                                        shapeCount = rowOptions.size,
                                     ) {
                                         Icon(
                                             imageVector = when (modes.first()) {
@@ -534,16 +535,20 @@ fun ColorPaletteScreenMaterial(
                                         val pageScaleConfirmSource = remember { MutableInteractionSource() }
                                         ExpressiveButtonGroup(
                                             modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.Center,
+                                            horizontalArrangement = Arrangement.spacedBy(
+                                                ButtonGroupDefaults.ConnectedSpaceBetween,
+                                                alignment = Alignment.CenterHorizontally,
+                                            ),
                                             verticalAlignment = Alignment.CenterVertically,
                                         ) {
                                             customItem(
                                                 buttonGroupContent = {
                                                     ExpressiveTextButton(
                                                         onClick = { showPageScaleValueDialog = false },
-                                                        modifier = Modifier.animateWidth(pageScaleCancelSource, compressionLimit = 0.dp),
+                                                        modifier = Modifier,
                                                         interactionSource = pageScaleCancelSource,
-                                                        
+                                                        shapeIndex = 0,
+                                                        shapeCount = 2,
                                                     ) { Text(stringResource(android.R.string.cancel)) }
                                                 },
                                                 menuContent = { state ->
@@ -564,9 +569,10 @@ fun ColorPaletteScreenMaterial(
                                                     showPageScaleValueDialog = false
                                                 }
                                                         },
-                                                        modifier = Modifier.animateWidth(pageScaleConfirmSource, compressionLimit = 0.dp),
+                                                        modifier = Modifier,
                                                         interactionSource = pageScaleConfirmSource,
-                                                        
+                                                        shapeIndex = 1,
+                                                        shapeCount = 2,
                                                     ) { Text(stringResource(android.R.string.ok)) }
                                                 },
                                                 menuContent = { state ->
@@ -719,16 +725,20 @@ fun ColorPaletteScreenMaterial(
                                         val cornerConfirmSource = remember { MutableInteractionSource() }
                                         ExpressiveButtonGroup(
                                             modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.Center,
+                                            horizontalArrangement = Arrangement.spacedBy(
+                                                ButtonGroupDefaults.ConnectedSpaceBetween,
+                                                alignment = Alignment.CenterHorizontally,
+                                            ),
                                             verticalAlignment = Alignment.CenterVertically,
                                         ) {
                                             customItem(
                                                 buttonGroupContent = {
                                                     ExpressiveTextButton(
                                                         onClick = { showCornerValueDialog = false },
-                                                        modifier = Modifier.animateWidth(cornerCancelSource, compressionLimit = 0.dp),
+                                                        modifier = Modifier,
                                                         interactionSource = cornerCancelSource,
-                                                        
+                                                        shapeIndex = 0,
+                                                        shapeCount = 2,
                                                     ) { Text(stringResource(android.R.string.cancel)) }
                                                 },
                                                 menuContent = { state ->
@@ -750,9 +760,10 @@ fun ColorPaletteScreenMaterial(
                                                     showCornerValueDialog = false
                                                 }
                                                         },
-                                                        modifier = Modifier.animateWidth(cornerConfirmSource, compressionLimit = 0.dp),
+                                                        modifier = Modifier,
                                                         interactionSource = cornerConfirmSource,
-                                                        
+                                                        shapeIndex = 1,
+                                                        shapeCount = 2,
                                                     ) { Text(stringResource(android.R.string.ok)) }
                                                 },
                                                 menuContent = { state ->
@@ -909,16 +920,20 @@ fun ColorPaletteScreenMaterial(
                                         val outlineConfirmSource = remember { MutableInteractionSource() }
                                         ExpressiveButtonGroup(
                                             modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.Center,
+                                            horizontalArrangement = Arrangement.spacedBy(
+                                                ButtonGroupDefaults.ConnectedSpaceBetween,
+                                                alignment = Alignment.CenterHorizontally,
+                                            ),
                                             verticalAlignment = Alignment.CenterVertically,
                                         ) {
                                             customItem(
                                                 buttonGroupContent = {
                                                     ExpressiveTextButton(
                                                         onClick = { showOutlineValueDialog = false },
-                                                        modifier = Modifier.animateWidth(outlineCancelSource, compressionLimit = 0.dp),
+                                                        modifier = Modifier,
                                                         interactionSource = outlineCancelSource,
-                                                        
+                                                        shapeIndex = 0,
+                                                        shapeCount = 2,
                                                     ) { Text(stringResource(android.R.string.cancel)) }
                                                 },
                                                 menuContent = { state ->
@@ -940,9 +955,10 @@ fun ColorPaletteScreenMaterial(
                                                     showOutlineValueDialog = false
                                                 }
                                                         },
-                                                        modifier = Modifier.animateWidth(outlineConfirmSource, compressionLimit = 0.dp),
+                                                        modifier = Modifier,
                                                         interactionSource = outlineConfirmSource,
-                                                        
+                                                        shapeIndex = 1,
+                                                        shapeCount = 2,
                                                     ) { Text(stringResource(android.R.string.ok)) }
                                                 },
                                                 menuContent = { state ->

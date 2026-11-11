@@ -70,8 +70,11 @@ internal val LocalMaterialButtonGroupExpansionPerSide = compositionLocalOf { 0.d
 fun ExpressiveButtonGroup(
     modifier: Modifier = Modifier.fillMaxWidth(),
     expandedRatio: Float = 0.30f,
-    horizontalArrangement: Arrangement.Horizontal = Arrangement.Center,
-    verticalAlignment: Alignment.Vertical = Alignment.Top,
+    horizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(
+        ButtonGroupDefaults.ConnectedSpaceBetween,
+        alignment = Alignment.CenterHorizontally,
+    ),
+    verticalAlignment: Alignment.Vertical = Alignment.CenterVertically,
     overflowIndicator: @Composable (ButtonGroupMenuState) -> Unit = { menuState ->
         ExpressiveIconButton(
             onClick = {
@@ -110,15 +113,18 @@ fun ExpressiveButton(
     colors: ButtonColors = ButtonDefaults.buttonColors(),
     interactionSource: MutableInteractionSource? = null,
     pressMotionEnabled: Boolean = true,
+    shapeIndex: Int = -1,
+    shapeCount: Int = 1,
     content: @Composable RowScope.() -> Unit,
 ) {
     val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val pressExpansion = rememberMaterialExpressivePressExpansion(actualInteractionSource, enabled)
-    // Standalone buttons morph their themed outline only; width remains unchanged.
-    val shapeProgress = (pressExpansion.value / 16f).coerceIn(0f, 1f)
+    val shapeProgress = if (pressMotionEnabled) {
+        (pressExpansion.value / 16f).coerceIn(0f, 1f)
+    } else 0f
     val actualShape = shape ?: alohaSegmentedShape(
-        index = -1,
-        count = 1,
+        index = shapeIndex,
+        count = shapeCount,
         vertical = false,
         pressProgress = shapeProgress,
     )
@@ -140,7 +146,13 @@ fun ExpressiveButton(
             disabledElevation = 0.dp,
         ),
         border = outlineWidth.takeIf { it > 0f }?.let { BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant) },
-        content = content,
+        content = {
+            val groupExpansionPerSide = LocalMaterialButtonGroupExpansionPerSide.current
+            val groupExpansion = if (pressMotionEnabled) groupExpansionPerSide * shapeProgress else 0.dp
+            Spacer(Modifier.width(groupExpansion))
+            content()
+            Spacer(Modifier.width(groupExpansion))
+        },
     )
 }
 
@@ -153,14 +165,18 @@ fun ExpressiveTextButton(
     colors: ButtonColors = ButtonDefaults.textButtonColors(),
     interactionSource: MutableInteractionSource? = null,
     pressMotionEnabled: Boolean = true,
+    shapeIndex: Int = -1,
+    shapeCount: Int = 1,
     content: @Composable RowScope.() -> Unit,
 ) {
     val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val pressExpansion = rememberMaterialExpressivePressExpansion(actualInteractionSource, enabled)
-    val shapeProgress = (pressExpansion.value / 16f).coerceIn(0f, 1f)
+    val shapeProgress = if (pressMotionEnabled) {
+        (pressExpansion.value / 16f).coerceIn(0f, 1f)
+    } else 0f
     val actualShape = shape ?: alohaSegmentedShape(
-        index = -1,
-        count = 1,
+        index = shapeIndex,
+        count = shapeCount,
         vertical = false,
         pressProgress = shapeProgress,
     )
@@ -183,7 +199,13 @@ fun ExpressiveTextButton(
         shape = actualShape,
         colors = colors,
         interactionSource = actualInteractionSource,
-        content = content,
+        content = {
+            val groupExpansionPerSide = LocalMaterialButtonGroupExpansionPerSide.current
+            val groupExpansion = if (pressMotionEnabled) groupExpansionPerSide * shapeProgress else 0.dp
+            Spacer(Modifier.width(groupExpansion))
+            content()
+            Spacer(Modifier.width(groupExpansion))
+        },
     )
 }
 
