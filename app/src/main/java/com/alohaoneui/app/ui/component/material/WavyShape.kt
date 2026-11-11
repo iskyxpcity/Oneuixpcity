@@ -3,7 +3,6 @@ package com.alohaoneui.app.ui.component.material
 import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Outline
@@ -158,8 +157,8 @@ internal class WavyShape private constructor(
                     val s = sin(angle)
                     frame[0] = width - topRight + topRight * c
                     frame[1] = topRight + topRight * s
-                    frame[2] = s
-                    frame[3] = -c
+                    frame[2] = c
+                    frame[3] = s
                     return
                 }
                 d -= trArc
