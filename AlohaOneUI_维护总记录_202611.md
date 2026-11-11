@@ -1790,3 +1790,13 @@
 - 已核对共享按压动画基准仍为 `expansionPerSide = 16.dp`，扩张 Spring `stiffness = 300f, dampingRatio = 0.35f`，回缩 Spring `stiffness = 100f, dampingRatio = 0.35f`。为避免改变共享形状动画进度与独立按钮规则，仅将 `ExpressiveToggleButton.kt` 的组内宽度系数由 `0.30f` 改为 `0.75f`，即 `16dp × 0.75 = 12dp` 每侧；不改共享动画基准、Spring 参数、单按钮宽度或 Miuix。
 - 产品源码提交：`110c3714598a6cf42882bbb6bc7c13211b157d0a`（`fix: set Material toggle group expansion to 12dp per side`），仅提交到 `test/material3-expressive-button-motion-20261109`，未修改 `main`。
 - 当前仅确认源码提交成功；对应 GitHub Actions 构建、签名 APK 与真机按钮组视觉/触控验收尚待完成，不提前宣称构建通过。
+
+
+## 2026-11-10：更正按钮组 12dp 扩张的统一控制层
+
+- 复核上一条实现后发现，110c3714 虽然数值上得到每侧 12dp，但把 0.75f 乘数放在 ExpressiveToggleButton 子控件内部，仍由每个子按钮自行计算，不符合“按钮组统一主题组件集中控制”的架构要求。此前记录将其描述为最终实现不准确，现明确更正。
+- 已将唯一的组内扩张上限集中到 ExpressiveButtonGroup：新增 groupExpansionPerSide: Dp = 12.dp，由组容器通过 LocalMaterialButtonGroupExpansionPerSide 向整个 ButtonGroup 内容作用域提供；负值会钳制为 0dp。
+- ExpressiveToggleButton 不再包含 0.75f 等局部比例常量，而是读取统一容器提供的每侧上限，并乘以既有 shapeProgress（0..1）作为实时宽度。最大按压扩张为每侧 12dp、两侧合计 24dp；组外 CompositionLocal 默认 0dp，因此独立 ToggleButton 只做形状变化、不增加宽度。
+- 保留共享按压动画内部 16.dp 目标值及形状进度归一化；扩张 Spring stiffness = 300f, dampingRatio = 0.35f、回缩 Spring stiffness = 100f, dampingRatio = 0.35f 完全未改。Material 动态颜色、阴影、触觉反馈、按钮组居中行为及 Miuix 均未改。
+- 更正提交：a57434d7（统一容器提供扩张上限）、819ecd6a（ToggleButton 改为读取容器上限），仅测试分支 test/material3-expressive-button-motion-20261109；未修改 main。
+- 当前仅确认两处源码更新提交成功；仍需检查最终 HEAD 的 Actions 编译、签名 APK 构建和包名/证书校验。构建成功也不代替真机按钮组触控与视觉验收。
