@@ -294,10 +294,10 @@ private fun createAlohaPhQuinticCubicSpans(): FloatArray {
     for (index in 0 until count) {
         val t0 = index * dt
         val t1 = (index + 1) * dt
-        val c1x = x(t0) + dx(t0) * dt / 3f
+        val c1x = if (index == count - 1) 1f else x(t0) + dx(t0) * dt / 3f
         val c1y = y(t0) + dy(t0) * dt / 3f
         val c2x = x(t1) - dx(t1) * dt / 3f
-        val c2y = y(t1) - dy(t1) * dt / 3f
+        val c2y = if (index == 0) 0f else y(t1) - dy(t1) * dt / 3f
         val offset = index * 6
         result[offset] = c1x
         result[offset + 1] = c1y
@@ -386,7 +386,6 @@ private class AlohaPathShape private constructor(
     }
 
     private companion object {
-        private const val PH_QUINTIC_CORNER_CONTROL = 0.80925643f
         private val PH_QUINTIC_CUBIC_SPANS = createAlohaPhQuinticCubicSpans()
 
         // Bounded process-wide LRU: reuse equal outlines across rows/components,
