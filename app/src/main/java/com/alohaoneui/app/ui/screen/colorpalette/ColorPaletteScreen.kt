@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -39,40 +40,45 @@ fun ColorPaletteScreen() {
         currentPaletteStyle = currentPaletteStyle,
         currentColorSpec = currentColorSpec,
     )
-    val actions = ColorPaletteScreenActions(
-        onBack = { if (navigator.backStackSize() > 1) navigator.pop() },
-        onSetThemeMode = viewModel::setThemeMode,
-        onSetMiuixMonet = viewModel::setMiuixMonet,
-        onSetKeyColor = viewModel::setKeyColor,
-        onSetColorMode = viewModel::setColorMode,
-        onSetColorStyle = viewModel::setColorStyle,
-        onSetColorSpec = viewModel::setColorSpec,
-        onSetEnableBlur = viewModel::setEnableBlur,
-        onSetEnableFloatingBottomBar = viewModel::setEnableFloatingBottomBar,
-        onSetEnableFloatingBottomBarBlur = viewModel::setEnableFloatingBottomBarBlur,
-        onSetEnablePredictiveBack = { enabled ->
-            viewModel.setEnablePredictiveBack(enabled)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                AlohaOneUIApplication.applyEnableOnBackInvokedCallback(context, enabled)
-                activity?.recreate()
-            }
-        },
-        onSetEnableSwipeBack = viewModel::setEnableSwipeBack,
-        onSetPagerGestureMode = viewModel::setPagerGestureMode,
-        onSetPageScale = viewModel::setPageScale,
-        onSetMaterialCornerScale = viewModel::setMaterialCornerScale,
-        onSetMaterialShapeStyle = viewModel::setMaterialShapeStyle,
-        onSetMaterialSwitchStyle = viewModel::setMaterialSwitchStyle,
-        onSetMaterialSliderStyle = viewModel::setMaterialSliderStyle,
-        onSetMaterialIconShapeStyle = viewModel::setMaterialIconShapeStyle,
-        onSetMaterialOutlineWidth = viewModel::setMaterialOutlineWidth,
-        onSetMaterialShadowContainers = viewModel::setMaterialShadowContainers,
-        onSetMaterialShadowTopBars = viewModel::setMaterialShadowTopBars,
-        onSetMaterialShadowButtons = viewModel::setMaterialShadowButtons,
-        onSetMaterialShadowFloatingButtons = viewModel::setMaterialShadowFloatingButtons,
-        onSetMaterialShadowSwitches = viewModel::setMaterialShadowSwitches,
-        onSetMaterialShadowSliders = viewModel::setMaterialShadowSliders,
-    )
+    // Keep the action bundle and its callbacks stable across SettingsUiState
+    // emissions. Recreating this object on every preference update needlessly
+    // changes a parameter passed into the entire theme-settings screen tree.
+    val actions = remember(viewModel, navigator, context, activity) {
+        ColorPaletteScreenActions(
+            onBack = { if (navigator.backStackSize() > 1) navigator.pop() },
+            onSetThemeMode = viewModel::setThemeMode,
+            onSetMiuixMonet = viewModel::setMiuixMonet,
+            onSetKeyColor = viewModel::setKeyColor,
+            onSetColorMode = viewModel::setColorMode,
+            onSetColorStyle = viewModel::setColorStyle,
+            onSetColorSpec = viewModel::setColorSpec,
+            onSetEnableBlur = viewModel::setEnableBlur,
+            onSetEnableFloatingBottomBar = viewModel::setEnableFloatingBottomBar,
+            onSetEnableFloatingBottomBarBlur = viewModel::setEnableFloatingBottomBarBlur,
+            onSetEnablePredictiveBack = { enabled ->
+                viewModel.setEnablePredictiveBack(enabled)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    AlohaOneUIApplication.applyEnableOnBackInvokedCallback(context, enabled)
+                    activity?.recreate()
+                }
+            },
+            onSetEnableSwipeBack = viewModel::setEnableSwipeBack,
+            onSetPagerGestureMode = viewModel::setPagerGestureMode,
+            onSetPageScale = viewModel::setPageScale,
+            onSetMaterialCornerScale = viewModel::setMaterialCornerScale,
+            onSetMaterialShapeStyle = viewModel::setMaterialShapeStyle,
+            onSetMaterialSwitchStyle = viewModel::setMaterialSwitchStyle,
+            onSetMaterialSliderStyle = viewModel::setMaterialSliderStyle,
+            onSetMaterialIconShapeStyle = viewModel::setMaterialIconShapeStyle,
+            onSetMaterialOutlineWidth = viewModel::setMaterialOutlineWidth,
+            onSetMaterialShadowContainers = viewModel::setMaterialShadowContainers,
+            onSetMaterialShadowTopBars = viewModel::setMaterialShadowTopBars,
+            onSetMaterialShadowButtons = viewModel::setMaterialShadowButtons,
+            onSetMaterialShadowFloatingButtons = viewModel::setMaterialShadowFloatingButtons,
+            onSetMaterialShadowSwitches = viewModel::setMaterialShadowSwitches,
+            onSetMaterialShadowSliders = viewModel::setMaterialShadowSliders,
+        )
+    }
 
     when (LocalUiMode.current) {
         UiMode.Miuix -> ColorPaletteScreenMiuix(state, actions)
