@@ -437,28 +437,27 @@ private class AlohaPathShape private constructor(
         if (topRight > 0f) smallestCorner = minOf(smallestCorner, topRight)
         if (bottomRight > 0f) smallestCorner = minOf(smallestCorner, bottomRight)
         if (bottomLeft > 0f) smallestCorner = minOf(smallestCorner, bottomLeft)
+        // A small gear-like ripple: fixed physical amplitude and equal arc-length
+        // pitch keep every tooth the same size on straight edges and corner arcs.
+        // Fewer, simpler half-wave spans also reduce outline construction work.
         val amplitude = minOf(
-            1.6f * densityScale,
-            minDimension * 0.045f,
-            smallestCorner * 0.22f,
+            0.55f * densityScale,
+            minDimension * 0.012f,
+            smallestCorner * 0.075f,
         ).coerceAtLeast(0f)
-        val waveCount = (perimeter / (18f * densityScale).coerceAtLeast(1f))
-            .toInt().coerceIn(3, 32)
+        val wavePitch = (22f * densityScale).coerceAtLeast(1f)
+        val waveCount = (perimeter / wavePitch).toInt().coerceIn(3, 24)
         val segments = waveCount * 2
         val step = perimeter / segments
         val angularFrequency = (2f * kotlin.math.PI.toFloat() * waveCount) / perimeter
 
         fun sample(index: Int): WaveSample {
-            val distance = index * step
             val frame = roundedRectWaveFrameAt(
-                distance, width, height, topLeft, topRight, bottomRight, bottomLeft,
+                index * step, width, height, topLeft, topRight, bottomRight, bottomLeft,
             )
-            // Every segment ends at a zero crossing (half-wave interval), so
-            // the wave displacement is exactly zero there. The harmonic blend
-            // is folded into the analytic slope; no per-point trig is required.
+            // A plain, low-amplitude sinusoidal ripple; no harmonic overshoot.
             val sign = if (index % 2 == 0) 1f else -1f
-            val displacementDerivative = amplitude * angularFrequency *
-                (1f + 0.66f) / 1.22f * sign
+            val displacementDerivative = amplitude * angularFrequency * sign
             val normalX = frame.tangentY
             val normalY = -frame.tangentX
             return WaveSample(
