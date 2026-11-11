@@ -94,7 +94,10 @@ fun ExpressiveToggleButton(
             // Outside ExpressiveButtonGroup the CompositionLocal is 0.dp,
             // so standalone toggles only morph their themed shape.
             val groupExpansionPerSide = LocalMaterialButtonGroupExpansionPerSide.current
-            val groupExpansion = if (shapeCount > 1 && pressMotionEnabled) {
+            // Group membership comes from ExpressiveButtonGroup's scope, not
+            // shapeCount: some pages rely on Material's supplied button shapes
+            // and intentionally leave shapeIndex/shapeCount at their defaults.
+            val groupExpansion = if (pressMotionEnabled) {
                 groupExpansionPerSide * shapeProgress
             } else 0.dp
             Spacer(Modifier.width(groupExpansion))
