@@ -1039,9 +1039,9 @@ fun ColorPaletteScreenMaterial(
                                 onCheckedChange = actions.onSetMaterialShadowSliders,
                             )
                         },
+                        )
                     }
                 )
-            }
 
             Spacer(modifier = Modifier.height(16.dp + navBars.calculateBottomPadding() + captionBar.calculateBottomPadding()))
         }
