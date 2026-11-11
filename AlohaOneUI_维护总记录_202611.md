@@ -1814,3 +1814,5 @@
 - 保留组外默认 0dp，因此独立按钮不横向扩大；保留扩张 Spring 300f/0.35f、回缩 Spring 100f/0.35f、内部16dp按压动画目标、Material动态颜色、阴影和触觉反馈；不改 Miuix。
 - 修复提交：922f0f7a（`fix: expand every toggle inside shared Material button groups`），仅测试分支 `test/material3-expressive-button-motion-20261109`。
 - `ExpressiveButtonGroup` 的已定位调用点包含首页设备信息分组、状态栏三合一分类页、颜色主题页，以及功能页的移动操作文本按钮组。后三类需要分别按其控件类型和现有动画策略验证；本次针对缺失 `shapeCount` 的 ToggleButton 组修复。尚未取得本提交对应 Actions 构建结果，不能提前宣称 APK 构建通过。
+
+- 构建核验补记：修复提交 `922f0f7a` 对应 Actions Build #2983（run `42939592485`）。源码校验、编译、加载签名密钥、owner-signed APK 构建、包名/稳定证书验证及 Artifact 保存步骤均成功。Artifact `AlohaOneUI-Signed-Test-APK`（ID `13819887600`，28,690,948 bytes）已生成。注意 GitHub run 顶层 conclusion 显示 cancelled，但 `build` job 本身为 success，签名 APK 构建与包名/证书验证步骤均成功；不将顶层状态描述为全流程 success。Artifact 页面：https://github.com/iskyxpcity/Oneuixpcity/actions/runs/42939592485 。
