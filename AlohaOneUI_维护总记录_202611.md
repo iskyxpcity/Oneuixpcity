@@ -1782,3 +1782,11 @@
 
 - 后续整理提交：`e08d75a`（移除状态栏组内重复触觉）、`8e7e660`（移除调色板组内重复触觉）、`cb69f4e`（补充动画状态委托导入）、`7ef53d5`（清理状态栏无用触觉导入）。最新源码 HEAD 为 `7ef53d5`；相关 Actions 已触发，当前仍待编译完成。
 - ToggleButton 阴影值进一步显式统一为常态/悬停/聚焦 2dp、按压 3dp、禁用 0dp（`463dfc3`），不依赖 Material 默认 token 的隐式数值。
+
+
+## 2026-11-10：Material 按钮组横向扩张调整为每侧 12dp
+
+- 用户确认将组内 ToggleButton 的按压横向扩张从每侧 4.8dp 调整为每侧 12dp；两侧合计最多增加 24dp。
+- 已核对共享按压动画基准仍为 `expansionPerSide = 16.dp`，扩张 Spring `stiffness = 300f, dampingRatio = 0.35f`，回缩 Spring `stiffness = 100f, dampingRatio = 0.35f`。为避免改变共享形状动画进度与独立按钮规则，仅将 `ExpressiveToggleButton.kt` 的组内宽度系数由 `0.30f` 改为 `0.75f`，即 `16dp × 0.75 = 12dp` 每侧；不改共享动画基准、Spring 参数、单按钮宽度或 Miuix。
+- 产品源码提交：`110c3714598a6cf42882bbb6bc7c13211b157d0a`（`fix: set Material toggle group expansion to 12dp per side`），仅提交到 `test/material3-expressive-button-motion-20261109`，未修改 `main`。
+- 当前仅确认源码提交成功；对应 GitHub Actions 构建、签名 APK 与真机按钮组视觉/触控验收尚待完成，不提前宣称构建通过。
