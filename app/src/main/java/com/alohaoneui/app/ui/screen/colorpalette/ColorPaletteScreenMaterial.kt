@@ -987,7 +987,16 @@ fun ColorPaletteScreenMaterial(
                 SegmentedColumn(
                     modifier = Modifier.padding(vertical = 4.dp),
                     title = stringResource(R.string.theme_group_shadows),
-                    content = listOf(
+                    content = remember(
+                        uiState.materialShadowContainers,
+                        uiState.materialShadowTopBars,
+                        uiState.materialShadowButtons,
+                        uiState.materialShadowFloatingButtons,
+                        uiState.materialShadowSwitches,
+                        uiState.materialShadowSliders,
+                        actions,
+                    ) {
+                        listOf(
                         {
                             SegmentedSwitchItem(
                                 title = stringResource(R.string.theme_shadow_container),
@@ -1030,7 +1039,7 @@ fun ColorPaletteScreenMaterial(
                                 onCheckedChange = actions.onSetMaterialShadowSliders,
                             )
                         },
-                    )
+                    }
                 )
             }
 
