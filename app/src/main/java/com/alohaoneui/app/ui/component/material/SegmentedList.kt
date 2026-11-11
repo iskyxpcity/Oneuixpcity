@@ -325,6 +325,8 @@ private class AlohaPathShape private constructor(
     }
 
     private companion object {
+        private const val PH_QUINTIC_CORNER_CONTROL = 0.80925643f
+
         // Bounded process-wide LRU: reuse equal outlines across rows/components,
         // while limiting retained Path objects when users explore many radii.
         private val outlineCache = object : java.util.LinkedHashMap<OutlineKey, Outline>(128, 0.75f, true) {
@@ -366,7 +368,7 @@ private class AlohaPathShape private constructor(
         radius: Float,
         orientation: Int,
     ) {
-        val c = 3f * (6f - kotlin.math.sqrt(2f)) / 17f
+        val c = PH_QUINTIC_CORNER_CONTROL
         val spans = 12
         val dt = 1f / spans
 
