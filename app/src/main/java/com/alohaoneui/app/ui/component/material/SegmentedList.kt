@@ -265,6 +265,49 @@ private class AlohaPathShape private constructor(
         }
     }
 
+    private fun appendPhQuinticCorner(
+        path: Path,
+        originX: Float,
+        originY: Float,
+        radius: Float,
+        orientation: Int,
+    ) {
+        fun mapX(x: Float, y: Float): Float = when (orientation) {
+            1 -> -y
+            2 -> -x
+            3 -> y
+            else -> x
+        }
+        fun mapY(x: Float, y: Float): Float = when (orientation) {
+            1 -> x
+            2 -> -y
+            3 -> -x
+            else -> y
+        }
+
+        // Six normalized values per span: C1.x/y, C2.x/y, endpoint.x/y.
+        // The eight cubic Hermite spans are generated once in the companion object.
+        val spans = PH_QUINTIC_CUBIC_SPANS
+        var offset = 0
+        while (offset < spans.size) {
+            val c1x = spans[offset]
+            val c1y = spans[offset + 1]
+            val c2x = spans[offset + 2]
+            val c2y = spans[offset + 3]
+            val endX = spans[offset + 4]
+            val endY = spans[offset + 5]
+            path.cubicTo(
+                originX + radius * mapX(c1x, c1y),
+                originY + radius * mapY(c1x, c1y),
+                originX + radius * mapX(c2x, c2y),
+                originY + radius * mapY(c2x, c2y),
+                originX + radius * mapX(endX, endY),
+                originY + radius * mapY(endX, endY),
+            )
+            offset += 6
+        }
+    }
+
     private fun createAlohaOutline(
         size: Size,
         layoutDirection: LayoutDirection,
