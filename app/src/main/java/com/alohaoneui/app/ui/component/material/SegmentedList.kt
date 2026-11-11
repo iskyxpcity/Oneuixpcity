@@ -400,7 +400,6 @@ private class AlohaPathShape private constructor(
         val y: Float,
         val tangentX: Float,
         val tangentY: Float,
-        val curvature: Float,
     )
 
     private data class WaveSample(
@@ -413,8 +412,8 @@ private class AlohaPathShape private constructor(
     /**
      * Appends a canonical PH quintic G² corner. The normalized control polygon is
      * (0,0), (c,0), (c,0), (1,1-c), (1,1-c), (1,1), where
-     * c = 3(6-sqrt(2))/17. Compose Path exposes cubic segments, so the exact
-     * quintic is converted to short cubic Hermite spans using its analytic
+     * c = 3(6-sqrt(2))/17. Compose Path exposes cubic segments, so the quintic
+     * is approximated by 12 short cubic Hermite spans using its analytic
      * position and tangent. This keeps the corner smooth without per-frame
      * numerical solving or trigonometric work.
      *
@@ -482,7 +481,7 @@ private class AlohaPathShape private constructor(
         val topLeftArc = topLeft * (kotlin.math.PI.toFloat() / 2f)
         var d = distance.coerceAtLeast(0f)
 
-        if (d < topLength) return WaveFrame(topLeft + d, 0f, 1f, 0f, 0f)
+        if (d < topLength) return WaveFrame(topLeft + d, 0f, 1f, 0f)
         d -= topLength
         if (d < topRightArc && topRight > 0f) {
             val angle = -kotlin.math.PI.toFloat() / 2f + d / topRight
@@ -493,11 +492,10 @@ private class AlohaPathShape private constructor(
                 topRight + topRight * sin,
                 -sin,
                 cos,
-                1f / topRight,
             )
         }
         d -= topRightArc
-        if (d < rightLength) return WaveFrame(width, topRight + d, 0f, 1f, 0f)
+        if (d < rightLength) return WaveFrame(width, topRight + d, 0f, 1f)
         d -= rightLength
         if (d < bottomRightArc && bottomRight > 0f) {
             val angle = d / bottomRight
@@ -508,11 +506,10 @@ private class AlohaPathShape private constructor(
                 height - bottomRight + bottomRight * sin,
                 -sin,
                 cos,
-                1f / bottomRight,
             )
         }
         d -= bottomRightArc
-        if (d < bottomLength) return WaveFrame(width - bottomRight - d, height, -1f, 0f, 0f)
+        if (d < bottomLength) return WaveFrame(width - bottomRight - d, height, -1f, 0f)
         d -= bottomLength
         if (d < bottomLeftArc && bottomLeft > 0f) {
             val angle = kotlin.math.PI.toFloat() / 2f + d / bottomLeft
@@ -523,11 +520,10 @@ private class AlohaPathShape private constructor(
                 height - bottomLeft + bottomLeft * sin,
                 -sin,
                 cos,
-                1f / bottomLeft,
             )
         }
         d -= bottomLeftArc
-        if (d < leftLength) return WaveFrame(0f, height - bottomLeft - d, 0f, -1f, 0f)
+        if (d < leftLength) return WaveFrame(0f, height - bottomLeft - d, 0f, -1f)
         d -= leftLength
         if (d < topLeftArc && topLeft > 0f) {
             val angle = kotlin.math.PI.toFloat() + d / topLeft
@@ -538,10 +534,9 @@ private class AlohaPathShape private constructor(
                 topLeft + topLeft * sin,
                 -sin,
                 cos,
-                1f / topLeft,
             )
         }
-        return WaveFrame(topLeft, 0f, 1f, 0f, 0f)
+        return WaveFrame(topLeft, 0f, 1f, 0f)
     }
 
     private fun appendWavyPerimeter(
