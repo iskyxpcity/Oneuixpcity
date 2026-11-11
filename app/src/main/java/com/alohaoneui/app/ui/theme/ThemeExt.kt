@@ -6,6 +6,7 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.materialkolor.PaletteStyle
@@ -38,10 +39,12 @@ fun rememberAlohaOneUIColorScheme(
     colorSpec: ColorSpec.SpecVersion,
 ): ColorScheme {
     val context = LocalContext.current
-    val seed = if (seedColor == Color.Unspecified) {
-        (if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)).primary
-    } else {
-        seedColor
+    val seed = remember(seedColor, isDark, context) {
+        if (seedColor == Color.Unspecified) {
+            (if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)).primary
+        } else {
+            seedColor
+        }
     }
     return rememberDynamicColorScheme(
         seedColor = seed,

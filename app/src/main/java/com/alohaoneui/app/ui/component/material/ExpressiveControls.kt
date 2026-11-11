@@ -209,6 +209,40 @@ fun ExpressiveTextButton(
     )
 }
 
+
+/**
+ * Filled action control for members of an ExpressiveButtonGroup.
+ * It uses the same shared Material container, outline, elevation, segmented
+ * geometry and horizontal press expansion as the home button group.
+ */
+@Composable
+fun ExpressiveButtonGroupAction(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    interactionSource: MutableInteractionSource? = null,
+    shapeIndex: Int,
+    shapeCount: Int,
+    content: @Composable RowScope.() -> Unit,
+) {
+    val colors = ButtonDefaults.buttonColors(
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    ExpressiveButton(
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled,
+        colors = colors,
+        interactionSource = interactionSource,
+        shapeIndex = shapeIndex,
+        shapeCount = shapeCount,
+        content = content,
+    )
+}
+
 @Composable
 fun ExpressiveIconButton(
     onClick: () -> Unit,

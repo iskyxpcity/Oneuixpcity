@@ -125,7 +125,7 @@ fun ExpressiveDialogActionButtons(
     ) {
         customItem(
             buttonGroupContent = {
-                ExpressiveTextButton(
+                ExpressiveButtonGroupAction(
                     onClick = onDismiss,
                     modifier = Modifier,
                     interactionSource = dismissSource,
@@ -142,7 +142,7 @@ fun ExpressiveDialogActionButtons(
         )
         customItem(
             buttonGroupContent = {
-                ExpressiveTextButton(
+                ExpressiveButtonGroupAction(
                     enabled = confirmEnabled,
                     onClick = onConfirm,
                     modifier = Modifier,

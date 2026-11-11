@@ -109,7 +109,7 @@ import com.alohaoneui.app.ui.component.bottombar.useNavigationRail
 import com.alohaoneui.app.ui.component.material.ExpressiveToggleButton
 import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
 import com.alohaoneui.app.ui.component.material.ExpressiveOutlinedTextField
-import com.alohaoneui.app.ui.component.material.ExpressiveTextButton
+import com.alohaoneui.app.ui.component.material.ExpressiveButtonGroupAction
 import com.alohaoneui.app.ui.component.material.ExpressiveButtonGroup
 import com.alohaoneui.app.ui.component.material.ExpressiveContentDialog
 import com.alohaoneui.app.ui.component.material.IconShapePresetPicker
@@ -216,7 +216,7 @@ fun ColorPaletteScreenMaterial(
                     )
                 }
 
-                items(keyColorOptions) { color ->
+                items(items = keyColorOptions, key = { it }) { color ->
                     ColorButtonMaterial(
                         color = Color(color),
                         isSelected = currentKeyColor == color,
@@ -237,79 +237,76 @@ fun ColorPaletteScreenMaterial(
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                val options = listOf(
-                    listOf(ColorMode.SYSTEM) to stringResource(R.string.settings_theme_mode_system),
-                    listOf(ColorMode.LIGHT) to stringResource(R.string.settings_theme_mode_light),
-                    listOf(ColorMode.DARK) to stringResource(R.string.settings_theme_mode_dark),
-                    listOf(ColorMode.DARK_AMOLED) to stringResource(R.string.settings_theme_mode_dark)
-                )
-
-                val modeInteractionSources = remember {
-                    List(options.size) { MutableInteractionSource() }
+                val systemModeLabel = stringResource(R.string.settings_theme_mode_system)
+                val lightModeLabel = stringResource(R.string.settings_theme_mode_light)
+                val darkModeLabel = stringResource(R.string.settings_theme_mode_dark)
+                val options = remember(systemModeLabel, lightModeLabel, darkModeLabel) {
+                    listOf(
+                        listOf(ColorMode.SYSTEM) to systemModeLabel,
+                        listOf(ColorMode.LIGHT) to lightModeLabel,
+                        listOf(ColorMode.DARK) to darkModeLabel,
+                        listOf(ColorMode.DARK_AMOLED) to darkModeLabel,
+                    )
                 }
-                options.chunked(4).forEachIndexed { rowIndex, rowOptions ->
-                    ExpressiveButtonGroup(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(
-                            ButtonGroupDefaults.ConnectedSpaceBetween,
-                            alignment = Alignment.CenterHorizontally,
-                        ),
-                    ) {
-                        rowOptions.forEachIndexed { index, (modes, label) ->
-                            val interactionSource = modeInteractionSources[rowIndex * 4 + index]
-                            customItem(
-                                buttonGroupContent = {
-                                    val sourceShape = alohaSegmentedShape(
-                                        index = index,
-                                        count = rowOptions.size,
-                                        vertical = false,
-                                    )
-                                    ExpressiveToggleButton(
-                                        checked = currentColorMode in modes,
-                                        onCheckedChange = {
-                                            if (it) {
-                                                actions.onSetColorMode(modes.first())
-                                            }
+                val modeInteractionSources = remember {
+                    List(4) { MutableInteractionSource() }
+                }
+                ExpressiveButtonGroup(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(
+                        ButtonGroupDefaults.ConnectedSpaceBetween,
+                        alignment = Alignment.CenterHorizontally,
+                    ),
+                ) {
+                    options.forEachIndexed { index, (modes, label) ->
+                        val interactionSource = modeInteractionSources[index]
+                        customItem(
+                            buttonGroupContent = {
+                                val sourceShape = alohaSegmentedShape(
+                                    index = index,
+                                    count = options.size,
+                                    vertical = false,
+                                )
+                                ExpressiveToggleButton(
+                                    checked = currentColorMode in modes,
+                                    onCheckedChange = {
+                                        if (it) actions.onSetColorMode(modes.first())
+                                    },
+                                    modifier = Modifier.semantics { role = Role.RadioButton },
+                                    shapes = ToggleButtonShapes(
+                                        shape = sourceShape,
+                                        pressedShape = sourceShape,
+                                        checkedShape = sourceShape,
+                                    ),
+                                    interactionSource = interactionSource,
+                                    shapeIndex = index,
+                                    shapeCount = options.size,
+                                ) {
+                                    Icon(
+                                        imageVector = when (modes.first()) {
+                                            ColorMode.SYSTEM -> Icons.Filled.Brightness4
+                                            ColorMode.LIGHT -> Icons.Filled.Brightness7
+                                            ColorMode.DARK -> Icons.Filled.Brightness3
+                                            ColorMode.DARK_AMOLED -> Icons.Filled.Brightness1
+                                            else -> Icons.Filled.Brightness4
                                         },
-                                        modifier = Modifier
-                                            .semantics { role = Role.RadioButton },
-                                        
-                                        shapes = ToggleButtonShapes(
-                                            shape = sourceShape,
-                                            pressedShape = sourceShape,
-                                            checkedShape = sourceShape,
-                                        ),
-                                        interactionSource = interactionSource,
-                                        shapeIndex = index,
-                                        shapeCount = rowOptions.size,
-                                    ) {
-                                        Icon(
-                                            imageVector = when (modes.first()) {
-                                                ColorMode.SYSTEM -> Icons.Filled.Brightness4
-                                                ColorMode.LIGHT -> Icons.Filled.Brightness7
-                                                ColorMode.DARK -> Icons.Filled.Brightness3
-                                                ColorMode.DARK_AMOLED -> Icons.Filled.Brightness1
-                                                else -> Icons.Filled.Brightness4
-                                            },
-                                            contentDescription = label
-                                        )
-                                    }
-                                },
-                                menuContent = { menuState ->
-                                    DropdownMenuItem(
-                                        text = { Text(label) },
-                                        onClick = {
-                                            menuState.dismiss()
-                                            haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
-                                            actions.onSetColorMode(modes.first())
-                                        },
+                                        contentDescription = label,
                                     )
-                                },
-                            )
-                        }
+                                }
+                            },
+                            menuContent = { menuState ->
+                                DropdownMenuItem(
+                                    text = { Text(label) },
+                                    onClick = {
+                                        menuState.dismiss()
+                                        haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                                        actions.onSetColorMode(modes.first())
+                                    },
+                                )
+                            },
+                        )
                     }
                 }
-
                 SegmentedColumn(
                     modifier = Modifier.padding(vertical = 4.dp),
                     content = listOf(
@@ -543,7 +540,7 @@ fun ColorPaletteScreenMaterial(
                                         ) {
                                             customItem(
                                                 buttonGroupContent = {
-                                                    ExpressiveTextButton(
+                                                    ExpressiveButtonGroupAction(
                                                         onClick = { showPageScaleValueDialog = false },
                                                         modifier = Modifier,
                                                         interactionSource = pageScaleCancelSource,
@@ -560,7 +557,7 @@ fun ColorPaletteScreenMaterial(
                                             )
                                             customItem(
                                                 buttonGroupContent = {
-                                                    ExpressiveTextButton(
+                                                    ExpressiveButtonGroupAction(
                                                         onClick = {
                                                             val parsed = pageScaleInput.toIntOrNull()
                                                 if (parsed != null && parsed in 80..110) {
@@ -733,7 +730,7 @@ fun ColorPaletteScreenMaterial(
                                         ) {
                                             customItem(
                                                 buttonGroupContent = {
-                                                    ExpressiveTextButton(
+                                                    ExpressiveButtonGroupAction(
                                                         onClick = { showCornerValueDialog = false },
                                                         modifier = Modifier,
                                                         interactionSource = cornerCancelSource,
@@ -750,7 +747,7 @@ fun ColorPaletteScreenMaterial(
                                             )
                                             customItem(
                                                 buttonGroupContent = {
-                                                    ExpressiveTextButton(
+                                                    ExpressiveButtonGroupAction(
                                                         onClick = {
                                                             val parsed = cornerScaleInput.toFloatOrNull()
                                                 if (parsed != null && parsed.isFinite() && parsed in 0f..2f) {
@@ -928,7 +925,7 @@ fun ColorPaletteScreenMaterial(
                                         ) {
                                             customItem(
                                                 buttonGroupContent = {
-                                                    ExpressiveTextButton(
+                                                    ExpressiveButtonGroupAction(
                                                         onClick = { showOutlineValueDialog = false },
                                                         modifier = Modifier,
                                                         interactionSource = outlineCancelSource,
@@ -945,7 +942,7 @@ fun ColorPaletteScreenMaterial(
                                             )
                                             customItem(
                                                 buttonGroupContent = {
-                                                    ExpressiveTextButton(
+                                                    ExpressiveButtonGroupAction(
                                                         onClick = {
                                                             val parsed = outlineWidthInput.toFloatOrNull()
                                                 if (parsed != null && parsed.isFinite() && parsed in 0f..1.5f) {
