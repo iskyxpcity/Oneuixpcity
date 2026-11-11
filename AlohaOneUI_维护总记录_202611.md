@@ -1800,3 +1800,5 @@
 - 保留共享按压动画内部 16.dp 目标值及形状进度归一化；扩张 Spring stiffness = 300f, dampingRatio = 0.35f、回缩 Spring stiffness = 100f, dampingRatio = 0.35f 完全未改。Material 动态颜色、阴影、触觉反馈、按钮组居中行为及 Miuix 均未改。
 - 更正提交：a57434d7（统一容器提供扩张上限）、819ecd6a（ToggleButton 改为读取容器上限），仅测试分支 test/material3-expressive-button-motion-20261109；未修改 main。
 - 当前仅确认两处源码更新提交成功；仍需检查最终 HEAD 的 Actions 编译、签名 APK 构建和包名/证书校验。构建成功也不代替真机按钮组触控与视觉验收。
+
+- 额外兼容性修正：将 groupExpansionPerSide 参数放在原有 overflowIndicator 参数之后、content 之前，避免改变 ExpressiveButtonGroup 既有前置参数的 Kotlin 位置参数顺序。提交 b3087b7f；测试分支内完成，main 未修改。
