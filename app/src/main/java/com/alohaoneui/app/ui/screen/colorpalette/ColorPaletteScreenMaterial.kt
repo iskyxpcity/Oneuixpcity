@@ -62,6 +62,8 @@ import androidx.compose.material.icons.rounded.Style
 import androidx.compose.material.icons.rounded.Swipe
 import androidx.compose.material.icons.rounded.ViewCarousel
 import androidx.compose.material.icons.rounded.WaterDrop
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -107,7 +109,8 @@ import com.alohaoneui.app.ui.component.bottombar.useNavigationRail
 import com.alohaoneui.app.ui.component.material.ExpressiveToggleButton
 import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
 import com.alohaoneui.app.ui.component.material.ExpressiveOutlinedTextField
-import com.alohaoneui.app.ui.component.material.ExpressiveTextButton
+import com.alohaoneui.app.ui.component.material.ExpressiveButtonGroupAction
+import com.alohaoneui.app.ui.component.material.ExpressiveButtonGroup
 import com.alohaoneui.app.ui.component.material.ExpressiveContentDialog
 import com.alohaoneui.app.ui.component.material.IconShapePresetPicker
 import com.alohaoneui.app.ui.component.material.IconShapePresetDetailScreen
@@ -129,6 +132,7 @@ import com.alohaoneui.app.ui.theme.LocalMaterialShadowSliders
 import com.alohaoneui.app.ui.theme.rememberAlohaOneUIColorScheme
 import com.alohaoneui.app.ui.theme.keyColorOptions
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ColorPaletteScreenMaterial(
     state: ColorPaletteUiState,
@@ -212,7 +216,7 @@ fun ColorPaletteScreenMaterial(
                     )
                 }
 
-                items(keyColorOptions) { color ->
+                items(items = keyColorOptions, key = { it }) { color ->
                     ColorButtonMaterial(
                         color = Color(color),
                         isSelected = currentKeyColor == color,
@@ -233,65 +237,79 @@ fun ColorPaletteScreenMaterial(
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                val options = listOf(
-                    listOf(ColorMode.SYSTEM) to stringResource(R.string.settings_theme_mode_system),
-                    listOf(ColorMode.LIGHT) to stringResource(R.string.settings_theme_mode_light),
-                    listOf(ColorMode.DARK) to stringResource(R.string.settings_theme_mode_dark),
-                    listOf(ColorMode.DARK_AMOLED) to stringResource(R.string.settings_theme_mode_dark)
-                )
-
-                options.chunked(4).forEach { rowOptions ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween)
-                    ) {
-                        rowOptions.forEachIndexed { index, (modes, label) ->
-                            val sourceShape = alohaSegmentedShape(
-                                index = index,
-                                count = rowOptions.size,
-                                vertical = false,
-                            )
-                            ExpressiveToggleButton(
-                                checked = currentColorMode in modes,
-                                onCheckedChange = {
-                                    if (it) {
+                val systemModeLabel = stringResource(R.string.settings_theme_mode_system)
+                val lightModeLabel = stringResource(R.string.settings_theme_mode_light)
+                val darkModeLabel = stringResource(R.string.settings_theme_mode_dark)
+                val options = remember(systemModeLabel, lightModeLabel, darkModeLabel) {
+                    listOf(
+                        listOf(ColorMode.SYSTEM) to systemModeLabel,
+                        listOf(ColorMode.LIGHT) to lightModeLabel,
+                        listOf(ColorMode.DARK) to darkModeLabel,
+                        listOf(ColorMode.DARK_AMOLED) to darkModeLabel,
+                    )
+                }
+                val modeInteractionSources = remember {
+                    List(4) { MutableInteractionSource() }
+                }
+                ExpressiveButtonGroup(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(
+                        ButtonGroupDefaults.ConnectedSpaceBetween,
+                        alignment = Alignment.CenterHorizontally,
+                    ),
+                ) {
+                    options.forEachIndexed { index, (modes, label) ->
+                        val interactionSource = modeInteractionSources[index]
+                        customItem(
+                            buttonGroupContent = {
+                                val sourceShape = alohaSegmentedShape(
+                                    index = index,
+                                    count = options.size,
+                                    vertical = false,
+                                )
+                                ExpressiveToggleButton(
+                                    checked = currentColorMode in modes,
+                                    onCheckedChange = {
+                                        if (it) actions.onSetColorMode(modes.first())
+                                    },
+                                    modifier = Modifier.semantics { role = Role.RadioButton },
+                                    shapes = ToggleButtonShapes(
+                                        shape = sourceShape,
+                                        pressedShape = sourceShape,
+                                        checkedShape = sourceShape,
+                                    ),
+                                    interactionSource = interactionSource,
+                                    shapeIndex = index,
+                                    shapeCount = options.size,
+                                ) {
+                                    Icon(
+                                        imageVector = when (modes.first()) {
+                                            ColorMode.SYSTEM -> Icons.Filled.Brightness4
+                                            ColorMode.LIGHT -> Icons.Filled.Brightness7
+                                            ColorMode.DARK -> Icons.Filled.Brightness3
+                                            ColorMode.DARK_AMOLED -> Icons.Filled.Brightness1
+                                            else -> Icons.Filled.Brightness4
+                                        },
+                                        contentDescription = label,
+                                    )
+                                }
+                            },
+                            menuContent = { menuState ->
+                                DropdownMenuItem(
+                                    text = { Text(label) },
+                                    onClick = {
+                                        menuState.dismiss()
                                         haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
                                         actions.onSetColorMode(modes.first())
-                                    }
-                                },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .semantics { role = Role.RadioButton },
-                                colors = ToggleButtonDefaults.colors(
-                                    checkedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                                    containerColor = MaterialTheme.colorScheme.surface,
-                                ),
-                                shapes = ToggleButtonShapes(
-                                    shape = sourceShape,
-                                    pressedShape = sourceShape,
-                                    checkedShape = sourceShape,
-                                ),
-                            ) {
-                                Icon(
-                                    imageVector = when (modes.first()) {
-                                        ColorMode.SYSTEM -> Icons.Filled.Brightness4
-                                        ColorMode.LIGHT -> Icons.Filled.Brightness7
-                                        ColorMode.DARK -> Icons.Filled.Brightness3
-                                        ColorMode.DARK_AMOLED -> Icons.Filled.Brightness1
-                                        else -> Icons.Filled.Brightness4
                                     },
-                                    contentDescription = label
                                 )
-                            }
-                        }
+                            },
+                        )
                     }
                 }
-
                 SegmentedColumn(
                     modifier = Modifier.padding(vertical = 4.dp),
-                    content = listOf(
+                    content = remember(colorStyle, colorSpec, actions) { listOf(
                         {
                             val styles = PaletteStyle.entries
                             SegmentedChoiceOptionsItem(
@@ -317,6 +335,7 @@ fun ColorPaletteScreenMaterial(
                             )
                         }
                     )
+                }
                 )
 
                 SegmentedColumn(
@@ -510,27 +529,66 @@ fun ColorPaletteScreenMaterial(
                                     },
                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                                         )
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.End,
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    ExpressiveTextButton(onClick = { showPageScaleValueDialog = false }) {
-                                        Text(stringResource(android.R.string.cancel))
-                                    }
-                                    ExpressiveTextButton(
-                                        onClick = {
-                                            val parsed = pageScaleInput.toIntOrNull()
-                                            if (parsed != null && parsed in 80..110) {
-                                                sliderValue = parsed / 100f
-                                                actions.onSetPageScale(sliderValue)
-                                                showPageScaleValueDialog = false
-                                            }
-                                        },
-                                    ) {
-                                        Text(stringResource(android.R.string.ok))
-                                    }
-                                }
+                                val pageScaleCancelSource = remember { MutableInteractionSource() }
+                                        val pageScaleConfirmSource = remember { MutableInteractionSource() }
+                                        ExpressiveButtonGroup(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(
+                                                ButtonGroupDefaults.ConnectedSpaceBetween,
+                                                alignment = Alignment.CenterHorizontally,
+                                            ),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            customItem(
+                                                buttonGroupContent = {
+                                                    ExpressiveButtonGroupAction(
+                                                        onClick = { showPageScaleValueDialog = false },
+                                                        modifier = Modifier,
+                                                        interactionSource = pageScaleCancelSource,
+                                                        shapeIndex = 0,
+                                                        shapeCount = 2,
+                                                    ) { Text(stringResource(android.R.string.cancel)) }
+                                                },
+                                                menuContent = { state ->
+                                                    DropdownMenuItem(
+                                                        text = { Text(stringResource(android.R.string.cancel)) },
+                                                        onClick = { state.dismiss(); showPageScaleValueDialog = false },
+                                                    )
+                                                },
+                                            )
+                                            customItem(
+                                                buttonGroupContent = {
+                                                    ExpressiveButtonGroupAction(
+                                                        onClick = {
+                                                            val parsed = pageScaleInput.toIntOrNull()
+                                                if (parsed != null && parsed in 80..110) {
+                                                    sliderValue = parsed / 100f
+                                                    actions.onSetPageScale(sliderValue)
+                                                    showPageScaleValueDialog = false
+                                                }
+                                                        },
+                                                        modifier = Modifier,
+                                                        interactionSource = pageScaleConfirmSource,
+                                                        shapeIndex = 1,
+                                                        shapeCount = 2,
+                                                    ) { Text(stringResource(android.R.string.ok)) }
+                                                },
+                                                menuContent = { state ->
+                                                    DropdownMenuItem(
+                                                        text = { Text(stringResource(android.R.string.ok)) },
+                                                        onClick = {
+                                                            state.dismiss()
+                                                            val parsed = pageScaleInput.toIntOrNull()
+                                                if (parsed != null && parsed in 80..110) {
+                                                    sliderValue = parsed / 100f
+                                                    actions.onSetPageScale(sliderValue)
+                                                    showPageScaleValueDialog = false
+                                                }
+                                                        },
+                                                    )
+                                                },
+                                            )
+                                        }
                             }
                         }
                     }
@@ -661,28 +719,67 @@ fun ColorPaletteScreenMaterial(
                                             modifier = Modifier.fillMaxWidth(),
                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                                         )
-                                        Row(
+                                        val cornerCancelSource = remember { MutableInteractionSource() }
+                                        val cornerConfirmSource = remember { MutableInteractionSource() }
+                                        ExpressiveButtonGroup(
                                             modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.End,
+                                            horizontalArrangement = Arrangement.spacedBy(
+                                                ButtonGroupDefaults.ConnectedSpaceBetween,
+                                                alignment = Alignment.CenterHorizontally,
+                                            ),
                                             verticalAlignment = Alignment.CenterVertically,
                                         ) {
-                                            ExpressiveTextButton(onClick = { showCornerValueDialog = false }) {
-                                                Text(stringResource(android.R.string.cancel))
-                                            }
-                                            ExpressiveTextButton(
-                                                onClick = {
-                                                    val parsed = cornerScaleInput.toFloatOrNull()
-                                                    if (parsed != null && parsed.isFinite() && parsed in 0f..2f) {
-                                                        val snapped = (kotlin.math.round(parsed * 20f) / 20f)
-                                                            .coerceIn(0f, 2f)
-                                                        cornerScale = snapped
-                                                        actions.onSetMaterialCornerScale(snapped)
-                                                        showCornerValueDialog = false
-                                                    }
+                                            customItem(
+                                                buttonGroupContent = {
+                                                    ExpressiveButtonGroupAction(
+                                                        onClick = { showCornerValueDialog = false },
+                                                        modifier = Modifier,
+                                                        interactionSource = cornerCancelSource,
+                                                        shapeIndex = 0,
+                                                        shapeCount = 2,
+                                                    ) { Text(stringResource(android.R.string.cancel)) }
                                                 },
-                                            ) {
-                                                Text(stringResource(android.R.string.ok))
-                                            }
+                                                menuContent = { state ->
+                                                    DropdownMenuItem(
+                                                        text = { Text(stringResource(android.R.string.cancel)) },
+                                                        onClick = { state.dismiss(); showCornerValueDialog = false },
+                                                    )
+                                                },
+                                            )
+                                            customItem(
+                                                buttonGroupContent = {
+                                                    ExpressiveButtonGroupAction(
+                                                        onClick = {
+                                                            val parsed = cornerScaleInput.toFloatOrNull()
+                                                if (parsed != null && parsed.isFinite() && parsed in 0f..2f) {
+                                                    val snapped = (kotlin.math.round(parsed * 20f) / 20f).coerceIn(0f, 2f)
+                                                    cornerScale = snapped
+                                                    actions.onSetMaterialCornerScale(snapped)
+                                                    showCornerValueDialog = false
+                                                }
+                                                        },
+                                                        modifier = Modifier,
+                                                        interactionSource = cornerConfirmSource,
+                                                        shapeIndex = 1,
+                                                        shapeCount = 2,
+                                                    ) { Text(stringResource(android.R.string.ok)) }
+                                                },
+                                                menuContent = { state ->
+                                                    DropdownMenuItem(
+                                                        text = { Text(stringResource(android.R.string.ok)) },
+                                                        onClick = {
+                                                            state.dismiss()
+                                                            val parsed = cornerScaleInput.toFloatOrNull()
+                                                if (parsed != null && parsed.isFinite() && parsed in 0f..2f) {
+                                                    val snapped = (kotlin.math.round(parsed * 20f) / 20f).coerceIn(0f, 2f)
+                                                    cornerScale = snapped
+                                                    actions.onSetMaterialCornerScale(snapped)
+                                                    showCornerValueDialog = false
+                                                }
+                                                        },
+                                                    )
+                                                },
+                                            )
                                         }
                                     }
                                 }
@@ -817,28 +914,67 @@ fun ColorPaletteScreenMaterial(
                                             modifier = Modifier.fillMaxWidth(),
                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                                         )
-                                        Row(
+                                        val outlineCancelSource = remember { MutableInteractionSource() }
+                                        val outlineConfirmSource = remember { MutableInteractionSource() }
+                                        ExpressiveButtonGroup(
                                             modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.End,
+                                            horizontalArrangement = Arrangement.spacedBy(
+                                                ButtonGroupDefaults.ConnectedSpaceBetween,
+                                                alignment = Alignment.CenterHorizontally,
+                                            ),
                                             verticalAlignment = Alignment.CenterVertically,
                                         ) {
-                                            ExpressiveTextButton(onClick = { showOutlineValueDialog = false }) {
-                                                Text(stringResource(android.R.string.cancel))
-                                            }
-                                            ExpressiveTextButton(
-                                                onClick = {
-                                                    val parsed = outlineWidthInput.toFloatOrNull()
-                                                    if (parsed != null && parsed.isFinite() && parsed in 0f..1.5f) {
-                                                        val snapped = (kotlin.math.round(parsed * 10f) / 10f)
-                                                            .coerceIn(0f, 1.5f)
-                                                        outlineWidth = snapped
-                                                        actions.onSetMaterialOutlineWidth(snapped)
-                                                        showOutlineValueDialog = false
-                                                    }
+                                            customItem(
+                                                buttonGroupContent = {
+                                                    ExpressiveButtonGroupAction(
+                                                        onClick = { showOutlineValueDialog = false },
+                                                        modifier = Modifier,
+                                                        interactionSource = outlineCancelSource,
+                                                        shapeIndex = 0,
+                                                        shapeCount = 2,
+                                                    ) { Text(stringResource(android.R.string.cancel)) }
                                                 },
-                                            ) {
-                                                Text(stringResource(android.R.string.ok))
-                                            }
+                                                menuContent = { state ->
+                                                    DropdownMenuItem(
+                                                        text = { Text(stringResource(android.R.string.cancel)) },
+                                                        onClick = { state.dismiss(); showOutlineValueDialog = false },
+                                                    )
+                                                },
+                                            )
+                                            customItem(
+                                                buttonGroupContent = {
+                                                    ExpressiveButtonGroupAction(
+                                                        onClick = {
+                                                            val parsed = outlineWidthInput.toFloatOrNull()
+                                                if (parsed != null && parsed.isFinite() && parsed in 0f..1.5f) {
+                                                    val snapped = (kotlin.math.round(parsed * 10f) / 10f).coerceIn(0f, 1.5f)
+                                                    outlineWidth = snapped
+                                                    actions.onSetMaterialOutlineWidth(snapped)
+                                                    showOutlineValueDialog = false
+                                                }
+                                                        },
+                                                        modifier = Modifier,
+                                                        interactionSource = outlineConfirmSource,
+                                                        shapeIndex = 1,
+                                                        shapeCount = 2,
+                                                    ) { Text(stringResource(android.R.string.ok)) }
+                                                },
+                                                menuContent = { state ->
+                                                    DropdownMenuItem(
+                                                        text = { Text(stringResource(android.R.string.ok)) },
+                                                        onClick = {
+                                                            state.dismiss()
+                                                            val parsed = outlineWidthInput.toFloatOrNull()
+                                                if (parsed != null && parsed.isFinite() && parsed in 0f..1.5f) {
+                                                    val snapped = (kotlin.math.round(parsed * 10f) / 10f).coerceIn(0f, 1.5f)
+                                                    outlineWidth = snapped
+                                                    actions.onSetMaterialOutlineWidth(snapped)
+                                                    showOutlineValueDialog = false
+                                                }
+                                                        },
+                                                    )
+                                                },
+                                            )
                                         }
                                     }
                                 }
@@ -851,7 +987,16 @@ fun ColorPaletteScreenMaterial(
                 SegmentedColumn(
                     modifier = Modifier.padding(vertical = 4.dp),
                     title = stringResource(R.string.theme_group_shadows),
-                    content = listOf(
+                    content = remember(
+                        uiState.materialShadowContainers,
+                        uiState.materialShadowTopBars,
+                        uiState.materialShadowButtons,
+                        uiState.materialShadowFloatingButtons,
+                        uiState.materialShadowSwitches,
+                        uiState.materialShadowSliders,
+                        actions,
+                    ) {
+                        listOf(
                         {
                             SegmentedSwitchItem(
                                 title = stringResource(R.string.theme_shadow_container),
@@ -894,12 +1039,13 @@ fun ColorPaletteScreenMaterial(
                                 onCheckedChange = actions.onSetMaterialShadowSliders,
                             )
                         },
-                    )
+                        )
+                    }
                 )
-            }
 
             Spacer(modifier = Modifier.height(16.dp + navBars.calculateBottomPadding() + captionBar.calculateBottomPadding()))
         }
+    }
     }
 }
 

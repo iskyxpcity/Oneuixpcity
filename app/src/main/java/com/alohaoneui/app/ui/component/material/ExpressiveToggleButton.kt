@@ -3,11 +3,16 @@ package com.alohaoneui.app.ui.component.material
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
+import com.alohaoneui.app.ui.component.material.alohaSegmentedShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonColors
@@ -29,22 +34,76 @@ fun ExpressiveToggleButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     colors: ToggleButtonColors = expressiveToggleButtonColors(),
+    interactionSource: MutableInteractionSource? = null,
+    pressMotionEnabled: Boolean = true,
+    shapeIndex: Int = -1,
+    shapeCount: Int = 1,
     content: @Composable RowScope.() -> Unit,
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
+    val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
+    val haptic = LocalHapticFeedback.current
+    val pressExpansion = rememberMaterialExpressivePressExpansion(actualInteractionSource, enabled)
+    // Feed the same live expansion progress into the detail-row shape engine.
+    // Selected buttons use one unified shape; only unselected buttons use
+    // leading / middle / trailing geometry.
+    val shapeProgress = if (pressMotionEnabled) {
+        (pressExpansion.value / 16f).coerceIn(0f, 1f)
+    } else 0f
+    val animatedShape = if (checked) {
+        alohaSegmentedShape(
+            index = -1,
+            count = 1,
+            vertical = false,
+            pressProgress = shapeProgress,
+        )
+    } else {
+        alohaSegmentedShape(
+            index = shapeIndex,
+            count = shapeCount,
+            vertical = false,
+            pressProgress = shapeProgress,
+        )
+    }
+    val expressiveShapes = shapes.copy(
+        shape = animatedShape,
+        pressedShape = animatedShape,
+        checkedShape = animatedShape,
+    )
     ToggleButton(
         checked = checked,
-        onCheckedChange = onCheckedChange,
+        onCheckedChange = { value -> haptic.performHapticFeedback(HapticFeedbackType.VirtualKey); onCheckedChange(value) },
         modifier = modifier,
         enabled = enabled,
         colors = colors,
-        shapes = shapes,
+        shapes = expressiveShapes,
         border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
             BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
         },
-        elevation = if (LocalMaterialShadowButtons.current) ToggleButtonDefaults.elevation() else null,
-        interactionSource = interactionSource,
-        content = content,
+        elevation = if (LocalMaterialShadowButtons.current) {
+            ToggleButtonDefaults.elevation(
+                defaultElevation = 2.dp,
+                pressedElevation = 3.dp,
+                focusedElevation = 2.dp,
+                hoveredElevation = 2.dp,
+                disabledElevation = 0.dp,
+            )
+        } else null,
+        interactionSource = actualInteractionSource,
+        content = {
+            // The group container supplies the one shared expansion limit.
+            // Outside ExpressiveButtonGroup the CompositionLocal is 0.dp,
+            // so standalone toggles only morph their themed shape.
+            val groupExpansionPerSide = LocalMaterialButtonGroupExpansionPerSide.current
+            // Group membership comes from ExpressiveButtonGroup's scope, not
+            // shapeCount: some pages rely on Material's supplied button shapes
+            // and intentionally leave shapeIndex/shapeCount at their defaults.
+            val groupExpansion = if (pressMotionEnabled) {
+                groupExpansionPerSide * shapeProgress
+            } else 0.dp
+            Spacer(Modifier.width(groupExpansion))
+            content()
+            Spacer(Modifier.width(groupExpansion))
+        },
     )
 }
 

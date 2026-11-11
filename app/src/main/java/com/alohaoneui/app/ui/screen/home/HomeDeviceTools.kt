@@ -28,6 +28,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,7 +39,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Devices
 import androidx.compose.material.icons.outlined.ExpandLess
@@ -81,6 +81,9 @@ import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.material.TonalCard
 import com.alohaoneui.app.ui.component.material.ExpressiveToggleButton
+import com.alohaoneui.app.ui.component.material.ExpressiveButtonGroup
+import com.alohaoneui.app.ui.component.material.alohaCornerShape
+import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -226,31 +229,55 @@ private fun DeviceInfoSectionSelector(
     onSelect: (Int) -> Unit,
 ) {
     val options = listOf("系统监视器", "屏幕信息", "设备信息")
+    val interactionSources = remember(options.size) {
+        List(options.size) { MutableInteractionSource() }
+    }
     when (LocalUiMode.current) {
-        UiMode.Material -> Row(
+        UiMode.Material -> ExpressiveButtonGroup(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+            horizontalArrangement = Arrangement.spacedBy(
+                ButtonGroupDefaults.ConnectedSpaceBetween,
+                alignment = Alignment.CenterHorizontally,
+            ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             options.forEachIndexed { index, label ->
-                ExpressiveToggleButton(
-                    checked = selectedSection == index,
-                    onCheckedChange = { checked -> if (checked) onSelect(index) },
-                    modifier = Modifier.weight(1f).semantics { role = Role.RadioButton },
-                    shapes = when (index) {
-                        0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                        options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                        else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                val interactionSource = interactionSources[index]
+                customItem(
+                    buttonGroupContent = {
+                        ExpressiveToggleButton(
+                            checked = selectedSection == index,
+                            onCheckedChange = { checked -> if (checked) onSelect(index) },
+                            modifier = Modifier
+                                .semantics { role = Role.RadioButton },
+                            shapes = when (index) {
+                                0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                                options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                                else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                            },
+                            interactionSource = interactionSource,
+                            shapeIndex = index,
+                            shapeCount = options.size,
+                        ) {
+                            MaterialText(
+                                text = label,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = if (selectedSection == index) FontWeight.SemiBold else FontWeight.Medium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
                     },
-                ) {
-                    MaterialText(
-                        text = label,
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = if (selectedSection == index) FontWeight.SemiBold else FontWeight.Medium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
+                    menuContent = { menuState ->
+                        androidx.compose.material3.DropdownMenuItem(
+                            text = { MaterialText(label) },
+                            onClick = {
+                                menuState.dismiss()
+                                onSelect(index)
+                            },
+                        )
+                    },
+                )
             }
         }
         UiMode.Miuix -> MiuixTabRowWithContour(
@@ -473,9 +500,9 @@ private fun CpuFrequencyGrid(entries: List<CpuFrequencyEntry>) {
                         modifier = Modifier
                             .weight(1f)
                             .height(58.dp)
-                            .clip(RoundedCornerShape(12.dp))
+                            .clip(alohaCornerShape(12.dp))
                             .background(deviceTileColor())
-                            .border(1.dp, deviceTileOutlineColor(), RoundedCornerShape(12.dp))
+                            .then(LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let { Modifier.border(it.dp, deviceTileOutlineColor(), alohaCornerShape(12.dp)) } ?: Modifier)
                             .padding(horizontal = 3.dp, vertical = 8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
@@ -506,9 +533,9 @@ private fun CpuFrequencyGrid(entries: List<CpuFrequencyEntry>) {
 @Composable
 private fun DeviceValueTile(title: String, value: String, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.clip(RoundedCornerShape(14.dp))
+        modifier = modifier.clip(alohaCornerShape(14.dp))
             .background(deviceTileColor())
-            .border(1.dp, deviceTileOutlineColor(), RoundedCornerShape(14.dp))
+            .then(LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let { Modifier.border(it.dp, deviceTileOutlineColor(), alohaCornerShape(14.dp)) } ?: Modifier)
             .padding(horizontal = 12.dp, vertical = 11.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {

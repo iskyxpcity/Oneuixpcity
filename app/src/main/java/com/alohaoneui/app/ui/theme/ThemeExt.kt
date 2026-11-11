@@ -6,11 +6,16 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.rememberDynamicColorScheme
+
+/** Retained historical animation trace identifier; not a persisted preference key. */
+@Suppress("unused")
+private const val LEGACY_THEME_COLOR_ANIMATION_LABEL = "oneuixp_theme_color_animation"
 
 /**
  * Adapted from the KernelSU v3.3.1 theme layer under GPL-3.0.
@@ -38,10 +43,12 @@ fun rememberAlohaOneUIColorScheme(
     colorSpec: ColorSpec.SpecVersion,
 ): ColorScheme {
     val context = LocalContext.current
-    val seed = if (seedColor == Color.Unspecified) {
-        (if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)).primary
-    } else {
-        seedColor
+    val seed = remember(seedColor, isDark, context) {
+        if (seedColor == Color.Unspecified) {
+            (if (isDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)).primary
+        } else {
+            seedColor
+        }
     }
     return rememberDynamicColorScheme(
         seedColor = seed,

@@ -1,6 +1,7 @@
 package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
@@ -9,8 +10,21 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonGroup
+import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.ButtonGroupMenuState
+import androidx.compose.material3.ButtonGroupScope
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.IconButton
@@ -21,6 +35,10 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -30,9 +48,57 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
+
+/**
+ * The group container is the single source of truth for horizontal press expansion.
+ * Standalone buttons receive zero and therefore never change their measured width.
+ */
+private val MaterialButtonGroupExpansionPerSide = 12.dp
+internal val LocalMaterialButtonGroupExpansionPerSide = compositionLocalOf { 0.dp }
+
+/**
+ * Project-wide Material 3 Expressive button-group container.
+ * All group members read the same per-side expansion limit from this scope.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun ExpressiveButtonGroup(
+    modifier: Modifier = Modifier.fillMaxWidth(),
+    expandedRatio: Float = 0.30f,
+    horizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(
+        ButtonGroupDefaults.ConnectedSpaceBetween,
+        alignment = Alignment.CenterHorizontally,
+    ),
+    verticalAlignment: Alignment.Vertical = Alignment.CenterVertically,
+    overflowIndicator: @Composable (ButtonGroupMenuState) -> Unit = { menuState ->
+        ExpressiveIconButton(
+            onClick = {
+                if (menuState.isShowing) menuState.dismiss() else menuState.show()
+            },
+        ) {
+            Icon(Icons.Default.MoreHoriz, contentDescription = "More options")
+        }
+    },
+    content: ButtonGroupScope.() -> Unit,
+) {
+    CompositionLocalProvider(
+        LocalMaterialButtonGroupExpansionPerSide provides MaterialButtonGroupExpansionPerSide,
+    ) {
+        ButtonGroup(
+            overflowIndicator = overflowIndicator,
+            modifier = modifier,
+            expandedRatio = expandedRatio,
+            horizontalArrangement = horizontalArrangement,
+            verticalAlignment = verticalAlignment,
+            content = content,
+        )
+    }
+}
 
 /**
  * Shared Material button controls. Screen code owns actions and content; this
@@ -45,15 +111,31 @@ fun ExpressiveButton(
     enabled: Boolean = true,
     shape: Shape? = null,
     colors: ButtonColors = ButtonDefaults.buttonColors(),
+    interactionSource: MutableInteractionSource? = null,
+    pressMotionEnabled: Boolean = true,
+    shapeIndex: Int = -1,
+    shapeCount: Int = 1,
     content: @Composable RowScope.() -> Unit,
 ) {
-    val actualShape = shape ?: alohaCornerShape(12.dp)
+    val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
+    val pressExpansion = rememberMaterialExpressivePressExpansion(actualInteractionSource, enabled)
+    val shapeProgress = if (pressMotionEnabled) {
+        (pressExpansion.value / 16f).coerceIn(0f, 1f)
+    } else 0f
+    val actualShape = shape ?: alohaSegmentedShape(
+        index = shapeIndex,
+        count = shapeCount,
+        vertical = false,
+        pressProgress = shapeProgress,
+    )
     val hasShadow = LocalMaterialShadowButtons.current
+    val haptic = LocalHapticFeedback.current
     val outlineWidth = LocalMaterialOutlineWidth.current
     Button(
-        onClick = onClick,
+        onClick = { haptic.performHapticFeedback(HapticFeedbackType.VirtualKey); onClick() },
         modifier = modifier,
         enabled = enabled,
+        interactionSource = actualInteractionSource,
         shape = actualShape,
         colors = colors,
         elevation = ButtonDefaults.buttonElevation(
@@ -63,10 +145,14 @@ fun ExpressiveButton(
             hoveredElevation = if (hasShadow) 2.dp else 0.dp,
             disabledElevation = 0.dp,
         ),
-        border = outlineWidth.takeIf { it > 0f }?.let {
-            BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
+        border = outlineWidth.takeIf { it > 0f }?.let { BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant) },
+        content = {
+            val groupExpansionPerSide = LocalMaterialButtonGroupExpansionPerSide.current
+            val groupExpansion = if (pressMotionEnabled) groupExpansionPerSide * shapeProgress else 0.dp
+            Spacer(Modifier.width(groupExpansion))
+            content()
+            Spacer(Modifier.width(groupExpansion))
         },
-        content = content,
     )
 }
 
@@ -77,11 +163,29 @@ fun ExpressiveTextButton(
     enabled: Boolean = true,
     shape: Shape? = null,
     colors: ButtonColors = ButtonDefaults.textButtonColors(),
+    interactionSource: MutableInteractionSource? = null,
+    pressMotionEnabled: Boolean = true,
+    shapeIndex: Int = -1,
+    shapeCount: Int = 1,
     content: @Composable RowScope.() -> Unit,
 ) {
-    val actualShape = shape ?: alohaCornerShape(12.dp)
+    val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
+    val pressExpansion = rememberMaterialExpressivePressExpansion(actualInteractionSource, enabled)
+    val shapeProgress = if (pressMotionEnabled) {
+        (pressExpansion.value / 16f).coerceIn(0f, 1f)
+    } else 0f
+    val actualShape = shape ?: alohaSegmentedShape(
+        index = shapeIndex,
+        count = shapeCount,
+        vertical = false,
+        pressProgress = shapeProgress,
+    )
     val outlineWidth = LocalMaterialOutlineWidth.current
+    val hasShadow = LocalMaterialShadowButtons.current
+    val haptic = LocalHapticFeedback.current
+    val shadowElevation by animateDpAsState(if (hasShadow && pressExpansion.value > 0.1f) 3.dp else if (hasShadow) 2.dp else 0.dp, label = "textButtonShadow")
     val styledModifier = modifier
+        .then(if (hasShadow) Modifier.shadow(shadowElevation, actualShape) else Modifier)
         .then(
             outlineWidth.takeIf { it > 0f }?.let {
                 Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, actualShape)
@@ -89,11 +193,52 @@ fun ExpressiveTextButton(
         )
         .clip(actualShape)
     TextButton(
-        onClick = onClick,
+        onClick = { haptic.performHapticFeedback(HapticFeedbackType.VirtualKey); onClick() },
         modifier = styledModifier,
         enabled = enabled,
         shape = actualShape,
         colors = colors,
+        interactionSource = actualInteractionSource,
+        content = {
+            val groupExpansionPerSide = LocalMaterialButtonGroupExpansionPerSide.current
+            val groupExpansion = if (pressMotionEnabled) groupExpansionPerSide * shapeProgress else 0.dp
+            Spacer(Modifier.width(groupExpansion))
+            content()
+            Spacer(Modifier.width(groupExpansion))
+        },
+    )
+}
+
+
+/**
+ * Filled action control for members of an ExpressiveButtonGroup.
+ * It uses the same shared Material container, outline, elevation, segmented
+ * geometry and horizontal press expansion as the home button group.
+ */
+@Composable
+fun ExpressiveButtonGroupAction(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    interactionSource: MutableInteractionSource? = null,
+    shapeIndex: Int,
+    shapeCount: Int,
+    content: @Composable RowScope.() -> Unit,
+) {
+    val colors = ButtonDefaults.buttonColors(
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+        contentColor = MaterialTheme.colorScheme.onSurface,
+        disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    ExpressiveButton(
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled,
+        colors = colors,
+        interactionSource = interactionSource,
+        shapeIndex = shapeIndex,
+        shapeCount = shapeCount,
         content = content,
     )
 }
@@ -107,15 +252,26 @@ fun ExpressiveIconButton(
     interactionSource: MutableInteractionSource? = null,
     shape: Shape? = null,
     framed: Boolean = false,
+    pressMotionEnabled: Boolean = true,
     content: @Composable () -> Unit,
 ) {
-    val actualShape = shape ?: alohaCornerShape(40.dp)
+    val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
+    val pressExpansion = rememberMaterialExpressivePressExpansion(actualInteractionSource, enabled)
+    val shapeProgress = (pressExpansion.value / 16f).coerceIn(0f, 1f)
+    val actualShape = shape ?: alohaSegmentedShape(
+        index = -1,
+        count = 1,
+        vertical = false,
+        pressProgress = shapeProgress,
+    )
     val outlineWidth = LocalMaterialOutlineWidth.current
+    val hasShadow = LocalMaterialShadowButtons.current
+    val haptic = LocalHapticFeedback.current
+    val shadowElevation by animateDpAsState(if (hasShadow && pressExpansion.value > 0.1f) 3.dp else if (hasShadow) 2.dp else 0.dp, label = "iconButtonShadow")
     val styledModifier = modifier
+        .then(if (hasShadow) Modifier.shadow(shadowElevation, actualShape) else Modifier)
         .then(
-            if (framed && LocalMaterialShadowButtons.current) {
-                Modifier.shadow(2.dp, actualShape)
-            } else Modifier
+            Modifier
         )
         .then(
             if (framed && outlineWidth > 0f) {
@@ -124,12 +280,12 @@ fun ExpressiveIconButton(
         )
         .clip(actualShape)
     IconButton(
-        onClick = onClick,
+        onClick = { haptic.performHapticFeedback(HapticFeedbackType.VirtualKey); onClick() },
         modifier = styledModifier,
         enabled = enabled,
         colors = colors,
-        interactionSource = interactionSource,
-        content = content,
+        interactionSource = actualInteractionSource,
+        content = { content() },
     )
 }
 
