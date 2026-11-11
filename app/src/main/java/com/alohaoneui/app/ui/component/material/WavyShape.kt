@@ -117,15 +117,25 @@ internal class WavyShape private constructor(
                 return Outline.Rounded(RoundRect(0f, 0f, width, height))
             }
 
-            val top = (width - topLeft - topRight).coerceAtLeast(0f)
-            val right = (height - topRight - bottomRight).coerceAtLeast(0f)
-            val bottom = (width - bottomRight - bottomLeft).coerceAtLeast(0f)
-            val left = (height - bottomLeft - topLeft).coerceAtLeast(0f)
+            val amplitude = (0.72f * density).coerceAtMost(min(width, height) * 0.018f)
+            // Keep the full wave inside the component bounds. The centerline is inset
+            // by one amplitude, so outward crests reach the bounds without clipping.
+            val inset = amplitude
+            val shapeWidth = (width - inset * 2f).coerceAtLeast(0.1f)
+            val shapeHeight = (height - inset * 2f).coerceAtLeast(0.1f)
+            val tl = (topLeft - inset).coerceAtLeast(0f)
+            val tr = (topRight - inset).coerceAtLeast(0f)
+            val br = (bottomRight - inset).coerceAtLeast(0f)
+            val bl = (bottomLeft - inset).coerceAtLeast(0f)
+            val top = (shapeWidth - tl - tr).coerceAtLeast(0f)
+            val right = (shapeHeight - tr - br).coerceAtLeast(0f)
+            val bottom = (shapeWidth - br - bl).coerceAtLeast(0f)
+            val left = (shapeHeight - bl - tl).coerceAtLeast(0f)
             val quarterPi = PI.toFloat() / 2f
-            val tlArc = topLeft * quarterPi
-            val trArc = topRight * quarterPi
-            val brArc = bottomRight * quarterPi
-            val blArc = bottomLeft * quarterPi
+            val tlArc = tl * quarterPi
+            val trArc = tr * quarterPi
+            val brArc = br * quarterPi
+            val blArc = bl * quarterPi
             val perimeter = top + trArc + right + brArc + bottom + blArc + left + tlArc
             if (perimeter <= 0.5f) {
                 return Outline.Rounded(RoundRect(0f, 0f, width, height))
@@ -135,7 +145,6 @@ internal class WavyShape private constructor(
             // side uses the same wavelength and amplitude.
             val waveCount = (perimeter / (12f * density).coerceAtLeast(1f))
                 .toInt().coerceIn(8, 40)
-            val amplitude = (0.72f * density).coerceAtMost(min(width, height) * 0.018f)
             val sampleCount = waveCount * profile.size
             val step = perimeter / sampleCount
             val frame = FloatArray(4)
@@ -144,19 +153,19 @@ internal class WavyShape private constructor(
             fun frameAt(distance: Float) {
                 var d = distance
                 if (d < top) {
-                    frame[0] = topLeft + d
-                    frame[1] = 0f
+                    frame[0] = inset + tl + d
+                    frame[1] = inset
                     frame[2] = 0f
                     frame[3] = -1f
                     return
                 }
                 d -= top
-                if (d < trArc && topRight > 0f) {
-                    val angle = -quarterPi + d / topRight
+                if (d < trArc && tr > 0f) {
+                    val angle = -quarterPi + d / tr
                     val c = cos(angle)
                     val s = sin(angle)
-                    frame[0] = width - topRight + topRight * c
-                    frame[1] = topRight + topRight * s
+                    frame[0] = inset + shapeWidth - tr + topRight * c
+                    frame[1] = tr + tr * s
                     frame[2] = c
                     frame[3] = s
                     return
@@ -164,61 +173,61 @@ internal class WavyShape private constructor(
                 d -= trArc
                 if (d < right) {
                     frame[0] = width
-                    frame[1] = topRight + d
+                    frame[1] = inset + tr + d
                     frame[2] = 1f
                     frame[3] = 0f
                     return
                 }
                 d -= right
-                if (d < brArc && bottomRight > 0f) {
-                    val angle = d / bottomRight
+                if (d < brArc && br > 0f) {
+                    val angle = d / br
                     val c = cos(angle)
                     val s = sin(angle)
-                    frame[0] = width - bottomRight + bottomRight * c
-                    frame[1] = height - bottomRight + bottomRight * s
+                    frame[0] = width - br + br * c
+                    frame[1] = shapeHeight - br + bottomRight * s
                     frame[2] = c
                     frame[3] = s
                     return
                 }
                 d -= brArc
                 if (d < bottom) {
-                    frame[0] = width - bottomRight - d
-                    frame[1] = height
+                    frame[0] = inset + shapeWidth - br - d
+                    frame[1] = inset + shapeHeight
                     frame[2] = 0f
                     frame[3] = 1f
                     return
                 }
                 d -= bottom
-                if (d < blArc && bottomLeft > 0f) {
-                    val angle = quarterPi + d / bottomLeft
+                if (d < blArc && bl > 0f) {
+                    val angle = quarterPi + d / bl
                     val c = cos(angle)
                     val s = sin(angle)
-                    frame[0] = bottomLeft + bottomLeft * c
-                    frame[1] = height - bottomLeft + bottomLeft * s
+                    frame[0] = inset + bl + bl * c
+                    frame[1] = inset + shapeHeight - bl + bl * s
                     frame[2] = c
                     frame[3] = s
                     return
                 }
                 d -= blArc
                 if (d < left) {
-                    frame[0] = 0f
-                    frame[1] = height - bottomLeft - d
+                    frame[0] = inset
+                    frame[1] = inset + shapeHeight - bl - d
                     frame[2] = -1f
                     frame[3] = 0f
                     return
                 }
                 d -= left
-                if (topLeft > 0f) {
-                    val angle = PI.toFloat() + d / topLeft
+                if (tl > 0f) {
+                    val angle = PI.toFloat() + d / tl
                     val c = cos(angle)
                     val s = sin(angle)
-                    frame[0] = topLeft + topLeft * c
-                    frame[1] = topLeft + topLeft * s
+                    frame[0] = inset + tl + tl * c
+                    frame[1] = inset + tl + tl * s
                     frame[2] = c
                     frame[3] = s
                 } else {
-                    frame[0] = topLeft
-                    frame[1] = 0f
+                    frame[0] = inset + tl
+                    frame[1] = inset
                     frame[2] = 0f
                     frame[3] = -1f
                 }
