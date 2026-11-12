@@ -80,7 +80,9 @@ internal class WavyShape private constructor(
 
         val amplitude = (WAVE_AMPLITUDE_DP * density)
             .coerceAtMost(min(width, height) * 0.018f)
-        val inset = amplitude
+        // Quadratic smoothing reduces the sampled crest to 75% of its control
+        // point displacement, so inset by the same amount to avoid clipping.
+        val inset = amplitude * 0.75f
 
         val innerWidth = (width - inset * 2f).coerceAtLeast(0.1f)
         val innerHeight = (height - inset * 2f).coerceAtLeast(0.1f)
@@ -228,10 +230,9 @@ internal class WavyShape private constructor(
 
         // A closed quadratic B-spline: every sample becomes a rounded control
         // point, with endpoints halfway between adjacent samples.
-        path.moveTo(
-            (first[0] + second[0]) * 0.5f,
-            (first[1] + second[1]) * 0.5f,
-        )
+        val startX = (first[0] + second[0]) * 0.5f
+        val startY = (first[1] + second[1]) * 0.5f
+        path.moveTo(startX, startY)
 
         var currentX = second[0]
         var currentY = second[1]
@@ -256,6 +257,9 @@ internal class WavyShape private constructor(
             currentY = next[1]
         }
 
+        // Complete the final quadratic segment through the first control point;
+        // closing directly here would leave a straight seam across the outline.
+        path.quadraticTo(first[0], first[1], startX, startY)
         path.close()
         return Outline.Generic(path)
     }
