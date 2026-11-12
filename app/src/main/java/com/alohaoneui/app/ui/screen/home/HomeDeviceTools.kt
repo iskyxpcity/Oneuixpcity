@@ -292,7 +292,12 @@ private fun DeviceInfoSectionSelector(
 @Composable
 private fun DeviceToolsSurface(content: @Composable () -> Unit) {
     when (LocalUiMode.current) {
-        UiMode.Material -> TonalCard(modifier = Modifier.fillMaxWidth()) { content() }
+        UiMode.Material -> TonalCard(
+            modifier = Modifier.fillMaxWidth(),
+            // Diagnostic only: isolate Material Card's Wavy outline hit-test from
+            // the child header and toggle controls without changing their shapes.
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
+        ) { content() }
         UiMode.Miuix -> MiuixCard(modifier = Modifier.fillMaxWidth()) { content() }
     }
 }
