@@ -58,6 +58,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -76,6 +77,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Icon as MaterialIcon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.Text as MaterialText
 import com.alohaoneui.app.ui.LocalUiMode
@@ -299,19 +301,41 @@ private fun DeviceToolsSurface(content: @Composable () -> Unit) {
             // conventional rounded outline, while the visible container remains Wavy.
             val visualShape = alohaCornerShape(20.dp)
             val containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)
+            val outlineColor = MaterialTheme.colorScheme.outlineVariant
             val outlineWidth = LocalMaterialOutlineWidth.current
             TonalCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .drawBehind {
                         val outline = visualShape.createOutline(size, layoutDirection, this)
-                        drawOutline(outline, containerColor)
-                        if (outlineWidth > 0f) {
-                            drawOutline(
-                                outline,
-                                MaterialTheme.colorScheme.outlineVariant,
-                                style = Stroke(width = outlineWidth.toPx()),
+                        when (outline) {
+                            is Outline.Generic -> drawPath(outline.path, containerColor)
+                            is Outline.Rounded -> drawRoundRect(
+                                color = containerColor,
+                                topLeft = outline.roundRect.topLeft,
+                                size = outline.roundRect.size,
+                                cornerRadius = outline.roundRect.topRight.let {
+                                    androidx.compose.ui.geometry.CornerRadius(it.x, it.y)
+                                },
                             )
+                            is Outline.Rectangle -> drawRect(containerColor)
+                        }
+                        if (outlineWidth > 0f) {
+                            val stroke = Stroke(width = outlineWidth * density)
+                            when (outline) {
+                                is Outline.Generic -> drawPath(outline.path, outlineColor, style = stroke)
+                                is Outline.Rounded -> drawRoundRect(
+                                    color = outlineColor,
+                                    topLeft = outline.roundRect.topLeft,
+                                    size = outline.roundRect.size,
+                                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(
+                                        outline.roundRect.topRight.x,
+                                        outline.roundRect.topRight.y,
+                                    ),
+                                    style = stroke,
+                                )
+                                is Outline.Rectangle -> drawRect(outlineColor, style = stroke)
+                            }
                         }
                     },
                 containerColor = Color.Transparent,
