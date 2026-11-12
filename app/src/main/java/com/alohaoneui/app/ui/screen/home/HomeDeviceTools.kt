@@ -314,9 +314,7 @@ private fun DeviceToolsSurface(content: @Composable () -> Unit) {
                                 color = containerColor,
                                 topLeft = outline.roundRect.topLeft,
                                 size = outline.roundRect.size,
-                                cornerRadius = outline.roundRect.topRight.let {
-                                    androidx.compose.ui.geometry.CornerRadius(it.x, it.y)
-                                },
+                                cornerRadius = outline.roundRect.topLeftCornerRadius,
                             )
                             is Outline.Rectangle -> drawRect(containerColor)
                         }
@@ -328,10 +326,7 @@ private fun DeviceToolsSurface(content: @Composable () -> Unit) {
                                     color = outlineColor,
                                     topLeft = outline.roundRect.topLeft,
                                     size = outline.roundRect.size,
-                                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(
-                                        outline.roundRect.topRight.x,
-                                        outline.roundRect.topRight.y,
-                                    ),
+                                    cornerRadius = outline.roundRect.topLeftCornerRadius,
                                     style = stroke,
                                 )
                                 is Outline.Rectangle -> drawRect(outlineColor, style = stroke)
