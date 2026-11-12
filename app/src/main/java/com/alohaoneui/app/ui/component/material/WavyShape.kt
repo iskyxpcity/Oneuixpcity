@@ -11,14 +11,14 @@ import androidx.compose.ui.unit.Dp
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.min
-import kotlin.math.roundToInt
 import kotlin.math.sin
+import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Independent static Wavy geometry engine.
+ * Independent Wavy geometry engine.
  *
  * The outline is a rounded-rectangle perimeter parameterized by physical arc length.
- * A static, precomputed gear-like profile is placed at equal distances around it.
+ * A periodic normal displacement is then evaluated from a fixed profile table.
  * Geometry is deliberately independent from Material colors, borders and shadows:
  * those remain owned by the caller's Material theme components.
  */
@@ -51,6 +51,17 @@ internal class WavyShape private constructor(
         bottomStart: CornerSize,
     ): CornerBasedShape = WavyShape(density, topStart, topEnd, bottomEnd, bottomStart)
 
+    private data class Key(
+        val density: Float,
+        val width: Float,
+        val height: Float,
+        val direction: LayoutDirection,
+        val topStart: Float,
+        val topEnd: Float,
+        val bottomEnd: Float,
+        val bottomStart: Float,
+    )
+
     override fun createOutline(
         size: Size,
         topStart: Float,
@@ -68,17 +79,20 @@ internal class WavyShape private constructor(
         val tr = if (layoutDirection == LayoutDirection.Ltr) te else ts
         val br = if (layoutDirection == LayoutDirection.Ltr) be else bs
         val bl = if (layoutDirection == LayoutDirection.Ltr) bs else be
-        return buildOutline(size.width, size.height, tl, tr, br, bl, density)
+        val key = Key(density, size.width, size.height, layoutDirection, tl, tr, br, bl)
+
+        cache[key]?.let { return it }
+        val outline = buildOutline(size.width, size.height, tl, tr, br, bl, density)
+        val existing = cache.putIfAbsent(key, outline)
+        if (cache.size > 512) cache.clear()
+        return existing ?: outline
     }
 
     private companion object {
-        // Fixed, precomputed rounded-gear profile. It never animates or changes.
-        // Each wave uses the same crest, shoulders and trough around the perimeter.
-        private val profile = floatArrayOf(
-            0f, 0.5f, 0.8660254f, 1f,
-            0.8660254f, 0.5f, 0f, -0.5f,
-            -0.8660254f, -1f, -0.8660254f, -0.5f,
-        )
+        // Four samples per scallop preserve a rounded gear-like wave while
+        // cutting path vertices in half. Values are shared by every component.
+        private val profile = floatArrayOf(0f, 1f, 0f, -1f)
+        private val cache = ConcurrentHashMap<Key, Outline>(128)
 
         private fun buildOutline(
             width: Float,
@@ -117,11 +131,10 @@ internal class WavyShape private constructor(
                 return Outline.Rounded(RoundRect(0f, 0f, width, height))
             }
 
-            // A fixed target pitch is distributed evenly over the closed perimeter.
-            // Rounding the cycle count once prevents a seam and keeps every crest
-            // equally spaced on all four sides and through all rounded corners.
-            val targetPitch = (8f * density).coerceAtLeast(1f)
-            val waveCount = (perimeter / targetPitch).roundToInt().coerceAtLeast(4)
+            // Fixed physical wave scale: corners do not shrink the ripple and every
+            // side uses the same wavelength and amplitude.
+            val waveCount = (perimeter / (8f * density).coerceAtLeast(1f))
+                .toInt().coerceIn(12, 48)
             val sampleCount = waveCount * profile.size
             val step = perimeter / sampleCount
             val frame = FloatArray(4)
