@@ -58,7 +58,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -308,29 +308,13 @@ private fun DeviceToolsSurface(content: @Composable () -> Unit) {
                     .fillMaxWidth()
                     .drawBehind {
                         val outline = visualShape.createOutline(size, layoutDirection, this)
-                        when (outline) {
-                            is Outline.Generic -> drawPath(outline.path, containerColor)
-                            is Outline.Rounded -> drawRoundRect(
-                                color = containerColor,
-                                topLeft = outline.roundRect.topLeft,
-                                size = outline.roundRect.size,
-                                cornerRadius = outline.roundRect.topLeftCornerRadius,
-                            )
-                            is Outline.Rectangle -> drawRect(containerColor)
-                        }
+                        drawOutline(outline, containerColor)
                         if (outlineWidth > 0f) {
-                            val stroke = Stroke(width = outlineWidth * density)
-                            when (outline) {
-                                is Outline.Generic -> drawPath(outline.path, outlineColor, style = stroke)
-                                is Outline.Rounded -> drawRoundRect(
-                                    color = outlineColor,
-                                    topLeft = outline.roundRect.topLeft,
-                                    size = outline.roundRect.size,
-                                    cornerRadius = outline.roundRect.topLeftCornerRadius,
-                                    style = stroke,
-                                )
-                                is Outline.Rectangle -> drawRect(outlineColor, style = stroke)
-                            }
+                            drawOutline(
+                                outline,
+                                outlineColor,
+                                style = Stroke(width = outlineWidth.dp.toPx()),
+                            )
                         }
                     },
                 containerColor = Color.Transparent,
