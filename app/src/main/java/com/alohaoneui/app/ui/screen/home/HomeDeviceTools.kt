@@ -165,7 +165,11 @@ fun HomeDeviceToolsCard() {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable(role = Role.Button) { expanded = !expanded }
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = androidx.compose.foundation.LocalIndication.current,
+                        role = Role.Button,
+                    ) { expanded = !expanded }
                     .semantics {
                         stateDescription = if (expanded) "已展开，点击收起" else "已收起，点击展开"
                     }
