@@ -13,6 +13,7 @@ import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlin.math.sin
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Static, arc-length-based Wavy outline.
@@ -54,6 +55,25 @@ internal class WavyShape private constructor(
     ): CornerBasedShape = WavyShape(density, topStart, topEnd, bottomEnd, bottomStart)
 
     override fun createOutline(
+        size: Size,
+        topStart: Float,
+        topEnd: Float,
+        bottomEnd: Float,
+        bottomStart: Float,
+        layoutDirection: LayoutDirection,
+    ): Outline {
+        val key = OutlineKey(
+            size.width.toBits(), size.height.toBits(),
+            topStart.toBits(), topEnd.toBits(), bottomEnd.toBits(), bottomStart.toBits(),
+            layoutDirection, density.toBits(),
+        )
+        outlineCache[key]?.let { return it }
+        val outline = buildOutline(size, topStart, topEnd, bottomEnd, bottomStart, layoutDirection)
+        if (outlineCache.size >= MAX_CACHE_ENTRIES) outlineCache.clear()
+        return outlineCache.putIfAbsent(key, outline) ?: outline
+    }
+
+    private fun buildOutline(
         size: Size,
         topStart: Float,
         topEnd: Float,
@@ -264,7 +284,18 @@ internal class WavyShape private constructor(
         return Outline.Generic(path)
     }
 
+    private data class OutlineKey(
+        val width: Int, val height: Int,
+        val topStart: Int, val topEnd: Int, val bottomEnd: Int, val bottomStart: Int,
+        val direction: LayoutDirection, val density: Int,
+    )
+
     private companion object {
+        // Shape outlines are immutable once built. Reuse the same Path for stable
+        // card sizes instead of rebuilding hundreds of quadratic segments per draw.
+        private const val MAX_CACHE_ENTRIES = 96
+        private val outlineCache = ConcurrentHashMap<OutlineKey, Outline>()
+
         private const val WAVE_AMPLITUDE_DP = 0.8f
         private const val WAVE_LENGTH_DP = 8f
         private const val SAMPLES_PER_WAVE = 4
