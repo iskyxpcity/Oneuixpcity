@@ -207,10 +207,9 @@ internal class WavyShape private constructor(
             }
         }
 
-        fun pointAt(distance: Float, waveIndex: Int, out: FloatArray) {
+        fun pointAt(distance: Float, out: FloatArray) {
             frameAt(distance)
-            val phase = (waveIndex % SAMPLES_PER_WAVE) *
-                (2f * PI.toFloat() / SAMPLES_PER_WAVE)
+            val phase = (distance / actualWavelength) * (2f * PI.toFloat())
             val displacement = amplitude * sin(phase)
             out[0] = frame[0] + frame[2] * displacement
             out[1] = frame[1] + frame[3] * displacement
@@ -220,10 +219,10 @@ internal class WavyShape private constructor(
         val second = FloatArray(2)
         val next = FloatArray(2)
 
-        pointAt(0f, 0, frame)
+        pointAt(0f, frame)
         first[0] = frame[0]
         first[1] = frame[1]
-        pointAt(step, 1, frame)
+        pointAt(step, frame)
         second[0] = frame[0]
         second[1] = frame[1]
 
@@ -242,7 +241,7 @@ internal class WavyShape private constructor(
                 next[0] = first[0]
                 next[1] = first[1]
             } else {
-                pointAt((nextIndex * step), nextIndex, frame)
+                pointAt(nextIndex * step, frame)
                 next[0] = frame[0]
                 next[1] = frame[1]
             }
