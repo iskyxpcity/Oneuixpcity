@@ -311,8 +311,8 @@ internal class WavyShape private constructor(
         private const val MAX_CACHE_ENTRIES = 96
         private val outlineCache = LinkedHashMap<OutlineKey, Outline>(MAX_CACHE_ENTRIES, 0.75f, true)
 
-        private const val WAVE_AMPLITUDE_DP = 0.52f
-        private const val WAVE_LENGTH_DP = 8f
+        private const val WAVE_AMPLITUDE_DP = 0.56f
+        private const val WAVE_LENGTH_DP = 9f
         private const val SAMPLES_PER_WAVE = 4
     }
 }
