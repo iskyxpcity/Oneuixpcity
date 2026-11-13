@@ -83,7 +83,6 @@ import androidx.compose.material3.Text as MaterialText
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.material.TonalCard
-import com.alohaoneui.app.ui.component.material.ExpressiveTabRow
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.SegmentedOptionFrame
@@ -228,14 +227,57 @@ private fun DeviceInfoSectionSelector(
     onSelect: (Int) -> Unit,
 ) {
     val options = listOf("系统监视器", "屏幕信息", "设备信息")
+    val interactionSources = remember(options.size) {
+        List(options.size) { MutableInteractionSource() }
+    }
     when (LocalUiMode.current) {
-        UiMode.Material -> ExpressiveTabRow(
-            selectedTabIndex = selectedSection,
-            tabs = options,
-            onTabClick = onSelect,
-            modifier = Modifier.fillMaxWidth(),
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        )
+        UiMode.Material -> ExpressiveButtonGroup(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(
+                ButtonGroupDefaults.ConnectedSpaceBetween,
+                alignment = Alignment.CenterHorizontally,
+            ),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            options.forEachIndexed { index, label ->
+                val interactionSource = interactionSources[index]
+                customItem(
+                    buttonGroupContent = {
+                        ExpressiveToggleButton(
+                            checked = selectedSection == index,
+                            onCheckedChange = { checked -> if (checked) onSelect(index) },
+                            modifier = Modifier
+                                .semantics { role = Role.RadioButton },
+                            shapes = when (index) {
+                                0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
+                                options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
+                                else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
+                            },
+                            interactionSource = interactionSource,
+                            shapeIndex = index,
+                            shapeCount = options.size,
+                        ) {
+                            MaterialText(
+                                text = label,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = if (selectedSection == index) FontWeight.SemiBold else FontWeight.Medium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    },
+                    menuContent = { menuState ->
+                        androidx.compose.material3.DropdownMenuItem(
+                            text = { MaterialText(label) },
+                            onClick = {
+                                menuState.dismiss()
+                                onSelect(index)
+                            },
+                        )
+                    },
+                )
+            }
+        }
         UiMode.Miuix -> MiuixTabRowWithContour(
             tabs = options,
             selectedTabIndex = selectedSection,
