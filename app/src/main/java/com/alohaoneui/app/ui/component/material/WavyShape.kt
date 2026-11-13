@@ -6,21 +6,23 @@ import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
-import java.util.concurrent.ConcurrentHashMap
+import java.util.LinkedHashMap
 
 /**
- * Independent Wavy geometry engine.
+ * Static, arc-length-based Wavy outline.
  *
- * The outline is a rounded-rectangle perimeter parameterized by physical arc length.
- * A periodic normal displacement is then evaluated from a fixed profile table.
- * Geometry is deliberately independent from Material colors, borders and shadows:
- * those remain owned by the caller's Material theme components.
+ * The wave is spatial geometry only: no animation, frame clock, mutable cache,
+ * or per-frame state. A single wavelength and amplitude are used around the
+ * complete rounded-rectangle perimeter, including its four corner arcs.
+ *
+ * Material colors, strokes, shadows and component states remain owned by the
+ * Material theme components that consume this shape.
  */
 internal class WavyShape private constructor(
     private val density: Float,
@@ -51,17 +53,6 @@ internal class WavyShape private constructor(
         bottomStart: CornerSize,
     ): CornerBasedShape = WavyShape(density, topStart, topEnd, bottomEnd, bottomStart)
 
-    private data class Key(
-        val density: Float,
-        val width: Float,
-        val height: Float,
-        val direction: LayoutDirection,
-        val topStart: Float,
-        val topEnd: Float,
-        val bottomEnd: Float,
-        val bottomStart: Float,
-    )
-
     override fun createOutline(
         size: Size,
         topStart: Float,
@@ -70,167 +61,264 @@ internal class WavyShape private constructor(
         bottomStart: Float,
         layoutDirection: LayoutDirection,
     ): Outline {
-        val maxRadius = min(size.width, size.height) / 2f
+        val key = OutlineKey(
+            size.width.toBits(),
+            size.height.toBits(),
+            topStart.toBits(),
+            topEnd.toBits(),
+            bottomEnd.toBits(),
+            bottomStart.toBits(),
+            layoutDirection,
+            density.toBits(),
+        )
+
+        synchronized(outlineCache) {
+            outlineCache[key]?.let { return it }
+        }
+
+        val outline = buildOutline(size, topStart, topEnd, bottomEnd, bottomStart, layoutDirection)
+        synchronized(outlineCache) {
+            outlineCache[key]?.let { return it }
+            outlineCache[key] = outline
+            if (outlineCache.size > MAX_CACHE_ENTRIES) {
+                val eldest = outlineCache.entries.iterator()
+                if (eldest.hasNext()) {
+                    eldest.next()
+                    eldest.remove()
+                }
+            }
+        }
+        return outline
+    }
+
+    private fun buildOutline(
+        size: Size,
+        topStart: Float,
+        topEnd: Float,
+        bottomEnd: Float,
+        bottomStart: Float,
+        layoutDirection: LayoutDirection,
+    ): Outline {
+        val width = size.width
+        val height = size.height
+        if (width <= 0f || height <= 0f) {
+            return Outline.Rounded(RoundRect(0f, 0f, width, height))
+        }
+
+        val maxRadius = min(width, height) / 2f
         val ts = topStart.coerceIn(0f, maxRadius)
         val te = topEnd.coerceIn(0f, maxRadius)
         val be = bottomEnd.coerceIn(0f, maxRadius)
         val bs = bottomStart.coerceIn(0f, maxRadius)
-        val tl = if (layoutDirection == LayoutDirection.Ltr) ts else te
-        val tr = if (layoutDirection == LayoutDirection.Ltr) te else ts
-        val br = if (layoutDirection == LayoutDirection.Ltr) be else bs
-        val bl = if (layoutDirection == LayoutDirection.Ltr) bs else be
-        val key = Key(density, size.width, size.height, layoutDirection, tl, tr, br, bl)
 
-        cache[key]?.let { return it }
-        val outline = buildOutline(size.width, size.height, tl, tr, br, bl, density)
-        val existing = cache.putIfAbsent(key, outline)
-        if (cache.size > 512) cache.clear()
-        return existing ?: outline
+        val topLeft = if (layoutDirection == LayoutDirection.Ltr) ts else te
+        val topRight = if (layoutDirection == LayoutDirection.Ltr) te else ts
+        val bottomRight = if (layoutDirection == LayoutDirection.Ltr) be else bs
+        val bottomLeft = if (layoutDirection == LayoutDirection.Ltr) bs else be
+
+        val amplitude = (WAVE_AMPLITUDE_DP * density)
+            .coerceAtMost(min(width, height) * 0.018f)
+        // Quadratic smoothing reduces the sampled crest to 75% of its control
+        // point displacement, so inset by the same amount to avoid clipping.
+        // Quadratic B-spline smoothing attenuates sampled crests to half amplitude.
+        // Inset only by that visible crest height so the wave reaches component bounds
+        // instead of leaving a uniform gap that exposes the container shadow.
+        val inset = amplitude * 0.75f
+
+        val innerWidth = (width - inset * 2f).coerceAtLeast(0.1f)
+        val innerHeight = (height - inset * 2f).coerceAtLeast(0.1f)
+        val tl = (topLeft - inset).coerceAtLeast(0f)
+        val tr = (topRight - inset).coerceAtLeast(0f)
+        val br = (bottomRight - inset).coerceAtLeast(0f)
+        val bl = (bottomLeft - inset).coerceAtLeast(0f)
+
+        val topLength = (innerWidth - tl - tr).coerceAtLeast(0f)
+        val rightLength = (innerHeight - tr - br).coerceAtLeast(0f)
+        val bottomLength = (innerWidth - br - bl).coerceAtLeast(0f)
+        val leftLength = (innerHeight - bl - tl).coerceAtLeast(0f)
+
+        val quarterPi = PI.toFloat() / 2f
+        val tlArc = tl * quarterPi
+        val trArc = tr * quarterPi
+        val brArc = br * quarterPi
+        val blArc = bl * quarterPi
+        val perimeter = topLength + trArc + rightLength + brArc +
+            bottomLength + blArc + leftLength + tlArc
+
+        if (perimeter <= 0.5f) {
+            return Outline.Rounded(RoundRect(0f, 0f, width, height))
+        }
+
+        // Fit an integer number of identical waves to the full perimeter.
+        // This keeps crest spacing equal on every edge and through every corner.
+        val targetWavelength = (WAVE_LENGTH_DP * density).coerceAtLeast(1f)
+        val waveCount = (perimeter / targetWavelength).toInt().coerceIn(12, 48)
+        val sampleCount = waveCount * SAMPLES_PER_WAVE
+        val step = perimeter / sampleCount
+        val actualWavelength = perimeter / waveCount
+        val path = Path()
+        val frame = FloatArray(4)
+
+        fun frameAt(distance: Float) {
+            var d = distance
+
+            if (d < topLength) {
+                frame[0] = inset + tl + d
+                frame[1] = inset
+                frame[2] = 0f
+                frame[3] = -1f
+                return
+            }
+            d -= topLength
+
+            if (tr > 0f && d < trArc) {
+                val angle = -quarterPi + d / tr
+                val nx = cos(angle)
+                val ny = sin(angle)
+                frame[0] = inset + innerWidth - tr + tr * nx
+                frame[1] = inset + tr + tr * ny
+                frame[2] = nx
+                frame[3] = ny
+                return
+            }
+            d -= trArc
+
+            if (d < rightLength) {
+                frame[0] = inset + innerWidth
+                frame[1] = inset + tr + d
+                frame[2] = 1f
+                frame[3] = 0f
+                return
+            }
+            d -= rightLength
+
+            if (br > 0f && d < brArc) {
+                val angle = d / br
+                val nx = cos(angle)
+                val ny = sin(angle)
+                frame[0] = inset + innerWidth - br + br * nx
+                frame[1] = inset + innerHeight - br + br * ny
+                frame[2] = nx
+                frame[3] = ny
+                return
+            }
+            d -= brArc
+
+            if (d < bottomLength) {
+                frame[0] = inset + innerWidth - br - d
+                frame[1] = inset + innerHeight
+                frame[2] = 0f
+                frame[3] = 1f
+                return
+            }
+            d -= bottomLength
+
+            if (bl > 0f && d < blArc) {
+                val angle = quarterPi + d / bl
+                val nx = cos(angle)
+                val ny = sin(angle)
+                frame[0] = inset + bl + bl * nx
+                frame[1] = inset + innerHeight - bl + bl * ny
+                frame[2] = nx
+                frame[3] = ny
+                return
+            }
+            d -= blArc
+
+            if (d < leftLength) {
+                frame[0] = inset
+                frame[1] = inset + innerHeight - bl - d
+                frame[2] = -1f
+                frame[3] = 0f
+                return
+            }
+            d -= leftLength
+
+            if (tl > 0f) {
+                val angle = PI.toFloat() + d / tl
+                val nx = cos(angle)
+                val ny = sin(angle)
+                frame[0] = inset + tl + tl * nx
+                frame[1] = inset + tl + tl * ny
+                frame[2] = nx
+                frame[3] = ny
+            } else {
+                frame[0] = inset + tl
+                frame[1] = inset
+                frame[2] = 0f
+                frame[3] = -1f
+            }
+        }
+
+        fun pointAt(distance: Float, out: FloatArray) {
+            frameAt(distance)
+            val phase = (distance / actualWavelength) * (2f * PI.toFloat())
+            val displacement = amplitude * sin(phase)
+            out[0] = frame[0] + frame[2] * displacement
+            out[1] = frame[1] + frame[3] * displacement
+        }
+
+        val first = FloatArray(2)
+        val second = FloatArray(2)
+        val next = FloatArray(2)
+
+        pointAt(0f, frame)
+        first[0] = frame[0]
+        first[1] = frame[1]
+        pointAt(step, frame)
+        second[0] = frame[0]
+        second[1] = frame[1]
+
+        // A closed quadratic B-spline: every sample becomes a rounded control
+        // point, with endpoints halfway between adjacent samples.
+        val startX = (first[0] + second[0]) * 0.5f
+        val startY = (first[1] + second[1]) * 0.5f
+        path.moveTo(startX, startY)
+
+        var currentX = second[0]
+        var currentY = second[1]
+        for (index in 1 until sampleCount) {
+            val nextIndex = (index + 1) % sampleCount
+            if (nextIndex == 0) {
+                next[0] = first[0]
+                next[1] = first[1]
+            } else {
+                pointAt(nextIndex * step, frame)
+                next[0] = frame[0]
+                next[1] = frame[1]
+            }
+
+            path.quadraticTo(
+                currentX,
+                currentY,
+                (currentX + next[0]) * 0.5f,
+                (currentY + next[1]) * 0.5f,
+            )
+            currentX = next[0]
+            currentY = next[1]
+        }
+
+        // Complete the final quadratic segment through the first control point;
+        // closing directly here would leave a straight seam across the outline.
+        path.quadraticTo(first[0], first[1], startX, startY)
+        path.close()
+        return Outline.Generic(path)
     }
 
+    private data class OutlineKey(
+        val width: Int, val height: Int,
+        val topStart: Int, val topEnd: Int, val bottomEnd: Int, val bottomStart: Int,
+        val direction: LayoutDirection, val density: Int,
+    )
+
     private companion object {
-        // Four samples per scallop preserve a rounded gear-like wave while
-        // cutting path vertices in half. Values are shared by every component.
-        private val profile = floatArrayOf(0f, 1f, 0f, -1f)
-        private val cache = ConcurrentHashMap<Key, Outline>(128)
+        // A small access-ordered cache retains common component sizes without
+        // clearing every entry at once when layouts produce new measurements.
+        private const val MAX_CACHE_ENTRIES = 96
+        private val outlineCache = LinkedHashMap<OutlineKey, Outline>(MAX_CACHE_ENTRIES, 0.75f, true)
 
-        private fun buildOutline(
-            width: Float,
-            height: Float,
-            topLeft: Float,
-            topRight: Float,
-            bottomRight: Float,
-            bottomLeft: Float,
-            density: Float,
-        ): Outline {
-            if (width <= 0f || height <= 0f) {
-                return Outline.Rounded(RoundRect(0f, 0f, width, height))
-            }
-
-            val amplitude = (0.58f * density).coerceAtMost(min(width, height) * 0.018f)
-            // Keep the full wave inside the component bounds. The centerline is inset
-            // by one amplitude, so outward crests reach the bounds without clipping.
-            val inset = amplitude
-            val shapeWidth = (width - inset * 2f).coerceAtLeast(0.1f)
-            val shapeHeight = (height - inset * 2f).coerceAtLeast(0.1f)
-            val tl = (topLeft - inset).coerceAtLeast(0f)
-            val tr = (topRight - inset).coerceAtLeast(0f)
-            val br = (bottomRight - inset).coerceAtLeast(0f)
-            val bl = (bottomLeft - inset).coerceAtLeast(0f)
-            val top = (shapeWidth - tl - tr).coerceAtLeast(0f)
-            val right = (shapeHeight - tr - br).coerceAtLeast(0f)
-            val bottom = (shapeWidth - br - bl).coerceAtLeast(0f)
-            val left = (shapeHeight - bl - tl).coerceAtLeast(0f)
-            val quarterPi = PI.toFloat() / 2f
-            val tlArc = tl * quarterPi
-            val trArc = tr * quarterPi
-            val brArc = br * quarterPi
-            val blArc = bl * quarterPi
-            val perimeter = top + trArc + right + brArc + bottom + blArc + left + tlArc
-            if (perimeter <= 0.5f) {
-                return Outline.Rounded(RoundRect(0f, 0f, width, height))
-            }
-
-            // Fixed physical wave scale: corners do not shrink the ripple and every
-            // side uses the same wavelength and amplitude.
-            val waveCount = (perimeter / (8f * density).coerceAtLeast(1f))
-                .toInt().coerceIn(12, 48)
-            val sampleCount = waveCount * profile.size
-            val step = perimeter / sampleCount
-            val frame = FloatArray(4)
-            val path = Path()
-
-            fun frameAt(distance: Float) {
-                var d = distance
-                if (d < top) {
-                    frame[0] = inset + tl + d
-                    frame[1] = inset
-                    frame[2] = 0f
-                    frame[3] = -1f
-                    return
-                }
-                d -= top
-                if (d < trArc && tr > 0f) {
-                    val angle = -quarterPi + d / tr
-                    val c = cos(angle)
-                    val s = sin(angle)
-                    frame[0] = inset + shapeWidth - tr + tr * c
-                    frame[1] = inset + tr + tr * s
-                    frame[2] = c
-                    frame[3] = s
-                    return
-                }
-                d -= trArc
-                if (d < right) {
-                    frame[0] = inset + shapeWidth
-                    frame[1] = inset + tr + d
-                    frame[2] = 1f
-                    frame[3] = 0f
-                    return
-                }
-                d -= right
-                if (d < brArc && br > 0f) {
-                    val angle = d / br
-                    val c = cos(angle)
-                    val s = sin(angle)
-                    frame[0] = inset + shapeWidth - br + br * c
-                    frame[1] = inset + shapeHeight - br + br * s
-                    frame[2] = c
-                    frame[3] = s
-                    return
-                }
-                d -= brArc
-                if (d < bottom) {
-                    frame[0] = inset + shapeWidth - br - d
-                    frame[1] = inset + shapeHeight
-                    frame[2] = 0f
-                    frame[3] = 1f
-                    return
-                }
-                d -= bottom
-                if (d < blArc && bl > 0f) {
-                    val angle = quarterPi + d / bl
-                    val c = cos(angle)
-                    val s = sin(angle)
-                    frame[0] = inset + bl + bl * c
-                    frame[1] = inset + shapeHeight - bl + bl * s
-                    frame[2] = c
-                    frame[3] = s
-                    return
-                }
-                d -= blArc
-                if (d < left) {
-                    frame[0] = inset
-                    frame[1] = inset + shapeHeight - bl - d
-                    frame[2] = -1f
-                    frame[3] = 0f
-                    return
-                }
-                d -= left
-                if (tl > 0f) {
-                    val angle = PI.toFloat() + d / tl
-                    val c = cos(angle)
-                    val s = sin(angle)
-                    frame[0] = inset + tl + tl * c
-                    frame[1] = inset + tl + tl * s
-                    frame[2] = c
-                    frame[3] = s
-                } else {
-                    frame[0] = inset + tl
-                    frame[1] = inset
-                    frame[2] = 0f
-                    frame[3] = -1f
-                }
-            }
-            for (index in 0 until sampleCount) {
-                frameAt(index * step)
-                val offset = amplitude * profile[index % profile.size]
-                val x = frame[0] + frame[2] * offset
-                val y = frame[1] + frame[3] * offset
-                if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
-            }
-            path.close()
-            return Outline.Generic(path)
-        }
+        private const val WAVE_AMPLITUDE_DP = 0.58f
+        private const val WAVE_LENGTH_DP = 8f
+        private const val SAMPLES_PER_WAVE = 4
     }
 }
