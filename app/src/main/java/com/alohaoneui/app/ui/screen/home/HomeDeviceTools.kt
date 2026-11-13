@@ -165,30 +165,22 @@ fun HomeDeviceToolsCard() {
 
     DeviceToolsSurface {
         Column(modifier = Modifier.fillMaxWidth()) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(role = Role.Button) { expanded = !expanded }
-                    .semantics {
-                        stateDescription = if (expanded) "已展开，点击收起" else "已收起，点击展开"
-                    }
-                    .padding(horizontal = 18.dp, vertical = 18.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                DeviceToolsIcon(Icons.Outlined.Devices, null, Modifier.size(26.dp))
-                Column(
-                    modifier = Modifier.weight(1f).padding(start = 12.dp, end = 10.dp),
-                    verticalArrangement = Arrangement.spacedBy(3.dp),
-                ) {
-                    DeviceToolsText("设备状态信息", DeviceTextKind.Title)
-                    DeviceToolsText("系统监视器 · 屏幕信息 · 设备信息", DeviceTextKind.Caption)
-                }
-                DeviceToolsIcon(
-                    if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
-                    if (expanded) "收起" else "展开",
-                    Modifier.size(24.dp),
-                )
-            }
+            SegmentedListItem(
+                onClick = { expanded = !expanded },
+                modifier = Modifier.semantics {
+                    stateDescription = if (expanded) "已展开，点击收起" else "已收起，点击展开"
+                },
+                leadingContent = { DeviceToolsIcon(Icons.Outlined.Devices, null, Modifier.size(26.dp)) },
+                headlineContent = { DeviceToolsText("设备状态信息", DeviceTextKind.Title) },
+                supportingContent = { DeviceToolsText("系统监视器 · 屏幕信息 · 设备信息", DeviceTextKind.Caption) },
+                trailingContent = {
+                    DeviceToolsIcon(
+                        if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                        if (expanded) "收起" else "展开",
+                        Modifier.size(24.dp),
+                    )
+                },
+            )
 
             AnimatedVisibility(
                 visible = expanded,
@@ -232,57 +224,14 @@ private fun DeviceInfoSectionSelector(
     onSelect: (Int) -> Unit,
 ) {
     val options = listOf("系统监视器", "屏幕信息", "设备信息")
-    val interactionSources = remember(options.size) {
-        List(options.size) { MutableInteractionSource() }
-    }
     when (LocalUiMode.current) {
-        UiMode.Material -> ExpressiveButtonGroup(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(
-                ButtonGroupDefaults.ConnectedSpaceBetween,
-                alignment = Alignment.CenterHorizontally,
-            ),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            options.forEachIndexed { index, label ->
-                val interactionSource = interactionSources[index]
-                customItem(
-                    buttonGroupContent = {
-                        ExpressiveToggleButton(
-                            checked = selectedSection == index,
-                            onCheckedChange = { checked -> if (checked) onSelect(index) },
-                            modifier = Modifier
-                                .semantics { role = Role.RadioButton },
-                            shapes = when (index) {
-                                0 -> ButtonGroupDefaults.connectedLeadingButtonShapes()
-                                options.lastIndex -> ButtonGroupDefaults.connectedTrailingButtonShapes()
-                                else -> ButtonGroupDefaults.connectedMiddleButtonShapes()
-                            },
-                            interactionSource = interactionSource,
-                            shapeIndex = index,
-                            shapeCount = options.size,
-                        ) {
-                            MaterialText(
-                                text = label,
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = if (selectedSection == index) FontWeight.SemiBold else FontWeight.Medium,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-                    },
-                    menuContent = { menuState ->
-                        androidx.compose.material3.DropdownMenuItem(
-                            text = { MaterialText(label) },
-                            onClick = {
-                                menuState.dismiss()
-                                onSelect(index)
-                            },
-                        )
-                    },
-                )
-            }
-        }
+        UiMode.Material -> ExpressiveTabRow(
+            selectedTabIndex = selectedSection,
+            tabs = options,
+            onTabClick = onSelect,
+            modifier = Modifier.fillMaxWidth(),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        )
         UiMode.Miuix -> MiuixTabRowWithContour(
             tabs = options,
             selectedTabIndex = selectedSection,
@@ -394,30 +343,62 @@ private fun SystemMonitorContent(snapshot: HomeDeviceSnapshot) {
 
 @Composable
 private fun ScreenInformationContent(snapshot: HomeDeviceSnapshot) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        DeviceDataRow("物理分辨率", snapshot.resolution)
-        DeviceDataRow("逻辑尺寸", snapshot.logicalSize)
-        DeviceDataRow("显示刷新率", snapshot.refreshRate)
-        DeviceDataRow("像素密度", snapshot.density)
-        DeviceDataRow("估算屏幕尺寸", snapshot.physicalSize)
-        DeviceDataRow("屏幕亮度", snapshot.brightness)
-        DeviceDataRow("屏幕方向", snapshot.orientation)
-    }
+    DeviceDataRows(
+        listOf(
+            "物理分辨率" to snapshot.resolution,
+            "逻辑尺寸" to snapshot.logicalSize,
+            "显示刷新率" to snapshot.refreshRate,
+            "像素密度" to snapshot.density,
+            "估算屏幕尺寸" to snapshot.physicalSize,
+            "屏幕亮度" to snapshot.brightness,
+            "屏幕方向" to snapshot.orientation,
+        )
+    )
 }
 
 @Composable
 private fun DeviceInformationContent(snapshot: HomeDeviceSnapshot) {
-    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        DeviceDataRow("手机型号", snapshot.model)
-        DeviceDataRow("Android 版本", snapshot.androidVersion)
-        DeviceDataRow("One UI 版本", snapshot.oneUiVersion)
-        DeviceDataRow("设备代号", snapshot.deviceCode)
-        DeviceDataRow("SoC / 芯片", snapshot.soc)
-        DeviceDataRow("CPU 架构", snapshot.cpuArchitecture)
-        DeviceDataRow("CPU 核心数", snapshot.cpuCores)
-        DeviceDataRow("系统构建号", snapshot.buildId)
-        DeviceDataRow("内核版本", snapshot.kernel)
-        DeviceDataRow("安全补丁", snapshot.securityPatch)
+    DeviceDataRows(
+        listOf(
+            "手机型号" to snapshot.model,
+            "Android 版本" to snapshot.androidVersion,
+            "One UI 版本" to snapshot.oneUiVersion,
+            "设备代号" to snapshot.deviceCode,
+            "SoC / 芯片" to snapshot.soc,
+            "CPU 架构" to snapshot.cpuArchitecture,
+            "CPU 核心数" to snapshot.cpuCores,
+            "系统构建号" to snapshot.buildId,
+            "内核版本" to snapshot.kernel,
+            "安全补丁" to snapshot.securityPatch,
+        )
+    )
+}
+
+@Composable
+private fun DeviceDataRows(rows: List<Pair<String, String>>) {
+    when (LocalUiMode.current) {
+        UiMode.Material -> SegmentedColumn(
+            content = rows.map { (label, value) ->
+                @Composable {
+                    SegmentedListItem(
+                        onClick = {},
+                        headlineContent = {
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                DeviceToolsText(label, DeviceTextKind.Label, Modifier.weight(0.42f))
+                                DeviceToolsText(value, DeviceTextKind.Value, Modifier.weight(0.58f), TextAlign.End)
+                            }
+                        },
+                    )
+                }
+            },
+        )
+        UiMode.Miuix -> Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            rows.forEach { (label, value) -> DeviceDataRow(label, value) }
+        }
     }
 }
 
