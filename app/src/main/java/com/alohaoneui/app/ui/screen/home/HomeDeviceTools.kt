@@ -57,7 +57,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.Path
@@ -88,7 +87,6 @@ import com.alohaoneui.app.ui.component.material.ExpressiveToggleButton
 import com.alohaoneui.app.ui.component.material.ExpressiveButtonGroup
 import com.alohaoneui.app.ui.component.material.alohaCornerShape
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
-import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -298,18 +296,16 @@ private fun DeviceInfoSectionSelector(
 private fun DeviceToolsSurface(content: @Composable () -> Unit) {
     when (LocalUiMode.current) {
         UiMode.Material -> {
-            // Keep the visible fill, outline and elevation on one identical theme shape.
-            // A rounded Material Card used to clip the Wavy fill while retaining a
-            // rounded shadow, exposing the shadow around an artificially inset frame.
+            // Draw the live theme outline independently from Card's interaction/clip
+            // shape. Material Card hit-testing and child pointer dispatch stay on a
+            // conventional rounded outline, while the visible container remains Wavy.
             val visualShape = alohaCornerShape(20.dp)
             val containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)
             val outlineColor = MaterialTheme.colorScheme.outlineVariant
             val outlineWidth = LocalMaterialOutlineWidth.current
-            val shadowElevation = if (LocalMaterialShadowContainers.current) 2.dp else 0.dp
-            Box(
+            TonalCard(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .shadow(shadowElevation, visualShape)
                     .drawBehind {
                         val outline = visualShape.createOutline(size, layoutDirection, this)
                         drawOutline(outline, containerColor)
@@ -321,9 +317,9 @@ private fun DeviceToolsSurface(content: @Composable () -> Unit) {
                             )
                         }
                     },
-            ) {
-                content()
-            }
+                containerColor = Color.Transparent,
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
+            ) { content() }
         }
         UiMode.Miuix -> MiuixCard(modifier = Modifier.fillMaxWidth()) { content() }
     }
