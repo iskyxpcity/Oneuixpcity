@@ -83,6 +83,10 @@ import androidx.compose.material3.Text as MaterialText
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.material.TonalCard
+import com.alohaoneui.app.ui.component.material.ExpressiveTabRow
+import com.alohaoneui.app.ui.component.material.SegmentedColumn
+import com.alohaoneui.app.ui.component.material.SegmentedListItem
+import com.alohaoneui.app.ui.component.material.SegmentedOptionFrame
 import com.alohaoneui.app.ui.component.material.ExpressiveToggleButton
 import com.alohaoneui.app.ui.component.material.ExpressiveButtonGroup
 import com.alohaoneui.app.ui.component.material.alohaCornerShape
