@@ -121,7 +121,7 @@ internal class WavyShape private constructor(
         // The closed quadratic B-spline reaches 75% of each sampled crest.
         // Match the inset to that visible displacement so the outer contour
         // meets the original component bounds without exposing the shadow.
-        val inset = amplitude * 0.75f
+        val inset = amplitude
 
         val innerWidth = (width - inset * 2f).coerceAtLeast(0.1f)
         val innerHeight = (height - inset * 2f).coerceAtLeast(0.1f)
@@ -151,11 +151,16 @@ internal class WavyShape private constructor(
         // This keeps crest spacing equal on every edge and through every corner.
         val targetWavelength = (WAVE_LENGTH_DP * density).coerceAtLeast(1f)
         val waveCount = (perimeter / targetWavelength).toInt().coerceIn(12, 48)
+        // Two cubic segments per wavelength keep the same small rounded
+        // scallop profile with half the path operations of the previous spline.
         val sampleCount = waveCount * SAMPLES_PER_WAVE
         val step = perimeter / sampleCount
         val actualWavelength = perimeter / waveCount
         val path = Path()
         val frame = FloatArray(4)
+        val crest = FloatArray(2)
+        val trough = FloatArray(2)
+        val controlOffset = amplitude * (4f / 3f)
 
         fun frameAt(distance: Float) {
             var d = distance
@@ -248,57 +253,37 @@ internal class WavyShape private constructor(
             }
         }
 
-        fun pointAt(distance: Float, out: FloatArray) {
+        fun controlAt(distance: Float, displacement: Float, out: FloatArray) {
             frameAt(distance)
-            val phase = (distance / actualWavelength) * (2f * PI.toFloat())
-            val displacement = amplitude * sin(phase)
             out[0] = frame[0] + frame[2] * displacement
             out[1] = frame[1] + frame[3] * displacement
         }
 
-        val first = FloatArray(2)
-        val second = FloatArray(2)
-        val next = FloatArray(2)
+        frameAt(0f)
+        path.moveTo(frame[0], frame[1])
 
-        pointAt(0f, frame)
-        first[0] = frame[0]
-        first[1] = frame[1]
-        pointAt(step, frame)
-        second[0] = frame[0]
-        second[1] = frame[1]
+        for (waveIndex in 0 until waveCount) {
+            val waveStart = waveIndex * actualWavelength
 
-        // A closed quadratic B-spline: every sample becomes a rounded control
-        // point, with endpoints halfway between adjacent samples.
-        val startX = (first[0] + second[0]) * 0.5f
-        val startY = (first[1] + second[1]) * 0.5f
-        path.moveTo(startX, startY)
-
-        var currentX = second[0]
-        var currentY = second[1]
-        for (index in 1 until sampleCount) {
-            val nextIndex = (index + 1) % sampleCount
-            if (nextIndex == 0) {
-                next[0] = first[0]
-                next[1] = first[1]
-            } else {
-                pointAt(nextIndex * step, frame)
-                next[0] = frame[0]
-                next[1] = frame[1]
-            }
-
-            path.quadraticTo(
-                currentX,
-                currentY,
-                (currentX + next[0]) * 0.5f,
-                (currentY + next[1]) * 0.5f,
+            // The two control points coincide at the rounded crest/trough.
+            // This yields a smooth half-wave while avoiding a dense point cloud.
+            controlAt(waveStart + step, controlOffset, crest)
+            frameAt(waveStart + 2f * step)
+            path.cubicTo(
+                crest[0], crest[1],
+                crest[0], crest[1],
+                frame[0], frame[1],
             )
-            currentX = next[0]
-            currentY = next[1]
+
+            controlAt(waveStart + 3f * step, -controlOffset, trough)
+            frameAt(waveStart + actualWavelength)
+            path.cubicTo(
+                trough[0], trough[1],
+                trough[0], trough[1],
+                frame[0], frame[1],
+            )
         }
 
-        // Complete the final quadratic segment through the first control point;
-        // closing directly here would leave a straight seam across the outline.
-        path.quadraticTo(first[0], first[1], startX, startY)
         path.close()
         return Outline.Generic(path)
     }
@@ -315,7 +300,7 @@ internal class WavyShape private constructor(
         private const val MAX_CACHE_ENTRIES = 96
         private val outlineCache = LinkedHashMap<OutlineKey, Outline>(MAX_CACHE_ENTRIES, 0.75f, true)
 
-        private const val WAVE_AMPLITUDE_DP = 0.58f
+        private const val WAVE_AMPLITUDE_DP = 0.34f
         private const val WAVE_LENGTH_DP = 8f
         private const val SAMPLES_PER_WAVE = 4
     }
