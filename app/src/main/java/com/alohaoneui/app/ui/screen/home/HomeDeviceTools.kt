@@ -295,32 +295,13 @@ private fun DeviceInfoSectionSelector(
 @Composable
 private fun DeviceToolsSurface(content: @Composable () -> Unit) {
     when (LocalUiMode.current) {
-        UiMode.Material -> {
-            // Draw the live theme outline independently from Card's interaction/clip
-            // shape. Material Card hit-testing and child pointer dispatch stay on a
-            // conventional rounded outline, while the visible container remains Wavy.
-            val visualShape = alohaCornerShape(20.dp)
-            val containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)
-            val outlineColor = MaterialTheme.colorScheme.outlineVariant
-            val outlineWidth = LocalMaterialOutlineWidth.current
-            TonalCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .drawBehind {
-                        val outline = visualShape.createOutline(size, layoutDirection, this)
-                        drawOutline(outline, containerColor)
-                        if (outlineWidth > 0f) {
-                            drawOutline(
-                                outline,
-                                outlineColor,
-                                style = Stroke(width = outlineWidth.dp.toPx()),
-                            )
-                        }
-                    },
-                containerColor = Color.Transparent,
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
-            ) { content() }
-        }
+        // Use the shared card as the single source of shape, clipping, outline,
+        // elevation and container color. Its default shape follows the active
+        // Material shape style, including Wavy; do not paint a second outline.
+        UiMode.Material -> TonalCard(
+            modifier = Modifier.fillMaxWidth(),
+            content = content,
+        )
         UiMode.Miuix -> MiuixCard(modifier = Modifier.fillMaxWidth()) { content() }
     }
 }
@@ -515,43 +496,46 @@ private fun DeviceProgressMetric(label: String, value: String, progress: Float) 
 
 @Composable
 private fun CpuFrequencyGrid(entries: List<CpuFrequencyEntry>) {
-    // Keep a constant four-column grid so changing clock digits never shifts
-    // neighboring CPU frequencies horizontally.
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        entries.chunked(4).forEach { rowEntries ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                rowEntries.forEach { entry ->
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(58.dp)
-                            .clip(alohaCornerShape(12.dp))
-                            .background(deviceTileColor())
-                            .then(LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let { Modifier.border(it.dp, deviceTileOutlineColor(), alohaCornerShape(12.dp)) } ?: Modifier)
-                            .padding(horizontal = 3.dp, vertical = 8.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
-                    ) {
-                        DeviceToolsText(
-                            entry.label,
-                            DeviceTextKind.Caption,
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center,
-                        )
-                        Spacer(modifier = Modifier.height(3.dp))
-                        DeviceToolsText(
-                            formatCpuFrequency(entry.currentKHz),
-                            DeviceTextKind.Value,
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center,
-                        )
+    // Keep a constant four-column grid; the shared option frame owns its theme shape,
+    // surface, outline and shadow rather than hand-painted per-tile borders.
+    when (LocalUiMode.current) {
+        UiMode.Material -> SegmentedOptionFrame {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                entries.chunked(4).forEach { rowEntries ->
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        rowEntries.forEach { entry ->
+                            TonalCard(
+                                modifier = Modifier.weight(1f).height(58.dp),
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                            ) {
+                                Column(
+                                    Modifier.fillMaxWidth().fillMaxHeight().padding(horizontal = 3.dp, vertical = 8.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center,
+                                ) {
+                                    DeviceToolsText(entry.label, DeviceTextKind.Caption, Modifier.fillMaxWidth(), TextAlign.Center)
+                                    Spacer(Modifier.height(3.dp))
+                                    DeviceToolsText(formatCpuFrequency(entry.currentKHz), DeviceTextKind.Value, Modifier.fillMaxWidth(), TextAlign.Center)
+                                }
+                            }
+                        }
+                        repeat(4 - rowEntries.size) { Spacer(Modifier.weight(1f)) }
                     }
                 }
-                repeat(4 - rowEntries.size) {
-                    Spacer(modifier = Modifier.weight(1f))
+            }
+        }
+        UiMode.Miuix -> Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            entries.chunked(4).forEach { rowEntries ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    rowEntries.forEach { entry ->
+                        MiuixCard(modifier = Modifier.weight(1f).height(58.dp)) {
+                            Column(Modifier.fillMaxWidth().padding(6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                DeviceToolsText(entry.label, DeviceTextKind.Caption)
+                                DeviceToolsText(formatCpuFrequency(entry.currentKHz), DeviceTextKind.Value)
+                            }
+                        }
+                    }
+                    repeat(4 - rowEntries.size) { Spacer(Modifier.weight(1f)) }
                 }
             }
         }
@@ -560,15 +544,25 @@ private fun CpuFrequencyGrid(entries: List<CpuFrequencyEntry>) {
 
 @Composable
 private fun DeviceValueTile(title: String, value: String, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.clip(alohaCornerShape(14.dp))
-            .background(deviceTileColor())
-            .then(LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let { Modifier.border(it.dp, deviceTileOutlineColor(), alohaCornerShape(14.dp)) } ?: Modifier)
-            .padding(horizontal = 12.dp, vertical = 11.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        DeviceToolsText(title, DeviceTextKind.Caption)
-        DeviceToolsText(value, DeviceTextKind.Large)
+    when (LocalUiMode.current) {
+        UiMode.Material -> TonalCard(
+            modifier = modifier,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        ) {
+            Column(
+                Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 11.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                DeviceToolsText(title, DeviceTextKind.Caption)
+                DeviceToolsText(value, DeviceTextKind.Large)
+            }
+        }
+        UiMode.Miuix -> MiuixCard(modifier = modifier) {
+            Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 11.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                DeviceToolsText(title, DeviceTextKind.Caption)
+                DeviceToolsText(value, DeviceTextKind.Large)
+            }
+        }
     }
 }
 
