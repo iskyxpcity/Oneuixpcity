@@ -435,8 +435,16 @@ fun ExpressiveLargeTopAppBar(
     LargeFlexibleTopAppBar(
         title = title,
         modifier = modifier,
-        navigationIcon = navigationIcon,
-        actions = actions,
+        navigationIcon = {
+            CompositionLocalProvider(LocalMaterialShadowButtons provides false) {
+                navigationIcon()
+            }
+        },
+        actions = {
+            CompositionLocalProvider(LocalMaterialShadowButtons provides false) {
+                actions()
+            }
+        },
         colors = colors,
         windowInsets = windowInsets,
         scrollBehavior = scrollBehavior,
