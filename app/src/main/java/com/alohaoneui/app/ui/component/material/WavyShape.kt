@@ -118,9 +118,9 @@ internal class WavyShape private constructor(
 
         val amplitude = (WAVE_AMPLITUDE_DP * density)
             .coerceAtMost(min(width, height) * 0.018f)
-        // The closed quadratic B-spline reaches 75% of each sampled crest.
-        // Match the inset to that visible displacement so the outer contour
-        // meets the original component bounds without exposing the shadow.
+        // Cubic crest controls are offset by 4/3 amplitude, giving the
+        // contour its requested visible amplitude while keeping the original
+        // component bounds intact.
         val inset = amplitude
 
         val innerWidth = (width - inset * 2f).coerceAtLeast(0.1f)
@@ -150,7 +150,7 @@ internal class WavyShape private constructor(
         // Fit an integer number of identical waves to the full perimeter.
         // This keeps crest spacing equal on every edge and through every corner.
         val targetWavelength = (WAVE_LENGTH_DP * density).coerceAtLeast(1f)
-        val waveCount = (perimeter / targetWavelength).toInt().coerceIn(12, 48)
+        val waveCount = (perimeter / targetWavelength).toInt().coerceIn(12, 128)
         // Two cubic segments per wavelength keep the same small rounded
         // scallop profile with half the path operations of the previous spline.
         val sampleCount = waveCount * SAMPLES_PER_WAVE
@@ -265,20 +265,27 @@ internal class WavyShape private constructor(
         for (waveIndex in 0 until waveCount) {
             val waveStart = waveIndex * actualWavelength
 
-            // The two control points coincide at the rounded crest/trough.
-            // This yields a smooth half-wave while avoiding a dense point cloud.
-            controlAt(waveStart + step, controlOffset, crest)
+            // Place the two controls at one-third and two-thirds of each
+            // half-wave. This preserves a rounded apex but removes the broad,
+            // flattened crest caused by coincident control points.
+            controlAt(waveStart + (2f / 3f) * step, controlOffset, crest)
             frameAt(waveStart + 2f * step)
+            val firstControlX = crest[0]
+            val firstControlY = crest[1]
+            controlAt(waveStart + (4f / 3f) * step, controlOffset, crest)
             path.cubicTo(
-                crest[0], crest[1],
+                firstControlX, firstControlY,
                 crest[0], crest[1],
                 frame[0], frame[1],
             )
 
-            controlAt(waveStart + 3f * step, -controlOffset, trough)
+            controlAt(waveStart + (8f / 3f) * step, -controlOffset, trough)
             frameAt(waveStart + actualWavelength)
+            val secondControlX = trough[0]
+            val secondControlY = trough[1]
+            controlAt(waveStart + (10f / 3f) * step, -controlOffset, trough)
             path.cubicTo(
-                trough[0], trough[1],
+                secondControlX, secondControlY,
                 trough[0], trough[1],
                 frame[0], frame[1],
             )
@@ -300,8 +307,8 @@ internal class WavyShape private constructor(
         private const val MAX_CACHE_ENTRIES = 96
         private val outlineCache = LinkedHashMap<OutlineKey, Outline>(MAX_CACHE_ENTRIES, 0.75f, true)
 
-        private const val WAVE_AMPLITUDE_DP = 0.34f
-        private const val WAVE_LENGTH_DP = 8f
+        private const val WAVE_AMPLITUDE_DP = 0.52f
+        private const val WAVE_LENGTH_DP = 5.5f
         private const val SAMPLES_PER_WAVE = 4
     }
 }
