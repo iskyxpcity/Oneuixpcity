@@ -272,22 +272,26 @@ internal class WavyShape private constructor(
             frameAt(waveStart + 2f * step)
             val firstControlX = crest[0]
             val firstControlY = crest[1]
+            val crestEndX = frame[0]
+            val crestEndY = frame[1]
             controlAt(waveStart + (4f / 3f) * step, controlOffset, crest)
             path.cubicTo(
                 firstControlX, firstControlY,
                 crest[0], crest[1],
-                frame[0], frame[1],
+                crestEndX, crestEndY,
             )
 
             controlAt(waveStart + (8f / 3f) * step, -controlOffset, trough)
             frameAt(waveStart + actualWavelength)
             val secondControlX = trough[0]
             val secondControlY = trough[1]
+            val troughEndX = frame[0]
+            val troughEndY = frame[1]
             controlAt(waveStart + (10f / 3f) * step, -controlOffset, trough)
             path.cubicTo(
                 secondControlX, secondControlY,
                 trough[0], trough[1],
-                frame[0], frame[1],
+                troughEndX, troughEndY,
             )
         }
 
