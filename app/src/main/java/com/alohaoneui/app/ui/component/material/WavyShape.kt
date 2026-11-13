@@ -102,7 +102,10 @@ internal class WavyShape private constructor(
             .coerceAtMost(min(width, height) * 0.018f)
         // Quadratic smoothing reduces the sampled crest to 75% of its control
         // point displacement, so inset by the same amount to avoid clipping.
-        val inset = amplitude * 0.75f
+        // Quadratic B-spline smoothing attenuates sampled crests to half amplitude.
+        // Inset only by that visible crest height so the wave reaches component bounds
+        // instead of leaving a uniform gap that exposes the container shadow.
+        val inset = amplitude * 0.5f * 0.75f
 
         val innerWidth = (width - inset * 2f).coerceAtLeast(0.1f)
         val innerHeight = (height - inset * 2f).coerceAtLeast(0.1f)
