@@ -22,8 +22,8 @@ import kotlinx.coroutines.launch
 /**
  * Shared Material press motion.
  *
- * Short taps remain visibly pressed for a brief minimum interval, without
- * forcing the expansion spring to finish. Long presses retract immediately
+ * Short taps remain expanded until both the 150 ms minimum feedback interval
+ * and the expansion spring have completed. Long presses retract immediately
  * on release from their current spring position.
  */
 @Composable
@@ -72,24 +72,31 @@ internal fun rememberMaterialExpressivePressExpansion(
                         val releasedGeneration = pressGeneration
                         releaseJob?.cancel()
                         releaseJob = launch {
-                            if (heldForMillis < longPressTimeoutMillis) {
-                                // Short tap: preserve a brief 150 ms pressed response,
-                                // but do not wait for the expansion spring to reach its peak.
+                            val isShortTap = heldForMillis < longPressTimeoutMillis
+                            if (isShortTap) {
+                                // Short tap: both conditions must be met before retracting.
+                                // The delay preserves the minimum visible response; join()
+                                // lets the expansion spring finish instead of cancelling it.
                                 delay(150L)
-                            }
-                            // Ignore a stale release if another press has already started.
-                            if (activePress == null && pressGeneration == releasedGeneration) {
+                                if (activePress != null || pressGeneration != releasedGeneration) {
+                                    return@launch
+                                }
+                                animationJob?.join()
+                            } else {
+                                // Long press: retract immediately from the current position.
                                 animationJob?.cancelAndJoin()
-                                if (activePress == null && pressGeneration == releasedGeneration) {
-                                    animationJob = launch {
-                                        expansion.animateTo(
-                                            0f,
-                                            spring(
-                                                dampingRatio = 0.35f,
-                                                stiffness = 100f,
-                                            ),
-                                        )
-                                    }
+                            }
+
+                            // Ignore a stale release if another press started while waiting.
+                            if (activePress == null && pressGeneration == releasedGeneration) {
+                                animationJob = launch {
+                                    expansion.animateTo(
+                                        0f,
+                                        spring(
+                                            dampingRatio = 0.35f,
+                                            stiffness = 100f,
+                                        ),
+                                    )
                                 }
                             }
                         }
