@@ -30,7 +30,6 @@ internal class WavyShape private constructor(
     topEnd: CornerSize,
     bottomEnd: CornerSize,
     bottomStart: CornerSize,
-    private val cacheOutlineGlobally: Boolean,
 ) : CornerBasedShape(topStart, topEnd, bottomEnd, bottomStart) {
 
     internal constructor(
@@ -39,14 +38,12 @@ internal class WavyShape private constructor(
         topEnd: Dp,
         bottomEnd: Dp,
         bottomStart: Dp,
-        cacheOutlineGlobally: Boolean = true,
     ) : this(
         density,
         CornerSize(topStart),
         CornerSize(topEnd),
         CornerSize(bottomEnd),
         CornerSize(bottomStart),
-        cacheOutlineGlobally,
     )
 
     override fun copy(
@@ -55,7 +52,7 @@ internal class WavyShape private constructor(
         bottomEnd: CornerSize,
         bottomStart: CornerSize,
     ): CornerBasedShape = WavyShape(
-        density, topStart, topEnd, bottomEnd, bottomStart, cacheOutlineGlobally,
+        density, topStart, topEnd, bottomEnd, bottomStart,
     )
 
     override fun createOutline(
