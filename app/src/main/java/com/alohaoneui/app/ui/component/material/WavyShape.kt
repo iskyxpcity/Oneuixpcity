@@ -33,13 +33,6 @@ internal class WavyShape private constructor(
     private val cacheOutlineGlobally: Boolean,
 ) : CornerBasedShape(topStart, topEnd, bottomEnd, bottomStart) {
 
-    // Press-driven shapes change their dimensions/radii on every animation frame.
-    // Keep only the most recent outline on that short-lived shape instance so
-    // shadow, border and clip can reuse it within the frame without churning the
-    // shared static cache or invoking its synchronized eviction path.
-    private var lastTransientKey: OutlineKey? = null
-    private var lastTransientOutline: Outline? = null
-
     internal constructor(
         density: Float,
         topStart: Dp,
@@ -84,18 +77,10 @@ internal class WavyShape private constructor(
             density.toBits(),
         )
 
-        if (!cacheOutlineGlobally) {
-            if (lastTransientKey == key) {
-                lastTransientOutline?.let { return it }
-            }
-            val outline = buildOutline(size, topStart, topEnd, bottomEnd, bottomStart, layoutDirection)
-            lastTransientKey = key
-            lastTransientOutline = outline
-            return outline
-        }
-
-        // Stable outlines use the shared cache. Animated press outlines bypass
-        // it because their per-frame keys would otherwise churn the bounded map.
+        // Wavy is a regular immutable CornerBasedShape. Every instance and
+        // every consumer (shadow, border, clip) shares the same geometry cache.
+        // This also lets separately-created press-state shapes reuse an outline
+        // when their resolved size and corner radii are identical.
         outlineCache[key]?.let { return it }
 
         val outline = buildOutline(size, topStart, topEnd, bottomEnd, bottomStart, layoutDirection)
