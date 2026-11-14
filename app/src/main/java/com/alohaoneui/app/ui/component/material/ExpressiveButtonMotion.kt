@@ -73,9 +73,9 @@ internal fun rememberMaterialExpressivePressExpansion(
                         releaseJob?.cancel()
                         releaseJob = launch {
                             if (heldForMillis < longPressTimeoutMillis) {
-                                // Short tap: preserve a brief 100 ms pressed response,
+                                // Short tap: preserve a brief 150 ms pressed response,
                                 // but do not wait for the expansion spring to reach its peak.
-                                delay(100L)
+                                delay(150L)
                             }
                             // Ignore a stale release if another press has already started.
                             if (activePress == null && pressGeneration == releasedGeneration) {
