@@ -30,7 +30,15 @@ internal class WavyShape private constructor(
     topEnd: CornerSize,
     bottomEnd: CornerSize,
     bottomStart: CornerSize,
+    private val cacheOutlineGlobally: Boolean,
 ) : CornerBasedShape(topStart, topEnd, bottomEnd, bottomStart) {
+
+    // Press-driven shapes change their dimensions/radii on every animation frame.
+    // Keep only the most recent outline on that short-lived shape instance so
+    // shadow, border and clip can reuse it within the frame without churning the
+    // shared static cache or invoking its synchronized eviction path.
+    private var lastTransientKey: OutlineKey? = null
+    private var lastTransientOutline: Outline? = null
 
     internal constructor(
         density: Float,
@@ -38,12 +46,14 @@ internal class WavyShape private constructor(
         topEnd: Dp,
         bottomEnd: Dp,
         bottomStart: Dp,
+        cacheOutlineGlobally: Boolean = true,
     ) : this(
         density,
         CornerSize(topStart),
         CornerSize(topEnd),
         CornerSize(bottomEnd),
         CornerSize(bottomStart),
+        cacheOutlineGlobally,
     )
 
     override fun copy(
@@ -51,7 +61,9 @@ internal class WavyShape private constructor(
         topEnd: CornerSize,
         bottomEnd: CornerSize,
         bottomStart: CornerSize,
-    ): CornerBasedShape = WavyShape(density, topStart, topEnd, bottomEnd, bottomStart)
+    ): CornerBasedShape = WavyShape(
+        density, topStart, topEnd, bottomEnd, bottomStart, cacheOutlineGlobally,
+    )
 
     override fun createOutline(
         size: Size,
@@ -72,8 +84,18 @@ internal class WavyShape private constructor(
             density.toBits(),
         )
 
-        // Cache hits do not take a global monitor: multiple Compose nodes can
-        // resolve their outlines concurrently without serializing on this shape.
+        if (!cacheOutlineGlobally) {
+            if (lastTransientKey == key) {
+                lastTransientOutline?.let { return it }
+            }
+            val outline = buildOutline(size, topStart, topEnd, bottomEnd, bottomStart, layoutDirection)
+            lastTransientKey = key
+            lastTransientOutline = outline
+            return outline
+        }
+
+        // Stable outlines use the shared cache. Animated press outlines bypass
+        // it because their per-frame keys would otherwise churn the bounded map.
         outlineCache[key]?.let { return it }
 
         val outline = buildOutline(size, topStart, topEnd, bottomEnd, bottomStart, layoutDirection)
