@@ -561,7 +561,7 @@ fun alohaSegmentedShape(
             safeTopEnd,
             safeBottomEnd,
             safeBottomStart,
-            cacheOutlineGlobally = progress == null,
+            cacheOutlineGlobally = progress == null || progress <= 0f,
         )
         else -> RoundedCornerShape(safeTopStart, safeTopEnd, safeBottomEnd, safeBottomStart)
     }
