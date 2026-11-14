@@ -494,27 +494,56 @@ fun alohaSegmentedShape(
     }
 
     val outerPressedRadius = if (count > 1 && (first || last)) 4.dp else 8.dp
-    val cornerAnimation: FiniteAnimationSpec<Dp> = if (progress != null) snap() else spring(dampingRatio = 0.45f, stiffness = 300f)
-    val topStart by animateDpAsState(
-        targetValue = corner(if (first) 25.dp else 4.dp, outerPressedRadius),
-        animationSpec = cornerAnimation,
-        label = "alohaSegmentTopStart",
-    )
-    val topEnd by animateDpAsState(
-        targetValue = corner(if (if (vertical) first else last) 25.dp else 4.dp, outerPressedRadius),
-        animationSpec = cornerAnimation,
-        label = "alohaSegmentTopEnd",
-    )
-    val bottomEnd by animateDpAsState(
-        targetValue = corner(if (last) 25.dp else 4.dp, outerPressedRadius),
-        animationSpec = cornerAnimation,
-        label = "alohaSegmentBottomEnd",
-    )
-    val bottomStart by animateDpAsState(
-        targetValue = corner(if (if (vertical) last else first) 25.dp else 4.dp, outerPressedRadius),
-        animationSpec = cornerAnimation,
-        label = "alohaSegmentBottomStart",
-    )
+    val restingTopStart = if (first) 25.dp else 4.dp
+    val restingTopEnd = if (if (vertical) first else last) 25.dp else 4.dp
+    val restingBottomEnd = if (last) 25.dp else 4.dp
+    val restingBottomStart = if (if (vertical) last else first) 25.dp else 4.dp
+
+    // Press progress already comes from the shared spring-driven Animatable.
+    // Do not wrap each frame in four additional animateDpAsState(snap()) nodes:
+    // resolve the interpolated radii directly and let the single press animation
+    // drive the WavyShape outline. The non-progress path retains the original
+    // spring animation for list rows and other callers.
+    val topStart = if (progress != null) {
+        corner(restingTopStart, outerPressedRadius)
+    } else {
+        val value by animateDpAsState(
+            targetValue = corner(restingTopStart, outerPressedRadius),
+            animationSpec = spring(dampingRatio = 0.45f, stiffness = 300f),
+            label = "alohaSegmentTopStart",
+        )
+        value
+    }
+    val topEnd = if (progress != null) {
+        corner(restingTopEnd, outerPressedRadius)
+    } else {
+        val value by animateDpAsState(
+            targetValue = corner(restingTopEnd, outerPressedRadius),
+            animationSpec = spring(dampingRatio = 0.45f, stiffness = 300f),
+            label = "alohaSegmentTopEnd",
+        )
+        value
+    }
+    val bottomEnd = if (progress != null) {
+        corner(restingBottomEnd, outerPressedRadius)
+    } else {
+        val value by animateDpAsState(
+            targetValue = corner(restingBottomEnd, outerPressedRadius),
+            animationSpec = spring(dampingRatio = 0.45f, stiffness = 300f),
+            label = "alohaSegmentBottomEnd",
+        )
+        value
+    }
+    val bottomStart = if (progress != null) {
+        corner(restingBottomStart, outerPressedRadius)
+    } else {
+        val value by animateDpAsState(
+            targetValue = corner(restingBottomStart, outerPressedRadius),
+            animationSpec = spring(dampingRatio = 0.45f, stiffness = 300f),
+            label = "alohaSegmentBottomStart",
+        )
+        value
+    }
 
     // An underdamped spring can briefly overshoot below its target when the
     // global corner scale changes (including a transition to 0.dp). CornerBasedShape
