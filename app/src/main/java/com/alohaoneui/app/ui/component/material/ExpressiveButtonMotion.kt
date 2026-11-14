@@ -15,16 +15,15 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 /**
  * Shared Material press motion.
  *
- * Short taps remain expanded until both the 150 ms minimum feedback interval
- * and the expansion spring have completed. Long presses retract immediately
- * on release from their current spring position.
+ * Short taps finish their expansion spring and retract immediately, without
+ * an extra hold at full expansion. Long presses retract from their current
+ * spring position on release.
  */
 @Composable
 internal fun rememberMaterialExpressivePressExpansion(
@@ -74,13 +73,8 @@ internal fun rememberMaterialExpressivePressExpansion(
                         releaseJob = launch {
                             val isShortTap = heldForMillis < longPressTimeoutMillis
                             if (isShortTap) {
-                                // Short tap: both conditions must be met before retracting.
-                                // The delay preserves the minimum visible response; join()
-                                // lets the expansion spring finish instead of cancelling it.
-                                delay(150L)
-                                if (activePress != null || pressGeneration != releasedGeneration) {
-                                    return@launch
-                                }
+                                // Short tap: finish the expansion spring, then retract
+                                // immediately. Do not add a post-expansion hold at full size.
                                 animationJob?.join()
                             } else {
                                 // Long press: retract immediately from the current position.
