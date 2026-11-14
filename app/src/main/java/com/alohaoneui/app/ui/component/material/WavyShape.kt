@@ -164,94 +164,93 @@ internal class WavyShape private constructor(
         val trough = FloatArray(2)
         val controlOffset = amplitude * (4f / 3f)
 
+        // Wave sample distances are processed in increasing perimeter order.
+        // Advance one segment cursor instead of re-testing all eight edges and
+        // corner arcs for every control point.
+        val segmentLengths = floatArrayOf(
+            topLength, trArc, rightLength, brArc,
+            bottomLength, blArc, leftLength, tlArc,
+        )
+        var segmentIndex = 0
+        var segmentStart = 0f
+        var segmentEnd = segmentLengths[0]
+
         fun frameAt(distance: Float) {
-            var d = distance
-
-            if (d < topLength) {
-                frame[0] = inset + tl + d
-                frame[1] = inset
-                frame[2] = 0f
-                frame[3] = -1f
-                return
+            while (segmentIndex < segmentLengths.lastIndex && distance >= segmentEnd) {
+                segmentStart = segmentEnd
+                segmentIndex++
+                segmentEnd += segmentLengths[segmentIndex]
             }
-            d -= topLength
+            val d = distance - segmentStart
 
-            if (tr > 0f && d < trArc) {
-                val angle = -quarterPi + d / tr
-                val nx = cos(angle)
-                val ny = sin(angle)
-                frame[0] = inset + innerWidth - tr + tr * nx
-                frame[1] = inset + tr + tr * ny
-                frame[2] = nx
-                frame[3] = ny
-                return
-            }
-            d -= trArc
-
-            if (d < rightLength) {
-                frame[0] = inset + innerWidth
-                frame[1] = inset + tr + d
-                frame[2] = 1f
-                frame[3] = 0f
-                return
-            }
-            d -= rightLength
-
-            if (br > 0f && d < brArc) {
-                val angle = d / br
-                val nx = cos(angle)
-                val ny = sin(angle)
-                frame[0] = inset + innerWidth - br + br * nx
-                frame[1] = inset + innerHeight - br + br * ny
-                frame[2] = nx
-                frame[3] = ny
-                return
-            }
-            d -= brArc
-
-            if (d < bottomLength) {
-                frame[0] = inset + innerWidth - br - d
-                frame[1] = inset + innerHeight
-                frame[2] = 0f
-                frame[3] = 1f
-                return
-            }
-            d -= bottomLength
-
-            if (bl > 0f && d < blArc) {
-                val angle = quarterPi + d / bl
-                val nx = cos(angle)
-                val ny = sin(angle)
-                frame[0] = inset + bl + bl * nx
-                frame[1] = inset + innerHeight - bl + bl * ny
-                frame[2] = nx
-                frame[3] = ny
-                return
-            }
-            d -= blArc
-
-            if (d < leftLength) {
-                frame[0] = inset
-                frame[1] = inset + innerHeight - bl - d
-                frame[2] = -1f
-                frame[3] = 0f
-                return
-            }
-            d -= leftLength
-
-            if (tl > 0f) {
-                val angle = PI.toFloat() + d / tl
-                val nx = cos(angle)
-                val ny = sin(angle)
-                frame[0] = inset + tl + tl * nx
-                frame[1] = inset + tl + tl * ny
-                frame[2] = nx
-                frame[3] = ny
-            } else {
-                frame[0] = inset + tl
-                frame[1] = inset
-                frame[2] = 0f
-                frame[3] = -1f
+            when (segmentIndex) {
+                0 -> {
+                    frame[0] = inset + tl + d
+                    frame[1] = inset
+                    frame[2] = 0f
+                    frame[3] = -1f
+                }
+                1 -> {
+                    val angle = -quarterPi + d / tr
+                    val nx = cos(angle)
+                    val ny = sin(angle)
+                    frame[0] = inset + innerWidth - tr + tr * nx
+                    frame[1] = inset + tr + tr * ny
+                    frame[2] = nx
+                    frame[3] = ny
+                }
+                2 -> {
+                    frame[0] = inset + innerWidth
+                    frame[1] = inset + tr + d
+                    frame[2] = 1f
+                    frame[3] = 0f
+                }
+                3 -> {
+                    val angle = d / br
+                    val nx = cos(angle)
+                    val ny = sin(angle)
+                    frame[0] = inset + innerWidth - br + br * nx
+                    frame[1] = inset + innerHeight - br + br * ny
+                    frame[2] = nx
+                    frame[3] = ny
+                }
+                4 -> {
+                    frame[0] = inset + innerWidth - br - d
+                    frame[1] = inset + innerHeight
+                    frame[2] = 0f
+                    frame[3] = 1f
+                }
+                5 -> {
+                    val angle = quarterPi + d / bl
+                    val nx = cos(angle)
+                    val ny = sin(angle)
+                    frame[0] = inset + bl + bl * nx
+                    frame[1] = inset + innerHeight - bl + bl * ny
+                    frame[2] = nx
+                    frame[3] = ny
+                }
+                6 -> {
+                    frame[0] = inset
+                    frame[1] = inset + innerHeight - bl - d
+                    frame[2] = -1f
+                    frame[3] = 0f
+                }
+                else -> {
+                    if (tl > 0f) {
+                        val angle = PI.toFloat() + d / tl
+                        val nx = cos(angle)
+                        val ny = sin(angle)
+                        frame[0] = inset + tl + tl * nx
+                        frame[1] = inset + tl + tl * ny
+                        frame[2] = nx
+                        frame[3] = ny
+                    } else {
+                        frame[0] = inset + tl
+                        frame[1] = inset
+                        frame[2] = 0f
+                        frame[3] = -1f
+                    }
+                }
             }
         }
 
@@ -271,29 +270,29 @@ internal class WavyShape private constructor(
             // half-wave. This preserves a rounded apex but removes the broad,
             // flattened crest caused by coincident control points.
             controlAt(waveStart + (2f / 3f) * step, controlOffset, crest)
-            frameAt(waveStart + 2f * step)
             val firstControlX = crest[0]
             val firstControlY = crest[1]
-            val crestEndX = frame[0]
-            val crestEndY = frame[1]
             controlAt(waveStart + (4f / 3f) * step, controlOffset, crest)
+            val secondControlX = crest[0]
+            val secondControlY = crest[1]
+            frameAt(waveStart + 2f * step)
             path.cubicTo(
                 firstControlX, firstControlY,
-                crest[0], crest[1],
-                crestEndX, crestEndY,
+                secondControlX, secondControlY,
+                frame[0], frame[1],
             )
 
             controlAt(waveStart + (8f / 3f) * step, -controlOffset, trough)
-            frameAt(waveStart + actualWavelength)
-            val secondControlX = trough[0]
-            val secondControlY = trough[1]
-            val troughEndX = frame[0]
-            val troughEndY = frame[1]
+            val firstTroughX = trough[0]
+            val firstTroughY = trough[1]
             controlAt(waveStart + (10f / 3f) * step, -controlOffset, trough)
+            val secondTroughX = trough[0]
+            val secondTroughY = trough[1]
+            frameAt(waveStart + actualWavelength)
             path.cubicTo(
-                secondControlX, secondControlY,
-                trough[0], trough[1],
-                troughEndX, troughEndY,
+                firstTroughX, firstTroughY,
+                secondTroughX, secondTroughY,
+                frame[0], frame[1],
             )
         }
 
