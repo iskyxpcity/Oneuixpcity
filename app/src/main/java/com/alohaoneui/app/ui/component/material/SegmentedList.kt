@@ -673,7 +673,7 @@ fun SegmentedItem(
  */
 @Composable
 private fun MutableInteractionSource.collectIsPressedWithMinimumDuration(
-    minimumPressedMillis: Long = 100L,
+    minimumPressedMillis: Long = 150L,
 ): Boolean {
     val activePresses = remember(this) { mutableStateListOf<PressInteraction.Press>() }
     LaunchedEffect(this) {
