@@ -12,7 +12,7 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
-import java.util.LinkedHashMap
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Static, arc-length-based Wavy outline.
@@ -72,23 +72,21 @@ internal class WavyShape private constructor(
             density.toBits(),
         )
 
-        synchronized(outlineCache) {
-            outlineCache[key]?.let { return it }
-        }
+        // Cache hits do not take a global monitor: multiple Compose nodes can
+        // resolve their outlines concurrently without serializing on this shape.
+        outlineCache[key]?.let { return it }
 
         val outline = buildOutline(size, topStart, topEnd, bottomEnd, bottomStart, layoutDirection)
-        synchronized(outlineCache) {
-            outlineCache[key]?.let { return it }
-            outlineCache[key] = outline
-            if (outlineCache.size > MAX_CACHE_ENTRIES) {
-                val eldest = outlineCache.entries.iterator()
-                if (eldest.hasNext()) {
-                    eldest.next()
-                    eldest.remove()
+        val cached = outlineCache.putIfAbsent(key, outline) ?: outline
+        if (outlineCache.size > MAX_CACHE_ENTRIES) {
+            synchronized(cacheTrimLock) {
+                while (outlineCache.size > MAX_CACHE_ENTRIES) {
+                    val candidate = outlineCache.keys.firstOrNull() ?: break
+                    outlineCache.remove(candidate)
                 }
             }
         }
-        return outline
+        return cached
     }
 
     private fun buildOutline(
@@ -306,10 +304,11 @@ internal class WavyShape private constructor(
     )
 
     private companion object {
-        // A small access-ordered cache retains common component sizes without
-        // clearing every entry at once when layouts produce new measurements.
+        // Concurrent lookups keep cache hits lock-free across Compose nodes.
+        // Trim only on overflow; avoid a global monitor on every outline request.
         private const val MAX_CACHE_ENTRIES = 96
-        private val outlineCache = LinkedHashMap<OutlineKey, Outline>(MAX_CACHE_ENTRIES, 0.75f, true)
+        private val outlineCache = ConcurrentHashMap<OutlineKey, Outline>(MAX_CACHE_ENTRIES)
+        private val cacheTrimLock = Any()
 
         private const val WAVE_AMPLITUDE_DP = 0.56f
         private const val WAVE_LENGTH_DP = 9f
