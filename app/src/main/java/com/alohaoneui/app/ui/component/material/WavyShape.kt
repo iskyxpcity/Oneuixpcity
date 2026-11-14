@@ -13,6 +13,7 @@ import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Static, arc-length-based Wavy outline.
@@ -82,7 +83,13 @@ internal class WavyShape private constructor(
 
         val outline = buildOutline(size, topStart, topEnd, bottomEnd, bottomStart, layoutDirection)
         val cached = outlineCache.putIfAbsent(key, outline) ?: outline
-        if (outlineCache.size > MAX_CACHE_ENTRIES) {
+        // Animated press progress can produce a fresh key on every frame.
+        // Do not acquire the global trim lock for every such miss: batch cache
+        // maintenance so outline generation is not followed by synchronized
+        // map traversal on each animation frame.
+        if (outlineCache.size > MAX_CACHE_ENTRIES &&
+            cacheMisses.incrementAndGet() % CACHE_TRIM_INTERVAL == 0
+        ) {
             synchronized(cacheTrimLock) {
                 while (outlineCache.size > MAX_CACHE_ENTRIES) {
                     val candidate = outlineCache.keys.firstOrNull() ?: break
@@ -312,6 +319,8 @@ internal class WavyShape private constructor(
         private const val MAX_CACHE_ENTRIES = 96
         private val outlineCache = ConcurrentHashMap<OutlineKey, Outline>(MAX_CACHE_ENTRIES)
         private val cacheTrimLock = Any()
+        private val cacheMisses = AtomicInteger(0)
+        private const val CACHE_TRIM_INTERVAL = 64
 
         private const val WAVE_AMPLITUDE_DP = 0.56f
         private const val WAVE_LENGTH_DP = 9f
