@@ -53,17 +53,25 @@ internal class WavyShape private constructor(
         density, topStart, topEnd, bottomEnd, bottomStart,
     )
 
-    // Voyage keeps only the last outline on the Shape instance. Match that
-    // hot-path behavior: a cache hit performs primitive comparisons only,
-    // without allocating a key or taking a global LRU lock on every layout.
-    private var cachedWidth = Float.NaN
-    private var cachedHeight = Float.NaN
-    private var cachedLayoutDirection: LayoutDirection? = null
-    private var cachedTopStart = Float.NaN
-    private var cachedTopEnd = Float.NaN
-    private var cachedBottomEnd = Float.NaN
-    private var cachedBottomStart = Float.NaN
-    private var cachedOutline: Outline? = null
+    // Keep a tiny per-instance working set rather than a single last-outline
+    // slot. A Canvas may request the same Shape at multiple stable sizes in one
+    // frame (for example, Fancy slider rail fill + inset outline); a one-slot
+    // cache alternates between those sizes and regenerates both paths every frame.
+    // Four entries cover those paired outlines plus a transient size without a
+    // global lock, key allocation, or cross-component cache contention.
+    private class OutlineCacheEntry(
+        val width: Float,
+        val height: Float,
+        val layoutDirection: LayoutDirection,
+        val topStart: Float,
+        val topEnd: Float,
+        val bottomEnd: Float,
+        val bottomStart: Float,
+        val outline: Outline,
+    )
+
+    private val outlineCache = arrayOfNulls<OutlineCacheEntry>(OUTLINE_CACHE_SIZE)
+    private var nextCacheSlot = 0
 
     override fun createOutline(
         size: Size,
@@ -73,31 +81,35 @@ internal class WavyShape private constructor(
         bottomStart: Float,
         layoutDirection: LayoutDirection,
     ): Outline {
-        cachedOutline?.let { cached ->
+        for (entry in outlineCache) {
             if (
-                size.width == cachedWidth &&
-                size.height == cachedHeight &&
-                layoutDirection == cachedLayoutDirection &&
-                topStart == cachedTopStart &&
-                topEnd == cachedTopEnd &&
-                bottomEnd == cachedBottomEnd &&
-                bottomStart == cachedBottomStart
+                entry != null &&
+                size.width == entry.width &&
+                size.height == entry.height &&
+                layoutDirection == entry.layoutDirection &&
+                topStart == entry.topStart &&
+                topEnd == entry.topEnd &&
+                bottomEnd == entry.bottomEnd &&
+                bottomStart == entry.bottomStart
             ) {
-                return cached
+                return entry.outline
             }
         }
 
         val generated = createPerimeterOutline(
             size, topStart, topEnd, bottomEnd, bottomStart, layoutDirection,
         )
-        cachedWidth = size.width
-        cachedHeight = size.height
-        cachedLayoutDirection = layoutDirection
-        cachedTopStart = topStart
-        cachedTopEnd = topEnd
-        cachedBottomEnd = bottomEnd
-        cachedBottomStart = bottomStart
-        cachedOutline = generated
+        outlineCache[nextCacheSlot] = OutlineCacheEntry(
+            width = size.width,
+            height = size.height,
+            layoutDirection = layoutDirection,
+            topStart = topStart,
+            topEnd = topEnd,
+            bottomEnd = bottomEnd,
+            bottomStart = bottomStart,
+            outline = generated,
+        )
+        nextCacheSlot = (nextCacheSlot + 1) % OUTLINE_CACHE_SIZE
         return generated
     }
 
@@ -343,6 +355,7 @@ internal class WavyShape private constructor(
         private const val MAX_PERIMETER_SAMPLES = 360f
         private const val SAMPLES_PER_WAVE = 8f
         private const val TWO_PI = 6.2831855f
+        private const val OUTLINE_CACHE_SIZE = 4
 
     }
 }
