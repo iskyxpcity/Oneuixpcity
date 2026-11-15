@@ -2,28 +2,25 @@ package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
-import kotlin.math.PI
-import kotlin.math.cos
+import kotlin.math.atan2
 import kotlin.math.min
-import kotlin.math.sin
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicInteger
+import kotlin.math.sqrt
 
 /**
- * Static, arc-length-based Wavy outline.
+ * Rounded-corner outline with small circular scallops along its four straight
+ * edges. Corner geometry is kept separate from edge geometry: the four corners
+ * remain ordinary quarter-circle arcs, while each straight edge is built from
+ * repeated circular arcs.
  *
- * The wave is spatial geometry only: no animation, frame clock, mutable cache,
- * or per-frame state. A single wavelength and amplitude are used around the
- * complete rounded-rectangle perimeter, including its four corner arcs.
- *
- * Material colors, strokes, shadows and component states remain owned by the
- * Material theme components that consume this shape.
+ * This is a static shape. It has no animation, per-frame sampling, or global
+ * outline cache.
  */
 internal class WavyShape private constructor(
     private val density: Float,
@@ -64,50 +61,6 @@ internal class WavyShape private constructor(
         bottomStart: Float,
         layoutDirection: LayoutDirection,
     ): Outline {
-        val key = OutlineKey(
-            size.width.toBits(),
-            size.height.toBits(),
-            topStart.toBits(),
-            topEnd.toBits(),
-            bottomEnd.toBits(),
-            bottomStart.toBits(),
-            layoutDirection,
-            density.toBits(),
-        )
-
-        // Wavy is a regular immutable CornerBasedShape. Every instance and
-        // every consumer (shadow, border, clip) shares the same geometry cache.
-        // This also lets separately-created press-state shapes reuse an outline
-        // when their resolved size and corner radii are identical.
-        outlineCache[key]?.let { return it }
-
-        val outline = buildOutline(size, topStart, topEnd, bottomEnd, bottomStart, layoutDirection)
-        val cached = outlineCache.putIfAbsent(key, outline) ?: outline
-        // Animated press progress can produce a fresh key on every frame.
-        // Do not acquire the global trim lock for every such miss: batch cache
-        // maintenance so outline generation is not followed by synchronized
-        // map traversal on each animation frame.
-        if (outlineCache.size > MAX_CACHE_ENTRIES &&
-            cacheMisses.incrementAndGet() % CACHE_TRIM_INTERVAL == 0
-        ) {
-            synchronized(cacheTrimLock) {
-                while (outlineCache.size > MAX_CACHE_ENTRIES) {
-                    val candidate = outlineCache.keys.firstOrNull() ?: break
-                    outlineCache.remove(candidate)
-                }
-            }
-        }
-        return cached
-    }
-
-    private fun buildOutline(
-        size: Size,
-        topStart: Float,
-        topEnd: Float,
-        bottomEnd: Float,
-        bottomStart: Float,
-        layoutDirection: LayoutDirection,
-    ): Outline {
         val width = size.width
         val height = size.height
         if (width <= 0f || height <= 0f) {
@@ -115,201 +68,162 @@ internal class WavyShape private constructor(
         }
 
         val maxRadius = min(width, height) / 2f
-        val ts = topStart.coerceIn(0f, maxRadius)
-        val te = topEnd.coerceIn(0f, maxRadius)
-        val be = bottomEnd.coerceIn(0f, maxRadius)
-        val bs = bottomStart.coerceIn(0f, maxRadius)
+        val logicalTopStart = topStart.coerceIn(0f, maxRadius)
+        val logicalTopEnd = topEnd.coerceIn(0f, maxRadius)
+        val logicalBottomEnd = bottomEnd.coerceIn(0f, maxRadius)
+        val logicalBottomStart = bottomStart.coerceIn(0f, maxRadius)
 
-        val topLeft = if (layoutDirection == LayoutDirection.Ltr) ts else te
-        val topRight = if (layoutDirection == LayoutDirection.Ltr) te else ts
-        val bottomRight = if (layoutDirection == LayoutDirection.Ltr) be else bs
-        val bottomLeft = if (layoutDirection == LayoutDirection.Ltr) bs else be
+        val tlOriginal = if (layoutDirection == LayoutDirection.Ltr) logicalTopStart else logicalTopEnd
+        val trOriginal = if (layoutDirection == LayoutDirection.Ltr) logicalTopEnd else logicalTopStart
+        val brOriginal = if (layoutDirection == LayoutDirection.Ltr) logicalBottomEnd else logicalBottomStart
+        val blOriginal = if (layoutDirection == LayoutDirection.Ltr) logicalBottomStart else logicalBottomEnd
 
         val amplitude = (WAVE_AMPLITUDE_DP * density)
             .coerceAtMost(min(width, height) * 0.018f)
-        // Cubic crest controls are offset by 4/3 amplitude, giving the
-        // contour its requested visible amplitude while keeping the original
-        // component bounds intact.
         val inset = amplitude
+        val tl = (tlOriginal - inset).coerceAtLeast(0f)
+        val tr = (trOriginal - inset).coerceAtLeast(0f)
+        val br = (brOriginal - inset).coerceAtLeast(0f)
+        val bl = (blOriginal - inset).coerceAtLeast(0f)
 
-        val innerWidth = (width - inset * 2f).coerceAtLeast(0.1f)
-        val innerHeight = (height - inset * 2f).coerceAtLeast(0.1f)
-        val tl = (topLeft - inset).coerceAtLeast(0f)
-        val tr = (topRight - inset).coerceAtLeast(0f)
-        val br = (bottomRight - inset).coerceAtLeast(0f)
-        val bl = (bottomLeft - inset).coerceAtLeast(0f)
+        val left = inset
+        val top = inset
+        val right = width - inset
+        val bottom = height - inset
+        val topLength = (right - left - tl - tr).coerceAtLeast(0f)
+        val rightLength = (bottom - top - tr - br).coerceAtLeast(0f)
+        val bottomLength = (right - left - br - bl).coerceAtLeast(0f)
+        val leftLength = (bottom - top - bl - tl).coerceAtLeast(0f)
 
-        val topLength = (innerWidth - tl - tr).coerceAtLeast(0f)
-        val rightLength = (innerHeight - tr - br).coerceAtLeast(0f)
-        val bottomLength = (innerWidth - br - bl).coerceAtLeast(0f)
-        val leftLength = (innerHeight - bl - tl).coerceAtLeast(0f)
-
-        val quarterPi = PI.toFloat() / 2f
-        val tlArc = tl * quarterPi
-        val trArc = tr * quarterPi
-        val brArc = br * quarterPi
-        val blArc = bl * quarterPi
-        val perimeter = topLength + trArc + rightLength + brArc +
-            bottomLength + blArc + leftLength + tlArc
-
-        if (perimeter <= 0.5f) {
-            return Outline.Rounded(RoundRect(0f, 0f, width, height))
-        }
-
-        // Fit an integer number of identical waves to the full perimeter.
-        // This keeps crest spacing equal on every edge and through every corner.
-        val targetWavelength = (WAVE_LENGTH_DP * density).coerceAtLeast(1f)
-        val waveCount = (perimeter / targetWavelength).toInt().coerceIn(12, 128)
-        // Two cubic segments per wavelength keep the same small rounded
-        // scallop profile with half the path operations of the previous spline.
-        val sampleCount = waveCount * SAMPLES_PER_WAVE
-        val step = perimeter / sampleCount
-        val actualWavelength = perimeter / waveCount
         val path = Path()
-        val frame = FloatArray(4)
-        val control = FloatArray(2)
-        val controlOffset = amplitude * 2f
+        path.moveTo(left + tl, top)
 
-        // Wave sample distances are processed in increasing perimeter order.
-        // Advance one segment cursor instead of re-testing all eight edges and
-        // corner arcs for every control point.
-        val segmentLengths = floatArrayOf(
-            topLength, trArc, rightLength, brArc,
-            bottomLength, blArc, leftLength, tlArc,
+        appendCircularWaveEdge(
+            path, left + tl, top, topLength,
+            tangentX = 1f, tangentY = 0f, normalX = 0f, normalY = -1f,
+            angleOffset = 0f, amplitude = amplitude,
         )
-        var segmentIndex = 0
-        var segmentStart = 0f
-        var segmentEnd = segmentLengths[0]
+        appendCorner(path, right - tr, top + tr, tr, -90f, 90f)
 
-        fun frameAt(distance: Float) {
-            while (segmentIndex < segmentLengths.lastIndex && distance >= segmentEnd) {
-                segmentStart = segmentEnd
-                segmentIndex++
-                segmentEnd += segmentLengths[segmentIndex]
-            }
-            val d = distance - segmentStart
+        appendCircularWaveEdge(
+            path, right, top + tr, rightLength,
+            tangentX = 0f, tangentY = 1f, normalX = 1f, normalY = 0f,
+            angleOffset = 90f, amplitude = amplitude,
+        )
+        appendCorner(path, right - br, bottom - br, br, 0f, 90f)
 
-            when (segmentIndex) {
-                0 -> {
-                    frame[0] = inset + tl + d
-                    frame[1] = inset
-                    frame[2] = 0f
-                    frame[3] = -1f
-                }
-                1 -> {
-                    val angle = -quarterPi + d / tr
-                    val nx = cos(angle)
-                    val ny = sin(angle)
-                    frame[0] = inset + innerWidth - tr + tr * nx
-                    frame[1] = inset + tr + tr * ny
-                    frame[2] = nx
-                    frame[3] = ny
-                }
-                2 -> {
-                    frame[0] = inset + innerWidth
-                    frame[1] = inset + tr + d
-                    frame[2] = 1f
-                    frame[3] = 0f
-                }
-                3 -> {
-                    val angle = d / br
-                    val nx = cos(angle)
-                    val ny = sin(angle)
-                    frame[0] = inset + innerWidth - br + br * nx
-                    frame[1] = inset + innerHeight - br + br * ny
-                    frame[2] = nx
-                    frame[3] = ny
-                }
-                4 -> {
-                    frame[0] = inset + innerWidth - br - d
-                    frame[1] = inset + innerHeight
-                    frame[2] = 0f
-                    frame[3] = 1f
-                }
-                5 -> {
-                    val angle = quarterPi + d / bl
-                    val nx = cos(angle)
-                    val ny = sin(angle)
-                    frame[0] = inset + bl + bl * nx
-                    frame[1] = inset + innerHeight - bl + bl * ny
-                    frame[2] = nx
-                    frame[3] = ny
-                }
-                6 -> {
-                    frame[0] = inset
-                    frame[1] = inset + innerHeight - bl - d
-                    frame[2] = -1f
-                    frame[3] = 0f
-                }
-                else -> {
-                    if (tl > 0f) {
-                        val angle = PI.toFloat() + d / tl
-                        val nx = cos(angle)
-                        val ny = sin(angle)
-                        frame[0] = inset + tl + tl * nx
-                        frame[1] = inset + tl + tl * ny
-                        frame[2] = nx
-                        frame[3] = ny
-                    } else {
-                        frame[0] = inset + tl
-                        frame[1] = inset
-                        frame[2] = 0f
-                        frame[3] = -1f
-                    }
-                }
-            }
-        }
+        appendCircularWaveEdge(
+            path, right - br, bottom, bottomLength,
+            tangentX = -1f, tangentY = 0f, normalX = 0f, normalY = 1f,
+            angleOffset = 180f, amplitude = amplitude,
+        )
+        appendCorner(path, left + bl, bottom - bl, bl, 90f, 90f)
 
-        fun controlAt(distance: Float, displacement: Float, out: FloatArray) {
-            frameAt(distance)
-            out[0] = frame[0] + frame[2] * displacement
-            out[1] = frame[1] + frame[3] * displacement
-        }
+        appendCircularWaveEdge(
+            path, left, bottom - bl, leftLength,
+            tangentX = 0f, tangentY = -1f, normalX = -1f, normalY = 0f,
+            angleOffset = 270f, amplitude = amplitude,
+        )
+        appendCorner(path, left + tl, top + tl, tl, 180f, 90f)
 
-        frameAt(0f)
-        path.moveTo(frame[0], frame[1])
-
-        // Each wavelength is two quadratic arcs: one crest and one trough.
-        // The control point is displaced by 2A so the quadratic midpoint reaches A.
-        // This replaces four frame samples + two cubic curves per wavelength
-        // with two frame samples + two quadratic curves.
-        val halfWave = actualWavelength / 2f
-        for (waveIndex in 0 until waveCount) {
-            val waveStart = waveIndex * actualWavelength
-
-            controlAt(waveStart + actualWavelength / 4f, controlOffset, control)
-            val crestX = control[0]
-            val crestY = control[1]
-            frameAt(waveStart + halfWave)
-            path.quadraticTo(crestX, crestY, frame[0], frame[1])
-
-            controlAt(waveStart + actualWavelength * 3f / 4f, -controlOffset, control)
-            val troughX = control[0]
-            val troughY = control[1]
-            frameAt(waveStart + actualWavelength)
-            path.quadraticTo(troughX, troughY, frame[0], frame[1])
-        }
         path.close()
         return Outline.Generic(path)
     }
 
-    private data class OutlineKey(
-        val width: Int, val height: Int,
-        val topStart: Int, val topEnd: Int, val bottomEnd: Int, val bottomStart: Int,
-        val direction: LayoutDirection, val density: Int,
-    )
+    private fun appendCorner(
+        path: Path,
+        centerX: Float,
+        centerY: Float,
+        radius: Float,
+        startAngle: Float,
+        sweepAngle: Float,
+    ) {
+        if (radius <= 0.01f) {
+            return
+        }
+        path.arcTo(
+            Rect(
+                centerX - radius,
+                centerY - radius,
+                centerX + radius,
+                centerY + radius,
+            ),
+            startAngle,
+            sweepAngle,
+            forceMoveTo = false,
+        )
+    }
+
+    /**
+     * Each half-wave is one circular arc. Alternating the arc's bulge direction
+     * produces a regular scalloped edge; arc length and radius are solved once
+     * per edge, rather than sampling a spline at multiple points per wave.
+     */
+    private fun appendCircularWaveEdge(
+        path: Path,
+        startX: Float,
+        startY: Float,
+        length: Float,
+        tangentX: Float,
+        tangentY: Float,
+        normalX: Float,
+        normalY: Float,
+        angleOffset: Float,
+        amplitude: Float,
+    ) {
+        val targetWavelength = (WAVE_LENGTH_DP * density).coerceAtLeast(1f)
+        val waveCount = (length / targetWavelength).toInt()
+        if (waveCount <= 0 || amplitude <= 0.01f) {
+            path.lineTo(startX + tangentX * length, startY + tangentY * length)
+            return
+        }
+
+        val halfWaveCount = waveCount * 2
+        val halfWaveLength = length / halfWaveCount
+        val halfChord = halfWaveLength / 2f
+        val radius = (halfChord * halfChord + amplitude * amplitude) / (2f * amplitude)
+        val centerOffset = radius - amplitude
+        val alpha = Math.toDegrees(atan2(centerOffset, halfChord).toDouble()).toFloat()
+        val localStartOutward = 180f - alpha
+        val localSweepOutward = -(180f - 2f * alpha)
+
+        for (index in 0 until halfWaveCount) {
+            val direction = if (index % 2 == 0) 1f else -1f
+            val centerDistance = (index + 0.5f) * halfWaveLength
+            val centerX = startX +
+                tangentX * centerDistance -
+                normalX * direction * centerOffset
+            val centerY = startY +
+                tangentY * centerDistance -
+                normalY * direction * centerOffset
+
+            val localStart = if (direction > 0f) {
+                localStartOutward
+            } else {
+                180f + alpha
+            }
+            val localSweep = if (direction > 0f) {
+                localSweepOutward
+            } else {
+                180f - 2f * alpha
+            }
+
+            path.arcTo(
+                Rect(
+                    centerX - radius,
+                    centerY - radius,
+                    centerX + radius,
+                    centerY + radius,
+                ),
+                angleOffset - localStart,
+                -localSweep,
+                forceMoveTo = false,
+            )
+        }
+    }
 
     private companion object {
-        // Concurrent lookups keep cache hits lock-free across Compose nodes.
-        // Trim only on overflow; avoid a global monitor on every outline request.
-        private const val MAX_CACHE_ENTRIES = 96
-        private val outlineCache = ConcurrentHashMap<OutlineKey, Outline>(MAX_CACHE_ENTRIES)
-        private val cacheTrimLock = Any()
-        private val cacheMisses = AtomicInteger(0)
-        private const val CACHE_TRIM_INTERVAL = 64
-
         private const val WAVE_AMPLITUDE_DP = 0.56f
         private const val WAVE_LENGTH_DP = 9f
-        private const val SAMPLES_PER_WAVE = 4
     }
 }
