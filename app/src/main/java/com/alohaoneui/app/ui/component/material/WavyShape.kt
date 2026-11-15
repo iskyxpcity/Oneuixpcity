@@ -167,9 +167,8 @@ internal class WavyShape private constructor(
         val actualWavelength = perimeter / waveCount
         val path = Path()
         val frame = FloatArray(4)
-        val crest = FloatArray(2)
-        val trough = FloatArray(2)
-        val controlOffset = amplitude * (4f / 3f)
+        val control = FloatArray(2)
+        val controlOffset = amplitude * 2f
 
         // Wave sample distances are processed in increasing perimeter order.
         // Advance one segment cursor instead of re-testing all eight edges and
@@ -270,39 +269,26 @@ internal class WavyShape private constructor(
         frameAt(0f)
         path.moveTo(frame[0], frame[1])
 
+        // Each wavelength is two quadratic arcs: one crest and one trough.
+        // The control point is displaced by 2A so the quadratic midpoint reaches A.
+        // This replaces four frame samples + two cubic curves per wavelength
+        // with two frame samples + two quadratic curves.
+        val halfWave = actualWavelength / 2f
         for (waveIndex in 0 until waveCount) {
             val waveStart = waveIndex * actualWavelength
 
-            // Place the two controls at one-third and two-thirds of each
-            // half-wave. This preserves a rounded apex but removes the broad,
-            // flattened crest caused by coincident control points.
-            controlAt(waveStart + (2f / 3f) * step, controlOffset, crest)
-            val firstControlX = crest[0]
-            val firstControlY = crest[1]
-            controlAt(waveStart + (4f / 3f) * step, controlOffset, crest)
-            val secondControlX = crest[0]
-            val secondControlY = crest[1]
-            frameAt(waveStart + 2f * step)
-            path.cubicTo(
-                firstControlX, firstControlY,
-                secondControlX, secondControlY,
-                frame[0], frame[1],
-            )
+            controlAt(waveStart + actualWavelength / 4f, controlOffset, control)
+            val crestX = control[0]
+            val crestY = control[1]
+            frameAt(waveStart + halfWave)
+            path.quadraticTo(crestX, crestY, frame[0], frame[1])
 
-            controlAt(waveStart + (8f / 3f) * step, -controlOffset, trough)
-            val firstTroughX = trough[0]
-            val firstTroughY = trough[1]
-            controlAt(waveStart + (10f / 3f) * step, -controlOffset, trough)
-            val secondTroughX = trough[0]
-            val secondTroughY = trough[1]
+            controlAt(waveStart + actualWavelength * 3f / 4f, -controlOffset, control)
+            val troughX = control[0]
+            val troughY = control[1]
             frameAt(waveStart + actualWavelength)
-            path.cubicTo(
-                firstTroughX, firstTroughY,
-                secondTroughX, secondTroughY,
-                frame[0], frame[1],
-            )
+            path.quadraticTo(troughX, troughY, frame[0], frame[1])
         }
-
         path.close()
         return Outline.Generic(path)
     }
