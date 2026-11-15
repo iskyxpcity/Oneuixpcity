@@ -144,6 +144,11 @@ internal class WavyShape private constructor(
         val br = (brOriginal - amplitude).coerceAtLeast(0f)
         val bl = (blOriginal - amplitude).coerceAtLeast(0f)
 
+        val topWave = if (tlOriginal > 0f || trOriginal > 0f) amplitude else 0f
+        val rightWave = if (trOriginal > 0f || brOriginal > 0f) amplitude else 0f
+        val bottomWave = if (brOriginal > 0f || blOriginal > 0f) amplitude else 0f
+        val leftWave = if (blOriginal > 0f || tlOriginal > 0f) amplitude else 0f
+
         // Each side is inset only when at least one of its adjoining
         // original corners exists; this mirrors Voyage's side-specific
         // corner-to-edge transition rules.
@@ -151,11 +156,6 @@ internal class WavyShape private constructor(
         val top = topWave
         val right = width - rightWave
         val bottom = height - bottomWave
-
-        val topWave = if (tlOriginal > 0f || trOriginal > 0f) amplitude else 0f
-        val rightWave = if (trOriginal > 0f || brOriginal > 0f) amplitude else 0f
-        val bottomWave = if (brOriginal > 0f || blOriginal > 0f) amplitude else 0f
-        val leftWave = if (blOriginal > 0f || tlOriginal > 0f) amplitude else 0f
 
         val topLength = max(0f, right - tr - (left + tl))
         val rightLength = max(0f, bottom - br - (top + tr))
