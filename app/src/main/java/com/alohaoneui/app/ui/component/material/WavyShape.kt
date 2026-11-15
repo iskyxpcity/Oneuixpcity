@@ -2,25 +2,25 @@ package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.foundation.shape.CornerSize
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
-import kotlin.math.atan2
+import kotlin.math.PI
+import kotlin.math.ceil
+import kotlin.math.cos
+import kotlin.math.max
 import kotlin.math.min
-import kotlin.math.sqrt
+import kotlin.math.sin
 
 /**
- * Rounded-corner outline with small circular scallops along its four straight
- * edges. Corner geometry is kept separate from edge geometry: the four corners
- * remain ordinary quarter-circle arcs, while each straight edge is built from
- * repeated circular arcs.
+ * Voyage-compatible perimeter wave shape.
  *
- * This is a static shape. It has no animation, per-frame sampling, or global
- * outline cache.
+ * The wave is evaluated against one continuous rounded-rectangle perimeter:
+ * straight edges and all four corner arcs share the same accumulated distance
+ * and phase. This is intentionally not a set of independent edge scallops.
  */
 internal class WavyShape private constructor(
     private val density: Float,
@@ -53,7 +53,44 @@ internal class WavyShape private constructor(
         density, topStart, topEnd, bottomEnd, bottomStart,
     )
 
+    private data class OutlineKey(
+        val density: Float,
+        val width: Float,
+        val height: Float,
+        val direction: LayoutDirection,
+        val topStart: Float,
+        val topEnd: Float,
+        val bottomEnd: Float,
+        val bottomStart: Float,
+    )
+
     override fun createOutline(
+        size: Size,
+        topStart: Float,
+        topEnd: Float,
+        bottomEnd: Float,
+        bottomStart: Float,
+        layoutDirection: LayoutDirection,
+    ): Outline {
+        val key = OutlineKey(
+            density, size.width, size.height, layoutDirection,
+            topStart, topEnd, bottomEnd, bottomStart,
+        )
+        synchronized(outlineCache) {
+            outlineCache[key]?.let { return it }
+        }
+
+        val generated = createPerimeterOutline(
+            size, topStart, topEnd, bottomEnd, bottomStart, layoutDirection,
+        )
+        synchronized(outlineCache) {
+            outlineCache[key]?.let { return it }
+            outlineCache[key] = generated
+            return generated
+        }
+    }
+
+    private fun createPerimeterOutline(
         size: Size,
         topStart: Float,
         topEnd: Float,
@@ -67,163 +104,235 @@ internal class WavyShape private constructor(
             return Outline.Rounded(RoundRect(0f, 0f, width, height))
         }
 
-        val maxRadius = min(width, height) / 2f
-        val logicalTopStart = topStart.coerceIn(0f, maxRadius)
-        val logicalTopEnd = topEnd.coerceIn(0f, maxRadius)
-        val logicalBottomEnd = bottomEnd.coerceIn(0f, maxRadius)
-        val logicalBottomStart = bottomStart.coerceIn(0f, maxRadius)
+        val minDimension = min(width, height)
+        val maxRadius = minDimension / 2f
+        val tlOriginal = (if (layoutDirection == LayoutDirection.Ltr) topStart else topEnd)
+            .coerceIn(0f, maxRadius)
+        val trOriginal = (if (layoutDirection == LayoutDirection.Ltr) topEnd else topStart)
+            .coerceIn(0f, maxRadius)
+        val brOriginal = (if (layoutDirection == LayoutDirection.Ltr) bottomEnd else bottomStart)
+            .coerceIn(0f, maxRadius)
+        val blOriginal = (if (layoutDirection == LayoutDirection.Ltr) bottomStart else bottomEnd)
+            .coerceIn(0f, maxRadius)
 
-        val tlOriginal = if (layoutDirection == LayoutDirection.Ltr) logicalTopStart else logicalTopEnd
-        val trOriginal = if (layoutDirection == LayoutDirection.Ltr) logicalTopEnd else logicalTopStart
-        val brOriginal = if (layoutDirection == LayoutDirection.Ltr) logicalBottomEnd else logicalBottomStart
-        val blOriginal = if (layoutDirection == LayoutDirection.Ltr) logicalBottomStart else logicalBottomEnd
+        if (tlOriginal <= 0f && trOriginal <= 0f &&
+            brOriginal <= 0f && blOriginal <= 0f
+        ) {
+            return Outline.Rounded(RoundRect(0f, 0f, width, height))
+        }
 
-        val amplitude = (WAVE_AMPLITUDE_DP * density)
-            .coerceAtMost(min(width, height) * 0.018f)
-        val inset = amplitude
-        val tl = (tlOriginal - inset).coerceAtLeast(0f)
-        val tr = (trOriginal - inset).coerceAtLeast(0f)
-        val br = (brOriginal - inset).coerceAtLeast(0f)
-        val bl = (blOriginal - inset).coerceAtLeast(0f)
+        // Voyage scales both wavelength and amplitude for compact controls.
+        val sizeScale = (minDimension / (48f * density)).coerceIn(0.42f, 1f)
+        val amplitude = (WAVE_AMPLITUDE_DP * density * sizeScale)
+            .coerceIn(0f, minDimension / 4f)
+        if (amplitude <= 0.01f) {
+            return Outline.Rounded(
+                RoundRect(
+                    left = 0f, top = 0f, right = width, bottom = height,
+                    topLeftCornerRadius = androidx.compose.ui.geometry.CornerRadius(tlOriginal),
+                    topRightCornerRadius = androidx.compose.ui.geometry.CornerRadius(trOriginal),
+                    bottomRightCornerRadius = androidx.compose.ui.geometry.CornerRadius(brOriginal),
+                    bottomLeftCornerRadius = androidx.compose.ui.geometry.CornerRadius(blOriginal),
+                ),
+            )
+        }
 
-        val left = inset
-        val top = inset
-        val right = width - inset
-        val bottom = height - inset
-        val topLength = (right - left - tl - tr).coerceAtLeast(0f)
-        val rightLength = (bottom - top - tr - br).coerceAtLeast(0f)
-        val bottomLength = (right - left - br - bl).coerceAtLeast(0f)
-        val leftLength = (bottom - top - bl - tl).coerceAtLeast(0f)
+        // The base rounded rectangle is inset by one amplitude. Its corner
+        // radii are reduced by the same amount, exactly as in Voyage's mapper.
+        val tl = (tlOriginal - amplitude).coerceAtLeast(0f)
+        val tr = (trOriginal - amplitude).coerceAtLeast(0f)
+        val br = (brOriginal - amplitude).coerceAtLeast(0f)
+        val bl = (blOriginal - amplitude).coerceAtLeast(0f)
+
+        val left = amplitude
+        val top = amplitude
+        val right = width - amplitude
+        val bottom = height - amplitude
+
+        val topWave = if (tlOriginal > 0f || trOriginal > 0f) amplitude else 0f
+        val rightWave = if (trOriginal > 0f || brOriginal > 0f) amplitude else 0f
+        val bottomWave = if (brOriginal > 0f || blOriginal > 0f) amplitude else 0f
+        val leftWave = if (blOriginal > 0f || tlOriginal > 0f) amplitude else 0f
+
+        val topLength = max(0f, right - tr - (left + tl))
+        val rightLength = max(0f, bottom - br - (top + tr))
+        val bottomLength = max(0f, right - br - (left + bl))
+        val leftLength = max(0f, bottom - bl - (top + tl))
+
+        val perimeter = topLength + rightLength + bottomLength + leftLength +
+            ((tl + tr + br + bl) * (PI.toFloat() / 2f))
+
+        if (perimeter <= 0.01f) {
+            return Outline.Rounded(RoundRect(0f, 0f, width, height))
+        }
+
+        // Fit an integer number of cycles around the closed perimeter. This
+        // prevents a phase jump where the final point meets the first point.
+        val targetWavelength = (WAVE_LENGTH_DP * density * sizeScale).coerceAtLeast(1f)
+        val cycleCount = max(1, ceil(perimeter / targetWavelength).toInt())
+        val wavelength = perimeter / cycleCount
+
+        // Keep the original adaptive sampling limits: at least eight samples
+        // per wave, at most about 360 samples around the whole outline, and
+        // never use a sub-pixel sampling interval.
+        val sampleStep = max(
+            1f,
+            max(wavelength / SAMPLES_PER_WAVE, perimeter / MAX_PERIMETER_SAMPLES),
+        )
 
         val path = Path()
-        path.moveTo(left + tl, top)
+        val state = WavePathState(path, wavelength, amplitude)
 
-        appendCircularWaveEdge(
-            path, left + tl, top, topLength,
-            tangentX = 1f, tangentY = 0f, normalX = 0f, normalY = -1f,
-            angleOffset = 0f, amplitude = amplitude,
+        appendLine(
+            state, left + tl, top, right - tr, top,
+            normalX = 0f, normalY = -1f, length = topLength,
+            waveAmplitude = topWave, sampleStep = sampleStep,
         )
-        appendCorner(path, right - tr, top + tr, tr, -90f, 90f)
-
-        appendCircularWaveEdge(
-            path, right, top + tr, rightLength,
-            tangentX = 0f, tangentY = 1f, normalX = 1f, normalY = 0f,
-            angleOffset = 90f, amplitude = amplitude,
+        appendCorner(
+            state, right - tr, top + tr, tr,
+            startAngle = -PI.toFloat() / 2f,
+            waveAmplitude = amplitude, sampleStep = sampleStep,
         )
-        appendCorner(path, right - br, bottom - br, br, 0f, 90f)
-
-        appendCircularWaveEdge(
-            path, right - br, bottom, bottomLength,
-            tangentX = -1f, tangentY = 0f, normalX = 0f, normalY = 1f,
-            angleOffset = 180f, amplitude = amplitude,
+        appendLine(
+            state, right, top + tr, right, bottom - br,
+            normalX = 1f, normalY = 0f, length = rightLength,
+            waveAmplitude = rightWave, sampleStep = sampleStep,
         )
-        appendCorner(path, left + bl, bottom - bl, bl, 90f, 90f)
-
-        appendCircularWaveEdge(
-            path, left, bottom - bl, leftLength,
-            tangentX = 0f, tangentY = -1f, normalX = -1f, normalY = 0f,
-            angleOffset = 270f, amplitude = amplitude,
+        appendCorner(
+            state, right - br, bottom - br, br,
+            startAngle = 0f,
+            waveAmplitude = amplitude, sampleStep = sampleStep,
         )
-        appendCorner(path, left + tl, top + tl, tl, 180f, 90f)
+        appendLine(
+            state, right - br, bottom, left + bl, bottom,
+            normalX = 0f, normalY = 1f, length = bottomLength,
+            waveAmplitude = bottomWave, sampleStep = sampleStep,
+        )
+        appendCorner(
+            state, left + bl, bottom - bl, bl,
+            startAngle = PI.toFloat() / 2f,
+            waveAmplitude = amplitude, sampleStep = sampleStep,
+        )
+        appendLine(
+            state, left, bottom - bl, left, top + tl,
+            normalX = -1f, normalY = 0f, length = leftLength,
+            waveAmplitude = leftWave, sampleStep = sampleStep,
+        )
+        appendCorner(
+            state, left + tl, top + tl, tl,
+            startAngle = PI.toFloat(),
+            waveAmplitude = amplitude, sampleStep = sampleStep,
+        )
 
-        path.close()
+        state.close()
         return Outline.Generic(path)
     }
 
+    private class WavePathState(
+        val path: Path,
+        val wavelength: Float,
+        val amplitude: Float,
+    ) {
+        var distance = 0f
+        var hasPrevious = false
+        var firstX = 0f
+        var firstY = 0f
+        var previousX = 0f
+        var previousY = 0f
+
+        fun append(baseX: Float, baseY: Float, normalX: Float, normalY: Float, waveAmplitude: Float) {
+            val displacement = waveAmplitude *
+                sin((distance * TWO_PI) / wavelength)
+            val x = baseX + normalX * displacement
+            val y = baseY + normalY * displacement
+
+            if (!hasPrevious) {
+                path.moveTo(x, y)
+                firstX = x
+                firstY = y
+                hasPrevious = true
+            } else {
+                path.quadraticTo(
+                    previousX,
+                    previousY,
+                    (previousX + x) / 2f,
+                    (previousY + y) / 2f,
+                )
+            }
+            previousX = x
+            previousY = y
+        }
+
+        fun close() {
+            if (!hasPrevious) return
+            path.quadraticTo(previousX, previousY, firstX, firstY)
+            path.close()
+        }
+    }
+
+    private fun appendLine(
+        state: WavePathState,
+        startX: Float,
+        startY: Float,
+        endX: Float,
+        endY: Float,
+        normalX: Float,
+        normalY: Float,
+        length: Float,
+        waveAmplitude: Float,
+        sampleStep: Float,
+    ) {
+        val steps = max(1, ceil(length / sampleStep).toInt())
+        for (index in 0..steps) {
+            val fraction = index.toFloat() / steps
+            state.append(
+                startX + (endX - startX) * fraction,
+                startY + (endY - startY) * fraction,
+                normalX,
+                normalY,
+                waveAmplitude,
+            )
+            if (index < steps) state.distance += length / steps
+        }
+    }
+
     private fun appendCorner(
-        path: Path,
+        state: WavePathState,
         centerX: Float,
         centerY: Float,
         radius: Float,
         startAngle: Float,
-        sweepAngle: Float,
+        waveAmplitude: Float,
+        sampleStep: Float,
     ) {
-        if (radius <= 0.01f) {
-            return
-        }
-        path.arcTo(
-            Rect(
-                centerX - radius,
-                centerY - radius,
-                centerX + radius,
-                centerY + radius,
-            ),
-            startAngle,
-            sweepAngle,
-            forceMoveTo = false,
-        )
-    }
-
-    /**
-     * Each half-wave is one circular arc. Alternating the arc's bulge direction
-     * produces a regular scalloped edge; arc length and radius are solved once
-     * per edge, rather than sampling a spline at multiple points per wave.
-     */
-    private fun appendCircularWaveEdge(
-        path: Path,
-        startX: Float,
-        startY: Float,
-        length: Float,
-        tangentX: Float,
-        tangentY: Float,
-        normalX: Float,
-        normalY: Float,
-        angleOffset: Float,
-        amplitude: Float,
-    ) {
-        val targetWavelength = (WAVE_LENGTH_DP * density).coerceAtLeast(1f)
-        val waveCount = (length / targetWavelength).toInt()
-        if (waveCount <= 0 || amplitude <= 0.01f) {
-            path.lineTo(startX + tangentX * length, startY + tangentY * length)
-            return
-        }
-
-        val halfWaveCount = waveCount * 2
-        val halfWaveLength = length / halfWaveCount
-        val halfChord = halfWaveLength / 2f
-        val radius = (halfChord * halfChord + amplitude * amplitude) / (2f * amplitude)
-        val centerOffset = radius - amplitude
-        val alpha = Math.toDegrees(atan2(centerOffset, halfChord).toDouble()).toFloat()
-        val localStartOutward = 180f - alpha
-        val localSweepOutward = -(180f - 2f * alpha)
-
-        for (index in 0 until halfWaveCount) {
-            val direction = if (index % 2 == 0) 1f else -1f
-            val centerDistance = (index + 0.5f) * halfWaveLength
-            val centerX = startX +
-                tangentX * centerDistance -
-                normalX * direction * centerOffset
-            val centerY = startY +
-                tangentY * centerDistance -
-                normalY * direction * centerOffset
-
-            val localStart = if (direction > 0f) {
-                localStartOutward
-            } else {
-                180f + alpha
-            }
-            val localSweep = if (direction > 0f) {
-                localSweepOutward
-            } else {
-                180f - 2f * alpha
-            }
-
-            path.arcTo(
-                Rect(
-                    centerX - radius,
-                    centerY - radius,
-                    centerX + radius,
-                    centerY + radius,
-                ),
-                angleOffset - localStart,
-                -localSweep,
-                forceMoveTo = false,
+        val arcLength = radius * PI.toFloat() / 2f
+        val steps = max(1, ceil(arcLength / sampleStep).toInt())
+        for (index in 0..steps) {
+            val fraction = index.toFloat() / steps
+            val angle = startAngle + (PI.toFloat() / 2f) * fraction
+            val normalX = cos(angle)
+            val normalY = sin(angle)
+            state.append(
+                centerX + radius * normalX,
+                centerY + radius * normalY,
+                normalX,
+                normalY,
+                waveAmplitude,
             )
+            if (index < steps) state.distance += arcLength / steps
         }
     }
 
     private companion object {
-        private const val WAVE_AMPLITUDE_DP = 0.56f
-        private const val WAVE_LENGTH_DP = 9f
+        private const val WAVE_LENGTH_DP = 12f
+        private const val WAVE_AMPLITUDE_DP = 0.9f
+        private const val MAX_PERIMETER_SAMPLES = 360f
+        private const val SAMPLES_PER_WAVE = 8f
+        private const val TWO_PI = 6.2831855f
+
+        private val outlineCache = object : LinkedHashMap<OutlineKey, Outline>(128, 0.75f, true) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<OutlineKey, Outline>?): Boolean =
+                size > 768
+        }
     }
 }
