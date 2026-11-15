@@ -53,16 +53,17 @@ internal class WavyShape private constructor(
         density, topStart, topEnd, bottomEnd, bottomStart,
     )
 
-    private data class OutlineKey(
-        val density: Float,
-        val width: Float,
-        val height: Float,
-        val direction: LayoutDirection,
-        val topStart: Float,
-        val topEnd: Float,
-        val bottomEnd: Float,
-        val bottomStart: Float,
-    )
+    // Voyage keeps only the last outline on the Shape instance. Match that
+    // hot-path behavior: a cache hit performs primitive comparisons only,
+    // without allocating a key or taking a global LRU lock on every layout.
+    private var cachedWidth = Float.NaN
+    private var cachedHeight = Float.NaN
+    private var cachedLayoutDirection: LayoutDirection? = null
+    private var cachedTopStart = Float.NaN
+    private var cachedTopEnd = Float.NaN
+    private var cachedBottomEnd = Float.NaN
+    private var cachedBottomStart = Float.NaN
+    private var cachedOutline: Outline? = null
 
     override fun createOutline(
         size: Size,
@@ -72,22 +73,32 @@ internal class WavyShape private constructor(
         bottomStart: Float,
         layoutDirection: LayoutDirection,
     ): Outline {
-        val key = OutlineKey(
-            density, size.width, size.height, layoutDirection,
-            topStart, topEnd, bottomEnd, bottomStart,
-        )
-        synchronized(outlineCache) {
-            outlineCache[key]?.let { return it }
+        cachedOutline?.let { cached ->
+            if (
+                size.width == cachedWidth &&
+                size.height == cachedHeight &&
+                layoutDirection == cachedLayoutDirection &&
+                topStart == cachedTopStart &&
+                topEnd == cachedTopEnd &&
+                bottomEnd == cachedBottomEnd &&
+                bottomStart == cachedBottomStart
+            ) {
+                return cached
+            }
         }
 
         val generated = createPerimeterOutline(
             size, topStart, topEnd, bottomEnd, bottomStart, layoutDirection,
         )
-        synchronized(outlineCache) {
-            outlineCache[key]?.let { return it }
-            outlineCache[key] = generated
-            return generated
-        }
+        cachedWidth = size.width
+        cachedHeight = size.height
+        cachedLayoutDirection = layoutDirection
+        cachedTopStart = topStart
+        cachedTopEnd = topEnd
+        cachedBottomEnd = bottomEnd
+        cachedBottomStart = bottomStart
+        cachedOutline = generated
+        return generated
     }
 
     private fun createPerimeterOutline(
@@ -333,9 +344,5 @@ internal class WavyShape private constructor(
         private const val SAMPLES_PER_WAVE = 8f
         private const val TWO_PI = 6.2831855f
 
-        private val outlineCache = object : LinkedHashMap<OutlineKey, Outline>(128, 0.75f, true) {
-            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<OutlineKey, Outline>?): Boolean =
-                size > 768
-        }
     }
 }
