@@ -16,6 +16,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.snapshotFlow
 import kotlinx.coroutines.launch
 
 /**
@@ -73,9 +75,12 @@ internal fun rememberMaterialExpressivePressExpansion(
                         releaseJob = launch {
                             val isShortTap = heldForMillis < longPressTimeoutMillis
                             if (isShortTap) {
-                                // Short tap: finish the expansion spring, then retract
-                                // immediately. Do not add a post-expansion hold at full size.
-                                animationJob?.join()
+                                // Short tap: reverse as soon as expansion reaches its
+                                // peak. Do not wait for an under-damped spring to settle;
+                                // its oscillation tail looks like a pause at full size.
+                                val peak = expansionPerSide.value * 0.98f
+                                snapshotFlow { expansion.value }.first { it >= peak }
+                                animationJob?.cancelAndJoin()
                             } else {
                                 // Long press: retract immediately from the current position.
                                 animationJob?.cancelAndJoin()
