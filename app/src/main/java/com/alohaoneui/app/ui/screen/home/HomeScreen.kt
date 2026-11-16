@@ -1,7 +1,6 @@
 package com.alohaoneui.app.ui.screen.home
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -45,9 +44,7 @@ fun HomePager(
         },
     )
 
-    val lsposedStatus = rememberLsposedHomeStatus()
-    CompositionLocalProvider(LocalLsposedHomeStatus provides lsposedStatus) {
-        when (LocalUiMode.current) {
+    when (LocalUiMode.current) {
             UiMode.Miuix -> HomePagerMiuix(
                 state = uiState,
                 actions = actions,
@@ -59,6 +56,5 @@ fun HomePager(
                 actions = actions,
                 bottomInnerPadding = bottomInnerPadding,
             )
-        }
     }
 }
