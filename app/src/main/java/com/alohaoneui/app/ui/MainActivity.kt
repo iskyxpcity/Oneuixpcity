@@ -259,7 +259,7 @@ class MainActivity : ComponentActivity() {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .layerBackdrop(switchBackdrop),
+                                
                         ) {
                             Box(
                                 modifier = Modifier
@@ -270,7 +270,7 @@ class MainActivity : ComponentActivity() {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .layerBackdrop(updateDialogBackdrop),
+                                
                         ) {
                             CompositionLocalProvider(
                                 LocalMaterialSwitchBackdrop provides switchBackdrop,
@@ -407,7 +407,7 @@ fun MainScreen(
                             enabled = enableSwipeBack,
                         ),
                         state = mainPagerState.pagerState,
-                        beyondViewportPageCount = if (contentReady) 3 else 0,
+                        beyondViewportPageCount = 0,
                         userScrollEnabled = enableSwipeBack && !interceptPagerAxis,
                         pageNestedScrollConnection = if (interceptPagerAxis) {
                             PagerGestureNestedScrollConnection
