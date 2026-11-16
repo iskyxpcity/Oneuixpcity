@@ -72,23 +72,37 @@ internal class WavyShape private constructor(
         bottomStart: Float,
         layoutDirection: LayoutDirection,
     ): Outline {
-        val key = OutlineKey(
-            density, size.width, size.height, layoutDirection,
-            topStart, topEnd, bottomEnd, bottomStart,
-        )
-        synchronized(outlineCache) {
-            outlineCache[key]?.let { return it }
-        }
+        android.os.Trace.beginSection("AlohaWavy#outline")
+        try {
+            val key = OutlineKey(
+                density, size.width, size.height, layoutDirection,
+                topStart, topEnd, bottomEnd, bottomStart,
+            )
+            synchronized(outlineCache) {
+                outlineCache[key]?.let {
+                    android.os.Trace.beginSection("AlohaWavy#cache_hit")
+                    android.os.Trace.endSection()
+                    return it
+                }
+            }
 
-        // Generate outside the lock so one expensive wave path never blocks
-        // unrelated outline lookups on other Compose nodes.
-        val generated = createPerimeterOutline(
-            size, topStart, topEnd, bottomEnd, bottomStart, layoutDirection,
-        )
-        synchronized(outlineCache) {
-            outlineCache[key]?.let { return it }
-            outlineCache[key] = generated
-            return generated
+            // Generate outside the lock so one expensive wave path never blocks
+            // unrelated outline lookups on other Compose nodes.
+            android.os.Trace.beginSection("AlohaWavy#cache_miss_path")
+            val generated = try {
+                createPerimeterOutline(
+                    size, topStart, topEnd, bottomEnd, bottomStart, layoutDirection,
+                )
+            } finally {
+                android.os.Trace.endSection()
+            }
+            synchronized(outlineCache) {
+                outlineCache[key]?.let { return it }
+                outlineCache[key] = generated
+                return generated
+            }
+        } finally {
+            android.os.Trace.endSection()
         }
     }
 
