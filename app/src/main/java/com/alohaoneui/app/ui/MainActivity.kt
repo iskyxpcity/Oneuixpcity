@@ -75,6 +75,8 @@ import com.alohaoneui.app.ui.screen.about.VersionChangelog261018Screen
 import com.alohaoneui.app.ui.screen.about.VersionChangelog261016Screen
 import com.alohaoneui.app.ui.screen.colorpalette.ColorPaletteScreen
 import com.alohaoneui.app.ui.screen.home.HomePager
+import com.alohaoneui.app.ui.screen.home.LocalLsposedHomeStatus
+import com.alohaoneui.app.ui.screen.home.rememberLsposedHomeStatus
 import com.alohaoneui.app.ui.screen.status.StatusPager
 import com.alohaoneui.app.ui.screen.status.StatusCategoryScreen
 import com.alohaoneui.app.ui.screen.settings.SettingPager
@@ -370,7 +372,11 @@ fun MainScreen(
 
     MainScreenBackHandler(mainPagerState, navController, enablePredictiveBack)
 
-    CompositionLocalProvider(LocalMainPagerState provides mainPagerState) {
+    val lsposedStatus = rememberLsposedHomeStatus()
+    CompositionLocalProvider(
+        LocalMainPagerState provides mainPagerState,
+        LocalLsposedHomeStatus provides lsposedStatus,
+    ) {
         val contentReady = rememberContentReady()
 
         // Re-read the actual window bounds so fold/unfold and freeform resizing adapt
