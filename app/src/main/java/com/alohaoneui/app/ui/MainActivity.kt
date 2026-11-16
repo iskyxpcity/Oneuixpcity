@@ -259,7 +259,7 @@ class MainActivity : ComponentActivity() {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .layerBackdrop(switchBackdrop),
+                                
                         ) {
                             Box(
                                 modifier = Modifier
@@ -270,7 +270,7 @@ class MainActivity : ComponentActivity() {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .layerBackdrop(updateDialogBackdrop),
+                                
                         ) {
                             CompositionLocalProvider(
                                 LocalMaterialSwitchBackdrop provides switchBackdrop,
