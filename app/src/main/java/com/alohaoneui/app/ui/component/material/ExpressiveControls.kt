@@ -191,7 +191,6 @@ fun ExpressiveTextButton(
                 Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, actualShape)
             } ?: Modifier
         )
-        .clip(actualShape)
     TextButton(
         onClick = { haptic.performHapticFeedback(HapticFeedbackType.VirtualKey); onClick() },
         modifier = styledModifier,
