@@ -12,11 +12,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.alohaoneui.app.ui.LocalUiMode
-import com.alohaoneui.app.ui.screen.home.LocalLsposedHomeStatus
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.navigation3.Navigator
 import com.alohaoneui.app.ui.util.update.requestUpdateDialog
 import com.alohaoneui.app.ui.viewmodel.HomeViewModel
+import com.alohaoneui.app.ui.screen.home.rememberLsposedHomeStatus
 
 @Composable
 fun HomePager(
@@ -49,17 +49,17 @@ fun HomePager(
     val lsposedStatus = rememberLsposedHomeStatus()
     CompositionLocalProvider(LocalLsposedHomeStatus provides lsposedStatus) {
         when (LocalUiMode.current) {
-        UiMode.Miuix -> HomePagerMiuix(
+            UiMode.Miuix -> HomePagerMiuix(
             state = uiState,
             actions = actions,
             bottomInnerPadding = bottomInnerPadding,
         )
 
-        UiMode.Material -> HomePagerMaterial(
+            UiMode.Material -> HomePagerMaterial(
             state = uiState,
             actions = actions,
             bottomInnerPadding = bottomInnerPadding,
-        )
+            )
         }
     }
 }
