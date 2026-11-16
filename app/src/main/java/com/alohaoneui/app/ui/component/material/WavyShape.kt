@@ -53,13 +53,8 @@ internal class WavyShape private constructor(
         density, topStart, topEnd, bottomEnd, bottomStart,
     )
 
-    // Keep a tiny per-instance working set rather than a single last-outline
-    // slot. A Canvas may request the same Shape at multiple stable sizes in one
-    // frame (for example, Fancy slider rail fill + inset outline); a one-slot
-    // cache alternates between those sizes and regenerates both paths every frame.
-    // Four entries cover those paired outlines plus a transient size without a
-    // global lock, key allocation, or cross-component cache contention.
-    private class OutlineCacheEntry(
+    private data class OutlineKey(
+        val density: Float,
         val width: Float,
         val height: Float,
         val layoutDirection: LayoutDirection,
@@ -67,11 +62,7 @@ internal class WavyShape private constructor(
         val topEnd: Float,
         val bottomEnd: Float,
         val bottomStart: Float,
-        val outline: Outline,
     )
-
-    private val outlineCache = arrayOfNulls<OutlineCacheEntry>(OUTLINE_CACHE_SIZE)
-    private var nextCacheSlot = 0
 
     override fun createOutline(
         size: Size,
@@ -81,36 +72,24 @@ internal class WavyShape private constructor(
         bottomStart: Float,
         layoutDirection: LayoutDirection,
     ): Outline {
-        for (entry in outlineCache) {
-            if (
-                entry != null &&
-                size.width == entry.width &&
-                size.height == entry.height &&
-                layoutDirection == entry.layoutDirection &&
-                topStart == entry.topStart &&
-                topEnd == entry.topEnd &&
-                bottomEnd == entry.bottomEnd &&
-                bottomStart == entry.bottomStart
-            ) {
-                return entry.outline
-            }
+        val key = OutlineKey(
+            density, size.width, size.height, layoutDirection,
+            topStart, topEnd, bottomEnd, bottomStart,
+        )
+        synchronized(outlineCache) {
+            outlineCache[key]?.let { return it }
         }
 
+        // Generate outside the lock so one expensive wave path never blocks
+        // unrelated outline lookups on other Compose nodes.
         val generated = createPerimeterOutline(
             size, topStart, topEnd, bottomEnd, bottomStart, layoutDirection,
         )
-        outlineCache[nextCacheSlot] = OutlineCacheEntry(
-            width = size.width,
-            height = size.height,
-            layoutDirection = layoutDirection,
-            topStart = topStart,
-            topEnd = topEnd,
-            bottomEnd = bottomEnd,
-            bottomStart = bottomStart,
-            outline = generated,
-        )
-        nextCacheSlot = (nextCacheSlot + 1) % OUTLINE_CACHE_SIZE
-        return generated
+        synchronized(outlineCache) {
+            outlineCache[key]?.let { return it }
+            outlineCache[key] = generated
+            return generated
+        }
     }
 
     private fun createPerimeterOutline(
@@ -355,7 +334,15 @@ internal class WavyShape private constructor(
         private const val MAX_PERIMETER_SAMPLES = 360f
         private const val SAMPLES_PER_WAVE = 8f
         private const val TWO_PI = 6.2831855f
-        private const val OUTLINE_CACHE_SIZE = 4
+        // Shared bounded LRU: WavyShape is recreated during animated corner
+        // interpolation, so an instance-local cache is discarded every frame.
+        // Sharing by resolved geometry allows stable/equal outlines across
+        // instances and controls to reuse the exact same Outline object.
+        private val outlineCache = object : java.util.LinkedHashMap<OutlineKey, Outline>(128, 0.75f, true) {
+            override fun removeEldestEntry(
+                eldest: MutableMap.MutableEntry<OutlineKey, Outline>?,
+            ): Boolean = size > 768
+        }
 
     }
 }
