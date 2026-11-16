@@ -1,6 +1,7 @@
 package com.alohaoneui.app.ui.screen.home
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -11,6 +12,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.alohaoneui.app.ui.LocalUiMode
+import com.alohaoneui.app.ui.screen.home.LocalLsposedHomeStatus
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.navigation3.Navigator
 import com.alohaoneui.app.ui.util.update.requestUpdateDialog
@@ -44,7 +46,9 @@ fun HomePager(
         },
     )
 
-    when (LocalUiMode.current) {
+    val lsposedStatus = rememberLsposedHomeStatus()
+    CompositionLocalProvider(LocalLsposedHomeStatus provides lsposedStatus) {
+        when (LocalUiMode.current) {
         UiMode.Miuix -> HomePagerMiuix(
             state = uiState,
             actions = actions,
@@ -56,5 +60,6 @@ fun HomePager(
             actions = actions,
             bottomInnerPadding = bottomInnerPadding,
         )
+        }
     }
 }
