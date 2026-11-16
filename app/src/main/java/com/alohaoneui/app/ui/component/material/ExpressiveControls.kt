@@ -60,9 +60,10 @@ import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
  */
 private val MaterialButtonGroupExpansionPerSide = 12.dp
 
-// Perf isolation build: keep Wavy corner animation but temporarily freeze
-// content-side spacers to determine whether they cause text remeasurement.
+// Perf isolation build: freeze both content-side expansion and animated Wavy geometry.
+// This separates the per-frame Shape/Outline path from the button's remaining press motion.
 private const val IsolateWavyContentMeasurement = true
+private const val IsolateWavyShapeAnimation = true
 internal val LocalMaterialButtonGroupExpansionPerSide = compositionLocalOf { 0.dp }
 
 /**
@@ -123,7 +124,7 @@ fun ExpressiveButton(
 ) {
     val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val pressExpansion = rememberMaterialExpressivePressExpansion(actualInteractionSource, enabled)
-    val shapeProgress = if (pressMotionEnabled) {
+    val shapeProgress = if (pressMotionEnabled && !IsolateWavyShapeAnimation) {
         (pressExpansion.value / 16f).coerceIn(0f, 1f)
     } else 0f
     val actualShape = shape ?: alohaSegmentedShape(
@@ -175,7 +176,7 @@ fun ExpressiveTextButton(
 ) {
     val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val pressExpansion = rememberMaterialExpressivePressExpansion(actualInteractionSource, enabled)
-    val shapeProgress = if (pressMotionEnabled) {
+    val shapeProgress = if (pressMotionEnabled && !IsolateWavyShapeAnimation) {
         (pressExpansion.value / 16f).coerceIn(0f, 1f)
     } else 0f
     val actualShape = shape ?: alohaSegmentedShape(
@@ -260,7 +261,7 @@ fun ExpressiveIconButton(
 ) {
     val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val pressExpansion = rememberMaterialExpressivePressExpansion(actualInteractionSource, enabled)
-    val shapeProgress = (pressExpansion.value / 16f).coerceIn(0f, 1f)
+    val shapeProgress = if (pressMotionEnabled && !IsolateWavyShapeAnimation) (pressExpansion.value / 16f).coerceIn(0f, 1f) else 0f
     val actualShape = shape ?: alohaSegmentedShape(
         index = -1,
         count = 1,
