@@ -407,7 +407,7 @@ fun MainScreen(
                             enabled = enableSwipeBack,
                         ),
                         state = mainPagerState.pagerState,
-                        beyondViewportPageCount = if (contentReady) 3 else 0,
+                        beyondViewportPageCount = 0,
                         userScrollEnabled = enableSwipeBack && !interceptPagerAxis,
                         pageNestedScrollConnection = if (interceptPagerAxis) {
                             PagerGestureNestedScrollConnection
