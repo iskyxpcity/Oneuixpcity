@@ -16,7 +16,6 @@ import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.navigation3.Navigator
 import com.alohaoneui.app.ui.util.update.requestUpdateDialog
 import com.alohaoneui.app.ui.viewmodel.HomeViewModel
-import com.alohaoneui.app.ui.screen.home.rememberLsposedHomeStatus
 
 @Composable
 fun HomePager(
@@ -50,10 +49,10 @@ fun HomePager(
     CompositionLocalProvider(LocalLsposedHomeStatus provides lsposedStatus) {
         when (LocalUiMode.current) {
             UiMode.Miuix -> HomePagerMiuix(
-            state = uiState,
-            actions = actions,
-            bottomInnerPadding = bottomInnerPadding,
-        )
+                state = uiState,
+                actions = actions,
+                bottomInnerPadding = bottomInnerPadding,
+            )
 
             UiMode.Material -> HomePagerMaterial(
             state = uiState,
