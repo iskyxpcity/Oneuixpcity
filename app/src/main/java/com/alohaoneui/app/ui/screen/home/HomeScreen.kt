@@ -55,9 +55,9 @@ fun HomePager(
             )
 
             UiMode.Material -> HomePagerMaterial(
-            state = uiState,
-            actions = actions,
-            bottomInnerPadding = bottomInnerPadding,
+                state = uiState,
+                actions = actions,
+                bottomInnerPadding = bottomInnerPadding,
             )
         }
     }
