@@ -555,13 +555,20 @@ fun alohaSegmentedShape(
     return when (LocalMaterialShapeStyle.current) {
         1 -> CutCornerShape(safeTopStart, safeTopEnd, safeBottomEnd, safeBottomStart)
         2, 3, 5, 6 -> AlohaPathShape(LocalMaterialShapeStyle.current, densityScale, safeTopStart, safeTopEnd, safeBottomEnd, safeBottomStart)
-        4 -> WavyShape(
-            densityScale,
-            safeTopStart,
-            safeTopEnd,
-            safeBottomEnd,
-            safeBottomStart,
-        )
+        4 -> {
+            android.os.Trace.beginSection("AlohaWavy#shape_create")
+            try {
+                WavyShape(
+                    densityScale,
+                    safeTopStart,
+                    safeTopEnd,
+                    safeBottomEnd,
+                    safeBottomStart,
+                )
+            } finally {
+                android.os.Trace.endSection()
+            }
+        }
         else -> RoundedCornerShape(safeTopStart, safeTopEnd, safeBottomEnd, safeBottomStart)
     }
 }
