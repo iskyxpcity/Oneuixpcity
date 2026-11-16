@@ -59,6 +59,10 @@ import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
  * Standalone buttons receive zero and therefore never change their measured width.
  */
 private val MaterialButtonGroupExpansionPerSide = 12.dp
+
+// Perf isolation build: keep Wavy corner animation but temporarily freeze
+// content-side spacers to determine whether they cause text remeasurement.
+private const val IsolateWavyContentMeasurement = true
 internal val LocalMaterialButtonGroupExpansionPerSide = compositionLocalOf { 0.dp }
 
 /**
@@ -148,7 +152,7 @@ fun ExpressiveButton(
         border = outlineWidth.takeIf { it > 0f }?.let { BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant) },
         content = {
             val groupExpansionPerSide = LocalMaterialButtonGroupExpansionPerSide.current
-            val groupExpansion = if (pressMotionEnabled) groupExpansionPerSide * shapeProgress else 0.dp
+            val groupExpansion = if (pressMotionEnabled && !IsolateWavyContentMeasurement) groupExpansionPerSide * shapeProgress else 0.dp
             Spacer(Modifier.width(groupExpansion))
             content()
             Spacer(Modifier.width(groupExpansion))
