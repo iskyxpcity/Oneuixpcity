@@ -62,8 +62,6 @@ private val MaterialButtonGroupExpansionPerSide = 12.dp
 
 // Perf isolation build: freeze both content-side expansion and animated Wavy geometry.
 // This separates the per-frame Shape/Outline path from the button's remaining press motion.
-private const val IsolateWavyContentMeasurement = true
-private const val IsolateWavyShapeAnimation = true
 internal val LocalMaterialButtonGroupExpansionPerSide = compositionLocalOf { 0.dp }
 
 /**
@@ -124,7 +122,7 @@ fun ExpressiveButton(
 ) {
     val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val pressExpansion = rememberMaterialExpressivePressExpansion(actualInteractionSource, enabled)
-    val shapeProgress = if (pressMotionEnabled && !IsolateWavyShapeAnimation) {
+    val shapeProgress = if (pressMotionEnabled) {
         (pressExpansion.value / 16f).coerceIn(0f, 1f)
     } else 0f
     val actualShape = shape ?: alohaSegmentedShape(
@@ -153,7 +151,7 @@ fun ExpressiveButton(
         border = outlineWidth.takeIf { it > 0f }?.let { BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant) },
         content = {
             val groupExpansionPerSide = LocalMaterialButtonGroupExpansionPerSide.current
-            val groupExpansion = if (pressMotionEnabled && !IsolateWavyContentMeasurement) groupExpansionPerSide * shapeProgress else 0.dp
+            val groupExpansion = if (pressMotionEnabled) groupExpansionPerSide * shapeProgress else 0.dp
             Spacer(Modifier.width(groupExpansion))
             content()
             Spacer(Modifier.width(groupExpansion))
@@ -176,7 +174,7 @@ fun ExpressiveTextButton(
 ) {
     val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val pressExpansion = rememberMaterialExpressivePressExpansion(actualInteractionSource, enabled)
-    val shapeProgress = if (pressMotionEnabled && !IsolateWavyShapeAnimation) {
+    val shapeProgress = if (pressMotionEnabled) {
         (pressExpansion.value / 16f).coerceIn(0f, 1f)
     } else 0f
     val actualShape = shape ?: alohaSegmentedShape(
@@ -261,7 +259,7 @@ fun ExpressiveIconButton(
 ) {
     val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val pressExpansion = rememberMaterialExpressivePressExpansion(actualInteractionSource, enabled)
-    val shapeProgress = if (pressMotionEnabled && !IsolateWavyShapeAnimation) (pressExpansion.value / 16f).coerceIn(0f, 1f) else 0f
+    val shapeProgress = if (pressMotionEnabled) (pressExpansion.value / 16f).coerceIn(0f, 1f) else 0f
     val actualShape = shape ?: alohaSegmentedShape(
         index = -1,
         count = 1,
