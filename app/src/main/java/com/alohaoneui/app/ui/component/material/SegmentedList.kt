@@ -874,7 +874,6 @@ fun SegmentedListItem(
         )
     }
 }
-}
 
 @Composable
 fun SegmentedSwitchItem(
