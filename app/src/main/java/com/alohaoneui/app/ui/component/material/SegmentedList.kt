@@ -709,7 +709,6 @@ private fun ListItemShapes.animatedAlohaShapes(
     return copy(shape = animatedShape, pressedShape = animatedShape, selectedShape = animatedShape) to animatedShape
 }
 
-/**
 @Composable
 fun SegmentedListItem(
     modifier: Modifier = Modifier,
