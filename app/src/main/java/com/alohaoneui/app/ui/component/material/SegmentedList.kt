@@ -101,7 +101,6 @@ import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 import androidx.compose.foundation.border
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.shadow
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
 import kotlinx.coroutines.launch
 
@@ -730,13 +729,15 @@ fun SegmentedListItem(
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val isPressed = resolvedInteractionSource.collectIsPressedWithMinimumDuration()
     val (animatedShapes, outlineShape) = itemShapes.animatedAlohaShapes(LocalSegmentedShapeConfig.current, isPressed)
+    // Reuse Material 3's existing item graphics layer for the container shadow.
+    val itemShadowElevation = if (LocalMaterialShadowContainers.current) 1.dp else 0.dp
+    val itemElevation = ListItemDefaults.elevation(
+        elevation = itemShadowElevation,
+        draggedElevation = itemShadowElevation,
+    )
     // Keep the optional outer shadow and outline on the exact same state shape used
     // by the Material 3 row for press/selection feedback.
     val styledModifier = modifier
-        .then(
-            if (LocalMaterialShadowContainers.current) Modifier.shadow(1.dp, outlineShape)
-            else Modifier
-        )
         .then(
             LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
                 Modifier.border(it.dp, colorScheme.outlineVariant, outlineShape)
@@ -750,6 +751,7 @@ fun SegmentedListItem(
         colors = colors,
         interactionSource = resolvedInteractionSource,
         shapes = animatedShapes,
+        elevation = itemElevation,
         modifier = styledModifier,
         leadingContent = leadingContent,
         trailingContent = trailingContent,
@@ -779,13 +781,15 @@ fun SegmentedListItem(
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val isPressed = resolvedInteractionSource.collectIsPressedWithMinimumDuration()
     val (animatedShapes, outlineShape) = itemShapes.animatedAlohaShapes(LocalSegmentedShapeConfig.current, isPressed)
+    // Reuse Material 3's existing item graphics layer for the container shadow.
+    val itemShadowElevation = if (LocalMaterialShadowContainers.current) 1.dp else 0.dp
+    val itemElevation = ListItemDefaults.elevation(
+        elevation = itemShadowElevation,
+        draggedElevation = itemShadowElevation,
+    )
     // Keep the optional outer shadow and outline on the exact same state shape used
     // by the Material 3 row for press/selection feedback.
     val styledModifier = modifier
-        .then(
-            if (LocalMaterialShadowContainers.current) Modifier.shadow(1.dp, outlineShape)
-            else Modifier
-        )
         .then(
             LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
                 Modifier.border(it.dp, colorScheme.outlineVariant, outlineShape)
@@ -796,6 +800,7 @@ fun SegmentedListItem(
         checked = checked,
         onCheckedChange = onCheckedChange,
         shapes = animatedShapes,
+        elevation = itemElevation,
         modifier = styledModifier,
         enabled = enabled,
         colors = colors,
@@ -829,13 +834,15 @@ fun SegmentedListItem(
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val isPressed = resolvedInteractionSource.collectIsPressedWithMinimumDuration()
     val (animatedShapes, outlineShape) = itemShapes.animatedAlohaShapes(LocalSegmentedShapeConfig.current, isPressed)
+    // Reuse Material 3's existing item graphics layer for the container shadow.
+    val itemShadowElevation = if (LocalMaterialShadowContainers.current) 1.dp else 0.dp
+    val itemElevation = ListItemDefaults.elevation(
+        elevation = itemShadowElevation,
+        draggedElevation = itemShadowElevation,
+    )
     // Keep the optional outer shadow and outline on the exact same state shape used
     // by the Material 3 row for press/selection feedback.
     val styledModifier = modifier
-        .then(
-            if (LocalMaterialShadowContainers.current) Modifier.shadow(1.dp, outlineShape)
-            else Modifier
-        )
         .then(
             LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
                 Modifier.border(it.dp, colorScheme.outlineVariant, outlineShape)
@@ -846,6 +853,7 @@ fun SegmentedListItem(
         selected = selected,
         onClick = onClick,
         shapes = animatedShapes,
+        elevation = itemElevation,
         modifier = styledModifier,
         enabled = enabled,
         colors = colors,
