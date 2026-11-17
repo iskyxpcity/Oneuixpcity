@@ -403,7 +403,13 @@ fun ExpressiveSurface(
     val actualBorder = border ?: outlineWidth.takeIf { it > 0f }?.let {
         BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
     }
-    val actualElevation = shadowElevation ?: if (LocalMaterialShadowContainers.current) 2.dp else 0.dp
+    // The global container-shadow setting is authoritative, including callers that
+    // provide a component-specific elevation override.
+    val actualElevation = if (LocalMaterialShadowContainers.current) {
+        shadowElevation ?: 2.dp
+    } else {
+        0.dp
+    }
     if (onClick == null) {
         androidx.compose.material3.Surface(
             modifier = modifier, shape = actualShape, color = color, contentColor = contentColor,
