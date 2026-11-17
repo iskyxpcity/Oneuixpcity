@@ -23,7 +23,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.matchParentSize
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
@@ -724,7 +724,7 @@ private fun SegmentedListItemShadowHost(
 ) {
     Box(modifier = modifier) {
         if (LocalMaterialShadowContainers.current) {
-            Box(Modifier.matchParentSize().shadow(1.dp, shadowShape))
+            Box(Modifier.fillMaxSize().shadow(1.dp, shadowShape))
         }
         content(contentModifier)
     }
@@ -775,7 +775,7 @@ fun SegmentedListItem(
         content = headlineContent
         )
     }
-})
+}
 }
 
 @Composable
@@ -825,7 +825,7 @@ fun SegmentedListItem(
         content = headlineContent
         )
     }
-})
+}
 }
 
 @Composable
@@ -875,7 +875,7 @@ fun SegmentedListItem(
         content = headlineContent
         )
     }
-})
+}
 }
 
 @Composable
