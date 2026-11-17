@@ -727,11 +727,12 @@ fun SegmentedListItem(
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val isPressed = resolvedInteractionSource.collectIsPressedWithMinimumDuration()
     val (animatedShapes, outlineShape) = itemShapes.animatedAlohaShapes(LocalSegmentedShapeConfig.current, isPressed)
-    // Keep the optional outer shadow and outline on the exact same state shape used
-    // by the Material 3 row for press/selection feedback.
+    // Keep the outer shadow on the stable resting outline. The row itself still uses
+    // its spring-animated shape, but animating the elevation shadow path every frame
+    // forces the renderer to rebuild a complex Aloha/Wavy outline while dragging.
     val styledModifier = modifier
         .then(
-            if (LocalMaterialShadowContainers.current) Modifier.shadow(1.dp, outlineShape)
+            if (LocalMaterialShadowContainers.current) Modifier.shadow(1.dp, itemShapes.shape)
             else Modifier
         )
         .then(
@@ -776,11 +777,12 @@ fun SegmentedListItem(
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val isPressed = resolvedInteractionSource.collectIsPressedWithMinimumDuration()
     val (animatedShapes, outlineShape) = itemShapes.animatedAlohaShapes(LocalSegmentedShapeConfig.current, isPressed)
-    // Keep the optional outer shadow and outline on the exact same state shape used
-    // by the Material 3 row for press/selection feedback.
+    // Keep the outer shadow on the stable resting outline. The row itself still uses
+    // its spring-animated shape, but animating the elevation shadow path every frame
+    // forces the renderer to rebuild a complex Aloha/Wavy outline while dragging.
     val styledModifier = modifier
         .then(
-            if (LocalMaterialShadowContainers.current) Modifier.shadow(1.dp, outlineShape)
+            if (LocalMaterialShadowContainers.current) Modifier.shadow(1.dp, itemShapes.shape)
             else Modifier
         )
         .then(
@@ -826,11 +828,12 @@ fun SegmentedListItem(
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val isPressed = resolvedInteractionSource.collectIsPressedWithMinimumDuration()
     val (animatedShapes, outlineShape) = itemShapes.animatedAlohaShapes(LocalSegmentedShapeConfig.current, isPressed)
-    // Keep the optional outer shadow and outline on the exact same state shape used
-    // by the Material 3 row for press/selection feedback.
+    // Keep the outer shadow on the stable resting outline. The row itself still uses
+    // its spring-animated shape, but animating the elevation shadow path every frame
+    // forces the renderer to rebuild a complex Aloha/Wavy outline while dragging.
     val styledModifier = modifier
         .then(
-            if (LocalMaterialShadowContainers.current) Modifier.shadow(1.dp, outlineShape)
+            if (LocalMaterialShadowContainers.current) Modifier.shadow(1.dp, itemShapes.shape)
             else Modifier
         )
         .then(
