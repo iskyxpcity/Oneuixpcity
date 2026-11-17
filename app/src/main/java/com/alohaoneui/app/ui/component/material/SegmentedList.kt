@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
@@ -709,6 +710,26 @@ private fun ListItemShapes.animatedAlohaShapes(
     return copy(shape = animatedShape, pressedShape = animatedShape, selectedShape = animatedShape) to animatedShape
 }
 
+/**
+ * Keeps the static WavyShape elevation shadow in its own graphics layer.
+ * The row content can recompose for its spring-driven shape animation without
+ * invalidating the sibling shadow layer on every animation frame.
+ */
+@Composable
+private fun SegmentedListItemShadowHost(
+    modifier: Modifier,
+    shadowShape: Shape,
+    contentModifier: Modifier,
+    content: @Composable (Modifier) -> Unit,
+) {
+    Box(modifier = modifier) {
+        if (LocalMaterialShadowContainers.current) {
+            Box(Modifier.matchParentSize().shadow(1.dp, shadowShape))
+        }
+        content(contentModifier)
+    }
+}
+
 @Composable
 fun SegmentedListItem(
     modifier: Modifier = Modifier,
@@ -730,32 +751,31 @@ fun SegmentedListItem(
     // Keep the outer shadow on the stable resting outline. The row itself still uses
     // its spring-animated shape, but animating the elevation shadow path every frame
     // forces the renderer to rebuild a complex Aloha/Wavy outline while dragging.
-    val styledModifier = modifier
-        .then(
-            if (LocalMaterialShadowContainers.current) Modifier.shadow(1.dp, itemShapes.shape)
-            else Modifier
-        )
+    val styledModifier = Modifier
         .then(
             LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
                 Modifier.border(it.dp, colorScheme.outlineVariant, outlineShape)
             } ?: Modifier
         )
         .then(if (!enabled) Modifier.alpha(0.5f) else Modifier)
-    SegmentedListItem(
+    SegmentedListItemShadowHost(modifier, itemShapes.shape, styledModifier) { rowModifier ->
+        SegmentedListItem(
         onClick = onClick ?: {},
         onLongClick = onLongClick,
         enabled = enabled,
         colors = colors,
         interactionSource = resolvedInteractionSource,
         shapes = animatedShapes,
-        modifier = styledModifier,
+        modifier = rowModifier,
         leadingContent = leadingContent,
         trailingContent = trailingContent,
         overlineContent = overlineContent,
         supportingContent = supportingContent,
         verticalAlignment = Alignment.CenterVertically,
         content = headlineContent
-    )
+        )
+    }
+})
 }
 
 @Composable
@@ -780,22 +800,19 @@ fun SegmentedListItem(
     // Keep the outer shadow on the stable resting outline. The row itself still uses
     // its spring-animated shape, but animating the elevation shadow path every frame
     // forces the renderer to rebuild a complex Aloha/Wavy outline while dragging.
-    val styledModifier = modifier
-        .then(
-            if (LocalMaterialShadowContainers.current) Modifier.shadow(1.dp, itemShapes.shape)
-            else Modifier
-        )
+    val styledModifier = Modifier
         .then(
             LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
                 Modifier.border(it.dp, colorScheme.outlineVariant, outlineShape)
             } ?: Modifier
         )
         .then(if (!enabled) Modifier.alpha(0.5f) else Modifier)
-    SegmentedListItem(
+    SegmentedListItemShadowHost(modifier, itemShapes.shape, styledModifier) { rowModifier ->
+        SegmentedListItem(
         checked = checked,
         onCheckedChange = onCheckedChange,
         shapes = animatedShapes,
-        modifier = styledModifier,
+        modifier = rowModifier,
         enabled = enabled,
         colors = colors,
         interactionSource = resolvedInteractionSource,
@@ -806,7 +823,9 @@ fun SegmentedListItem(
         verticalAlignment = Alignment.CenterVertically,
         onLongClick = onLongClick,
         content = headlineContent
-    )
+        )
+    }
+})
 }
 
 @Composable
@@ -831,22 +850,19 @@ fun SegmentedListItem(
     // Keep the outer shadow on the stable resting outline. The row itself still uses
     // its spring-animated shape, but animating the elevation shadow path every frame
     // forces the renderer to rebuild a complex Aloha/Wavy outline while dragging.
-    val styledModifier = modifier
-        .then(
-            if (LocalMaterialShadowContainers.current) Modifier.shadow(1.dp, itemShapes.shape)
-            else Modifier
-        )
+    val styledModifier = Modifier
         .then(
             LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
                 Modifier.border(it.dp, colorScheme.outlineVariant, outlineShape)
             } ?: Modifier
         )
         .then(if (!enabled) Modifier.alpha(0.5f) else Modifier)
-    SegmentedListItem(
+    SegmentedListItemShadowHost(modifier, itemShapes.shape, styledModifier) { rowModifier ->
+        SegmentedListItem(
         selected = selected,
         onClick = onClick,
         shapes = animatedShapes,
-        modifier = styledModifier,
+        modifier = rowModifier,
         enabled = enabled,
         colors = colors,
         interactionSource = resolvedInteractionSource,
@@ -857,7 +873,9 @@ fun SegmentedListItem(
         verticalAlignment = Alignment.CenterVertically,
         onLongClick = onLongClick,
         content = headlineContent
-    )
+        )
+    }
+})
 }
 
 @Composable
