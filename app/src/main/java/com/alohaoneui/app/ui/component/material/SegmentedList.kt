@@ -2,6 +2,7 @@ package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -78,6 +79,7 @@ import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -702,13 +704,46 @@ private fun MutableInteractionSource.collectIsPressedWithMinimumDuration(
     return activePresses.isNotEmpty()
 }
 
+/**
+ * Material 3 animates CornerBasedShape state changes internally. Segmented rows already
+ * animate their corner geometry with one shared spring progress, so expose that finished
+ * geometry as a plain Shape to prevent a second, lagging interpolation inside Material 3.
+ */
+private data class DirectSegmentedShape(
+    private val delegate: Shape,
+) : Shape {
+    override fun createOutline(
+        size: Size,
+        layoutDirection: LayoutDirection,
+        density: Density,
+    ): Outline = delegate.createOutline(size, layoutDirection, density)
+}
+
 @Composable
 private fun ListItemShapes.animatedAlohaShapes(
     config: SegmentedShapeConfig?,
     pressed: Boolean,
 ): Pair<ListItemShapes, Shape> {
-    val animatedShape = config?.let { alohaSegmentedShape(it.index, it.count, it.vertical, pressed) } ?: shape
-    return copy(shape = animatedShape, pressedShape = animatedShape, selectedShape = animatedShape) to animatedShape
+    val pressProgress by animateFloatAsState(
+        targetValue = if (pressed) 1f else 0f,
+        animationSpec = spring(dampingRatio = 0.45f, stiffness = 300f),
+        label = "alohaSegmentPressProgress",
+    )
+    val animatedShape = config?.let {
+        alohaSegmentedShape(
+            index = it.index,
+            count = it.count,
+            vertical = it.vertical,
+            pressProgress = pressProgress,
+            animateCorners = false,
+        )
+    } ?: shape
+    val materialShape = if (config != null) DirectSegmentedShape(animatedShape) else animatedShape
+    return copy(
+        shape = materialShape,
+        pressedShape = materialShape,
+        selectedShape = materialShape,
+    ) to animatedShape
 }
 
 @Composable
