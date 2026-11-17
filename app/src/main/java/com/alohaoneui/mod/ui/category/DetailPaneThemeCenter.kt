@@ -34,8 +34,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.sp
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.LocalUiMode
@@ -235,8 +233,7 @@ private fun ThemeStoreRegionChip(label: String, selected: Boolean, modifier: Mod
                 onCheckedChange = { checked -> if (checked) onClick() },
                 modifier = modifier
                     .fillMaxWidth()
-                    .height(36.dp)
-                    .semantics { role = Role.RadioButton },
+                    .height(36.dp),
                 shapes = ToggleButtonShapes(
                     shape = shape,
                     pressedShape = shape,
