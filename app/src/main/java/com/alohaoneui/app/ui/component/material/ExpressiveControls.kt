@@ -60,8 +60,6 @@ import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
  */
 private val MaterialButtonGroupExpansionPerSide = 12.dp
 
-// Perf isolation build: freeze both content-side expansion and animated Wavy geometry.
-// This separates the per-frame Shape/Outline path from the button's remaining press motion.
 internal val LocalMaterialButtonGroupExpansionPerSide = compositionLocalOf { 0.dp }
 
 /**
