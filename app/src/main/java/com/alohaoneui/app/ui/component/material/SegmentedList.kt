@@ -776,7 +776,6 @@ fun SegmentedListItem(
         )
     }
 }
-}
 
 @Composable
 fun SegmentedListItem(
@@ -825,7 +824,6 @@ fun SegmentedListItem(
         content = headlineContent
         )
     }
-}
 }
 
 @Composable
