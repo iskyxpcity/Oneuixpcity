@@ -467,6 +467,7 @@ fun alohaSegmentedShape(
     vertical: Boolean = true,
     pressed: Boolean = false,
     pressProgress: Float? = null,
+    animateCorners: Boolean = true,
 ): CornerBasedShape {
     val single = count == 1 || index == -1
     val first = single || index == 0
@@ -502,7 +503,7 @@ fun alohaSegmentedShape(
     // resolve the interpolated radii directly and let the single press animation
     // drive the WavyShape outline. The non-progress path retains the original
     // spring animation for list rows and other callers.
-    val topStart = if (progress != null) {
+    val topStart = if (progress != null || !animateCorners) {
         corner(restingTopStart, outerPressedRadius)
     } else {
         val value by animateDpAsState(
@@ -512,7 +513,7 @@ fun alohaSegmentedShape(
         )
         value
     }
-    val topEnd = if (progress != null) {
+    val topEnd = if (progress != null || !animateCorners) {
         corner(restingTopEnd, outerPressedRadius)
     } else {
         val value by animateDpAsState(
@@ -522,7 +523,7 @@ fun alohaSegmentedShape(
         )
         value
     }
-    val bottomEnd = if (progress != null) {
+    val bottomEnd = if (progress != null || !animateCorners) {
         corner(restingBottomEnd, outerPressedRadius)
     } else {
         val value by animateDpAsState(
@@ -532,7 +533,7 @@ fun alohaSegmentedShape(
         )
         value
     }
-    val bottomStart = if (progress != null) {
+    val bottomStart = if (progress != null || !animateCorners) {
         corner(restingBottomStart, outerPressedRadius)
     } else {
         val value by animateDpAsState(
@@ -579,7 +580,9 @@ private fun defaultSingleSegmentedShape(index: Int, count: Int): ListItemShapes 
     // states. Apply Aloha's live theme shape to all three slots; otherwise the
     // row silently falls back to Material 3 defaults as soon as it is pressed
     // or selected, even though the normal state follows the active theme shape settings.
-    val themeShape = alohaSegmentedShape(index, count, vertical = true)
+    val themeShape = alohaSegmentedShape(
+        index, count, vertical = true, animateCorners = false,
+    )
     return ListItemDefaults.segmentedShapes(index, count).copy(
         shape = themeShape,
         pressedShape = themeShape,
