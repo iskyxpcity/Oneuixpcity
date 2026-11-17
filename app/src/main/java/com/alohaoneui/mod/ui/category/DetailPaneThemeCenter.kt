@@ -16,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ToggleButtonShapes
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,6 +34,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.sp
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.LocalUiMode
@@ -50,7 +53,7 @@ import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.basic.Switch as MiuixSwitch
 import com.alohaoneui.app.ui.component.material.ExpressiveSwitch
-import com.alohaoneui.app.ui.component.material.ExpressiveSurface
+import com.alohaoneui.app.ui.component.material.ExpressiveToggleButton
 import com.alohaoneui.app.ui.component.material.alohaCornerShape
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 
@@ -226,27 +229,25 @@ private fun ThemeStoreRegionSelector(
 private fun ThemeStoreRegionChip(label: String, selected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     when (LocalUiMode.current) {
         UiMode.Material -> {
-            val scheme = MaterialTheme.colorScheme
-            ExpressiveSurface(
-                modifier = modifier,
-                shape = alohaCornerShape(12.dp),
-                color = if (selected) scheme.primary else scheme.surfaceContainerHighest,
-                contentColor = if (selected) scheme.onPrimary else scheme.onSurface,
-                onClick = onClick,
+            val shape = alohaCornerShape(12.dp)
+            ExpressiveToggleButton(
+                checked = selected,
+                onCheckedChange = { checked -> if (checked) onClick() },
+                modifier = modifier
+                    .fillMaxWidth()
+                    .height(36.dp)
+                    .semantics { role = Role.RadioButton },
+                shapes = ToggleButtonShapes(
+                    shape = shape,
+                    pressedShape = shape,
+                    checkedShape = shape,
+                ),
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 2.dp, vertical = 10.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = label,
-                        color = if (selected) scheme.onPrimary else scheme.onSurface,
-                        fontSize = 12.sp,
-                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
-                    )
-                }
+                Text(
+                    text = label,
+                    fontSize = 12.sp,
+                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                )
             }
         }
         UiMode.Miuix -> {
