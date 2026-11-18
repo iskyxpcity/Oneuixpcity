@@ -41,7 +41,11 @@ fun ExpressiveScaffold(
                 .fillMaxWidth()
                 .then(
                     if (LocalMaterialShadowTopBars.current) {
+                        if (topBarShape is WavyShape) {
+                        Modifier.voyageWavyShadow(topBarShape, 2.dp)
+                    } else {
                         Modifier.shadow(2.dp, topBarShape, clip = true)
+                    }
                     } else Modifier
                 )
                 .then(
