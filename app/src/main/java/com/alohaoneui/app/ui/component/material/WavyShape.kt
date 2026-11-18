@@ -346,4 +346,5 @@ internal class WavyShape private constructor(
         private const val MAX_PERIMETER_SAMPLES = 360f
         private const val SAMPLES_PER_WAVE = 8f
         private const val TWO_PI = 6.2831855f
-    }}
+    }
+}
