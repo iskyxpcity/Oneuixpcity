@@ -324,8 +324,10 @@ fun ExpressiveOutlinedTextField(
     // Keep the field as a real Material 3 outlined input: native focused and
     // unfocused strokes provide the visual separation from the dialog/list surface.
     val styledModifier = modifier.then(
-        if (LocalMaterialShadowButtons.current) Modifier.shadow(2.dp, actualShape)
-        else Modifier
+        if (LocalMaterialShadowButtons.current) {
+            if (actualShape is WavyShape) Modifier.voyageWavyShadow(actualShape, 2.dp)
+            else Modifier.shadow(2.dp, actualShape)
+        } else Modifier
     )
     OutlinedTextField(
         value = value,
