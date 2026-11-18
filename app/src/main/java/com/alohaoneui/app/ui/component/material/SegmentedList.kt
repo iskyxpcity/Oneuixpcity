@@ -711,12 +711,6 @@ private fun ListItemShapes.animatedAlohaShapes(
     return copy(shape = animatedShape, pressedShape = animatedShape, selectedShape = animatedShape) to animatedShape
 }
 
-
-/** Use a simple rounded outline for Wavy container shadows; retain the decorative Wavy outline on the content itself. */
-private fun wavyShadowOutline(shape: Shape): Shape = (shape as? CornerBasedShape)?.let {
-    RoundedCornerShape(it.topStart, it.topEnd, it.bottomEnd, it.bottomStart)
-} ?: RoundedCornerShape(20.dp)
-
 @Composable
 fun SegmentedListItem(
     modifier: Modifier = Modifier,
@@ -735,17 +729,15 @@ fun SegmentedListItem(
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val isPressed = resolvedInteractionSource.collectIsPressedWithMinimumDuration()
     val (animatedShapes, outlineShape) = itemShapes.animatedAlohaShapes(LocalSegmentedShapeConfig.current, isPressed)
-    // Wavy Outline.Generic is used for the container, but its non-convex sampled Path
-    // is unnecessarily complex as a shadow caster. Keep the visible Wavy geometry and
-    // use a rounded-corner shadow outline for this style only.
-    val useSimpleWavyShadow = LocalMaterialShadowContainers.current && LocalMaterialShapeStyle.current == 4
-    val itemShadowElevation = if (LocalMaterialShadowContainers.current && !useSimpleWavyShadow) 1.dp else 0.dp
+    // Reuse Material 3's existing item graphics layer for the container shadow.
+    val itemShadowElevation = if (LocalMaterialShadowContainers.current) 1.dp else 0.dp
     val itemElevation = ListItemDefaults.elevation(
         elevation = itemShadowElevation,
         draggedElevation = itemShadowElevation,
     )
+    // Keep the optional outer shadow and outline on the exact same state shape used
+    // by the Material 3 row for press/selection feedback.
     val styledModifier = modifier
-        .then(if (useSimpleWavyShadow) Modifier.shadow(1.dp, wavyShadowOutline(outlineShape), clip = false) else Modifier)
         .then(
             LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
                 Modifier.border(it.dp, colorScheme.outlineVariant, outlineShape)
@@ -789,17 +781,15 @@ fun SegmentedListItem(
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val isPressed = resolvedInteractionSource.collectIsPressedWithMinimumDuration()
     val (animatedShapes, outlineShape) = itemShapes.animatedAlohaShapes(LocalSegmentedShapeConfig.current, isPressed)
-    // Wavy Outline.Generic is used for the container, but its non-convex sampled Path
-    // is unnecessarily complex as a shadow caster. Keep the visible Wavy geometry and
-    // use a rounded-corner shadow outline for this style only.
-    val useSimpleWavyShadow = LocalMaterialShadowContainers.current && LocalMaterialShapeStyle.current == 4
-    val itemShadowElevation = if (LocalMaterialShadowContainers.current && !useSimpleWavyShadow) 1.dp else 0.dp
+    // Reuse Material 3's existing item graphics layer for the container shadow.
+    val itemShadowElevation = if (LocalMaterialShadowContainers.current) 1.dp else 0.dp
     val itemElevation = ListItemDefaults.elevation(
         elevation = itemShadowElevation,
         draggedElevation = itemShadowElevation,
     )
+    // Keep the optional outer shadow and outline on the exact same state shape used
+    // by the Material 3 row for press/selection feedback.
     val styledModifier = modifier
-        .then(if (useSimpleWavyShadow) Modifier.shadow(1.dp, wavyShadowOutline(outlineShape), clip = false) else Modifier)
         .then(
             LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
                 Modifier.border(it.dp, colorScheme.outlineVariant, outlineShape)
@@ -844,17 +834,15 @@ fun SegmentedListItem(
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val isPressed = resolvedInteractionSource.collectIsPressedWithMinimumDuration()
     val (animatedShapes, outlineShape) = itemShapes.animatedAlohaShapes(LocalSegmentedShapeConfig.current, isPressed)
-    // Wavy Outline.Generic is used for the container, but its non-convex sampled Path
-    // is unnecessarily complex as a shadow caster. Keep the visible Wavy geometry and
-    // use a rounded-corner shadow outline for this style only.
-    val useSimpleWavyShadow = LocalMaterialShadowContainers.current && LocalMaterialShapeStyle.current == 4
-    val itemShadowElevation = if (LocalMaterialShadowContainers.current && !useSimpleWavyShadow) 1.dp else 0.dp
+    // Reuse Material 3's existing item graphics layer for the container shadow.
+    val itemShadowElevation = if (LocalMaterialShadowContainers.current) 1.dp else 0.dp
     val itemElevation = ListItemDefaults.elevation(
         elevation = itemShadowElevation,
         draggedElevation = itemShadowElevation,
     )
+    // Keep the optional outer shadow and outline on the exact same state shape used
+    // by the Material 3 row for press/selection feedback.
     val styledModifier = modifier
-        .then(if (useSimpleWavyShadow) Modifier.shadow(1.dp, wavyShadowOutline(outlineShape), clip = false) else Modifier)
         .then(
             LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
                 Modifier.border(it.dp, colorScheme.outlineVariant, outlineShape)
