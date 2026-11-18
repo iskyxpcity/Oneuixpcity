@@ -138,7 +138,11 @@ internal fun alohaSliderContainerModifier(
     if (style == 1) return Modifier
     val containerShape = alohaCornerShape(20.dp)
     val containerShadow = if (LocalMaterialShadowSliders.current) {
-        Modifier.shadow(2.dp, containerShape, clip = false)
+        if (containerShape is WavyShape) {
+            Modifier.voyageWavyShadow(containerShape, 2.dp)
+        } else {
+            Modifier.shadow(2.dp, containerShape, clip = false)
+        }
     } else Modifier
     val outlineWidth = LocalMaterialOutlineWidth.current
     val outlineModifier = outlineWidth.takeIf { it > 0f }?.let {
