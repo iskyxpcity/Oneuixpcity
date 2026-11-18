@@ -42,6 +42,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
@@ -134,16 +135,19 @@ fun ExpressiveButton(
     val outlineWidth = LocalMaterialOutlineWidth.current
     Button(
         onClick = { haptic.performHapticFeedback(HapticFeedbackType.VirtualKey); onClick() },
-        modifier = modifier,
+        modifier = modifier.voyageWavyShadow(
+            actualShape,
+            if (hasShadow) if (pressExpansion.value > 0.1f) 3.dp else 2.dp else 0.dp,
+        ),
         enabled = enabled,
         interactionSource = actualInteractionSource,
         shape = actualShape,
         colors = colors,
         elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = if (hasShadow) 2.dp else 0.dp,
-            pressedElevation = if (hasShadow) 3.dp else 0.dp,
-            focusedElevation = if (hasShadow) 2.dp else 0.dp,
-            hoveredElevation = if (hasShadow) 2.dp else 0.dp,
+            defaultElevation = if (hasShadow && actualShape !is WavyShape) 2.dp else 0.dp,
+            pressedElevation = if (hasShadow && actualShape !is WavyShape) 3.dp else 0.dp,
+            focusedElevation = if (hasShadow && actualShape !is WavyShape) 2.dp else 0.dp,
+            hoveredElevation = if (hasShadow && actualShape !is WavyShape) 2.dp else 0.dp,
             disabledElevation = 0.dp,
         ),
         border = outlineWidth.takeIf { it > 0f }?.let { BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant) },
@@ -186,7 +190,13 @@ fun ExpressiveTextButton(
     val haptic = LocalHapticFeedback.current
     val shadowElevation by animateDpAsState(if (hasShadow && pressExpansion.value > 0.1f) 3.dp else if (hasShadow) 2.dp else 0.dp, label = "textButtonShadow")
     val styledModifier = modifier
-        .then(if (hasShadow) Modifier.shadow(shadowElevation, actualShape) else Modifier)
+        .then(
+            if (hasShadow && actualShape is WavyShape) {
+                Modifier.voyageWavyShadow(actualShape, shadowElevation)
+            } else if (hasShadow) {
+                Modifier.shadow(shadowElevation, actualShape)
+            } else Modifier
+        )
         .then(
             outlineWidth.takeIf { it > 0f }?.let {
                 Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, actualShape)
@@ -269,7 +279,13 @@ fun ExpressiveIconButton(
     val haptic = LocalHapticFeedback.current
     val shadowElevation by animateDpAsState(if (hasShadow && pressExpansion.value > 0.1f) 3.dp else if (hasShadow) 2.dp else 0.dp, label = "iconButtonShadow")
     val styledModifier = modifier
-        .then(if (hasShadow) Modifier.shadow(shadowElevation, actualShape) else Modifier)
+        .then(
+            if (hasShadow && actualShape is WavyShape) {
+                Modifier.voyageWavyShadow(actualShape, shadowElevation)
+            } else if (hasShadow) {
+                Modifier.shadow(shadowElevation, actualShape)
+            } else Modifier
+        )
         .then(
             Modifier
         )
@@ -410,17 +426,19 @@ fun ExpressiveSurface(
     } else {
         0.dp
     }
+    val surfaceModifier = modifier.voyageWavyShadow(actualShape, actualElevation)
+    val materialElevation = if (actualShape is WavyShape) 0.dp else actualElevation
     if (onClick == null) {
         androidx.compose.material3.Surface(
-            modifier = modifier, shape = actualShape, color = color, contentColor = contentColor,
-            tonalElevation = tonalElevation, shadowElevation = actualElevation, border = actualBorder,
+            modifier = surfaceModifier, shape = actualShape, color = color, contentColor = contentColor,
+            tonalElevation = tonalElevation, shadowElevation = materialElevation, border = actualBorder,
             content = content,
         )
     } else {
         androidx.compose.material3.Surface(
-            onClick = onClick, modifier = modifier, shape = actualShape, color = color,
+            onClick = onClick, modifier = surfaceModifier, shape = actualShape, color = color,
             contentColor = contentColor, tonalElevation = tonalElevation,
-            shadowElevation = actualElevation, border = actualBorder,
+            shadowElevation = materialElevation, border = actualBorder,
             interactionSource = interactionSource, content = content,
         )
     }
