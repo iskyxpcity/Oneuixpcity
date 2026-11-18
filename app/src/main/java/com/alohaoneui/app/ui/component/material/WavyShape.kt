@@ -53,16 +53,18 @@ internal class WavyShape private constructor(
         density, topStart, topEnd, bottomEnd, bottomStart,
     )
 
-    private data class OutlineKey(
-        val density: Float,
-        val width: Float,
-        val height: Float,
-        val layoutDirection: LayoutDirection,
-        val topStart: Float,
-        val topEnd: Float,
-        val bottomEnd: Float,
-        val bottomStart: Float,
-    )
+    // Match Voyage's per-Shape single-entry Outline cache. The original
+    // renderer compares resolved geometry directly instead of consulting a
+    // shared synchronized LRU on every outline request.
+    private var cachedOutline: Outline? = null
+    private var cachedWidth = Float.NaN
+    private var cachedHeight = Float.NaN
+    private var cachedTopStart = Float.NaN
+    private var cachedTopEnd = Float.NaN
+    private var cachedBottomEnd = Float.NaN
+    private var cachedBottomStart = Float.NaN
+    private var cachedLayoutDirection: LayoutDirection? = null
+    private var cachedDensity = Float.NaN
 
     override fun createOutline(
         size: Size,
@@ -72,38 +74,34 @@ internal class WavyShape private constructor(
         bottomStart: Float,
         layoutDirection: LayoutDirection,
     ): Outline {
-        android.os.Trace.beginSection("AlohaWavy#outline")
-        try {
-            val key = OutlineKey(
-                density, size.width, size.height, layoutDirection,
-                topStart, topEnd, bottomEnd, bottomStart,
-            )
-            synchronized(outlineCache) {
-                outlineCache[key]?.let {
-                    android.os.Trace.beginSection("AlohaWavy#cache_hit")
-                    android.os.Trace.endSection()
-                    return it
-                }
+        cachedOutline?.let { cached ->
+            if (
+                cachedWidth == size.width &&
+                cachedHeight == size.height &&
+                cachedTopStart == topStart &&
+                cachedTopEnd == topEnd &&
+                cachedBottomEnd == bottomEnd &&
+                cachedBottomStart == bottomStart &&
+                cachedLayoutDirection == layoutDirection &&
+                cachedDensity == density
+            ) {
+                return cached
             }
-
-            // Generate outside the lock so one expensive wave path never blocks
-            // unrelated outline lookups on other Compose nodes.
-            android.os.Trace.beginSection("AlohaWavy#cache_miss_path")
-            val generated = try {
-                createPerimeterOutline(
-                    size, topStart, topEnd, bottomEnd, bottomStart, layoutDirection,
-                )
-            } finally {
-                android.os.Trace.endSection()
-            }
-            synchronized(outlineCache) {
-                outlineCache[key]?.let { return it }
-                outlineCache[key] = generated
-                return generated
-            }
-        } finally {
-            android.os.Trace.endSection()
         }
+
+        val generated = createPerimeterOutline(
+            size, topStart, topEnd, bottomEnd, bottomStart, layoutDirection,
+        )
+        cachedWidth = size.width
+        cachedHeight = size.height
+        cachedTopStart = topStart
+        cachedTopEnd = topEnd
+        cachedBottomEnd = bottomEnd
+        cachedBottomStart = bottomStart
+        cachedLayoutDirection = layoutDirection
+        cachedDensity = density
+        cachedOutline = generated
+        return generated
     }
 
     private fun createPerimeterOutline(
@@ -348,15 +346,4 @@ internal class WavyShape private constructor(
         private const val MAX_PERIMETER_SAMPLES = 360f
         private const val SAMPLES_PER_WAVE = 8f
         private const val TWO_PI = 6.2831855f
-        // Shared bounded LRU: WavyShape is recreated during animated corner
-        // interpolation, so an instance-local cache is discarded every frame.
-        // Sharing by resolved geometry allows stable/equal outlines across
-        // instances and controls to reuse the exact same Outline object.
-        private val outlineCache = object : java.util.LinkedHashMap<OutlineKey, Outline>(128, 0.75f, true) {
-            override fun removeEldestEntry(
-                eldest: MutableMap.MutableEntry<OutlineKey, Outline>?,
-            ): Boolean = size > 768
-        }
-
-    }
-}
+    }}
