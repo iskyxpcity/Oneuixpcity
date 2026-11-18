@@ -33,14 +33,17 @@ fun TonalCard(
     val actualShape = shape ?: alohaCornerShape(20.dp)
     Card(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.voyageWavyShadow(
+            actualShape,
+            if (LocalMaterialShadowContainers.current) 2.dp else 0.dp,
+        ),
         enabled = enabled,
         border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
             BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
         },
         elevation = CardDefaults.cardElevation(
-            defaultElevation = if (LocalMaterialShadowContainers.current) 2.dp else 0.dp,
-            pressedElevation = if (LocalMaterialShadowContainers.current) 3.dp else 0.dp,
+            defaultElevation = if (LocalMaterialShadowContainers.current && actualShape !is WavyShape) 2.dp else 0.dp,
+            pressedElevation = if (LocalMaterialShadowContainers.current && actualShape !is WavyShape) 3.dp else 0.dp,
         ),
         colors = CardDefaults.cardColors(
             containerColor = containerColor,
@@ -62,12 +65,15 @@ fun TonalCard(
 ) {
     val actualShape = shape ?: alohaCornerShape(20.dp)
     Card(
-        modifier = modifier,
+        modifier = modifier.voyageWavyShadow(
+            actualShape,
+            if (LocalMaterialShadowContainers.current) 2.dp else 0.dp,
+        ),
         border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
             BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
         },
         elevation = CardDefaults.cardElevation(
-            defaultElevation = if (LocalMaterialShadowContainers.current) 2.dp else 0.dp
+            defaultElevation = if (LocalMaterialShadowContainers.current && actualShape !is WavyShape) 2.dp else 0.dp
         ),
         colors = CardDefaults.cardColors(
             containerColor = containerColor,
