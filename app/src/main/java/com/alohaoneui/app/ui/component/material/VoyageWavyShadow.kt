@@ -44,8 +44,9 @@ internal fun Modifier.voyageWavyShadow(
             )
         }
 
-        onDrawWithContent {
-            drawContent()
+        // Voyage installs this as a behind-content draw node: the shadow
+        // is painted first, then the component content is drawn over it.
+        onDrawBehind {
             drawIntoCanvas { canvas ->
                 canvas.nativeCanvas.drawPath(path.asAndroidPath(), shadowPaint)
             }
