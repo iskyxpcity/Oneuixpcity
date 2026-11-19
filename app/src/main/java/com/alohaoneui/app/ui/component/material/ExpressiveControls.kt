@@ -51,7 +51,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -72,9 +71,8 @@ private class AlohaPressCornerSize(
     override fun toPx(
         shapeSize: Size,
         density: Density,
-        layoutDirection: LayoutDirection,
     ): Float {
-        val start = base.toPx(shapeSize, density, layoutDirection)
+        val start = base.toPx(shapeSize, density)
         val end = with(density) { pressedRadius.toPx() }
         return start + (end - start) * progress
     }
