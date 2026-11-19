@@ -1816,3 +1816,18 @@
 - `ExpressiveButtonGroup` 的已定位调用点包含首页设备信息分组、状态栏三合一分类页、颜色主题页，以及功能页的移动操作文本按钮组。后三类需要分别按其控件类型和现有动画策略验证；本次针对缺失 `shapeCount` 的 ToggleButton 组修复。尚未取得本提交对应 Actions 构建结果，不能提前宣称 APK 构建通过。
 
 - 构建核验补记：修复提交 `922f0f7a` 对应 Actions Build #2983（run `42939592485`）。源码校验、编译、加载签名密钥、owner-signed APK 构建、包名/稳定证书验证及 Artifact 保存步骤均成功。Artifact `AlohaOneUI-Signed-Test-APK`（ID `13819887600`，28,690,948 bytes）已生成。注意 GitHub run 顶层 conclusion 显示 cancelled，但 `build` job 本身为 success，签名 APK 构建与包名/证书验证步骤均成功；不将顶层状态描述为全流程 success。Artifact 页面：https://github.com/iskyxpcity/Oneuixpcity/actions/runs/42939592485 。
+
+
+---
+
+## 2026-11-19：修复独立 Material 按钮形变动效与波浪阴影
+
+- 用户反馈：最近版本的独立按钮缺少按压形变动效与阴影。本轮只在测试分支处理，未修改或合并 `main`。
+- 根因一：`ExpressiveButton`、`ExpressiveTextButton`、`ExpressiveIconButton` 在页面显式传入 `CornerBasedShape` 时，直接使用静态 Shape，未把共享 Spring 按压进度传入形状圆角，导致这类独立按钮按压时没有主题形变。已新增 `AlohaPressCornerSize` 插值适配，让自定义圆角形状也随同一按压进度形变。
+- 根因二：`ExpressiveToggleButton` 没有像其他控件一样接入 `alohaWavyShadow`；波浪形状依赖专用阴影绘制时会缺少对应阴影。现已接入专用绘制器，并在 WavyShape 情况下关闭重复的 Material elevation；非波浪形状继续使用 Material elevation。
+- 普通 `ExpressiveButton` 的专用波浪阴影改为由 `animateDpAsState` 平滑驱动，避免按压阴影只在阈值处瞬间跳变。
+- 独立按钮仍只做形状形变，不增加测量宽度；按钮组扩张仍由 `LocalMaterialButtonGroupExpansionPerSide` 控制。本轮未改按钮组宽度联动，也未改按压/回弹 Spring 参数（按压 300f / 0.35，回缩 100f / 0.35），未改 Miuix。
+- 测试分支：`test/single-button-motion-shadow-fix-20261119`。源码提交：`bacf822ece05b85094fee018113fbb80e5ce0244`（修复 CornerSize API 签名）。
+- GitHub Actions Build #3164（run `44513077703`）已成功：源码校验、Kotlin 编译、owner-signed APK 构建、包名/稳定证书验证及 Artifact 保存全部成功。
+- 签名 APK Artifact：`AlohaOneUI-Signed-Test-APK`，ID `14524665551`，大小 28,705,556 bytes，SHA-256 `32a71a1fb6edaa80da1be1a6d1f8cf3da863ceb4fc5512f6783d865662595679`。构建页面：https://github.com/iskyxpcity/Oneuixpcity/actions/runs/44513077703 。
+- 当前状态：源码和签名构建已通过；仍需在设备上验证独立普通按钮、文字按钮、图标按钮、ToggleButton 的按压形变和阴影是否恢复。未合并 `main`。
