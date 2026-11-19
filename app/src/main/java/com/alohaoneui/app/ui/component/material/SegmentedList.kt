@@ -731,17 +731,17 @@ fun SegmentedListItem(
     val (animatedShapes, outlineShape) = itemShapes.animatedAlohaShapes(LocalSegmentedShapeConfig.current, isPressed)
     // Reuse Material 3's existing item graphics layer for the container shadow.
     val itemShadowElevation = if (LocalMaterialShadowContainers.current) 1.dp else 0.dp
-    val usesVoyageWaveShadow = outlineShape is WavyShape
+    val usesAlohaWaveShadow = outlineShape is WavyShape
     val itemElevation = ListItemDefaults.elevation(
-        // WavyShape draws its shadow through Voyage's dedicated native Paint path.
+        // WavyShape draws its shadow through Aloha's dedicated native Paint path.
         // Keep Material3 from drawing a second graphics-layer shadow.
-        elevation = if (usesVoyageWaveShadow) 0.dp else itemShadowElevation,
-        draggedElevation = if (usesVoyageWaveShadow) 0.dp else itemShadowElevation,
+        elevation = if (usesAlohaWaveShadow) 0.dp else itemShadowElevation,
+        draggedElevation = if (usesAlohaWaveShadow) 0.dp else itemShadowElevation,
     )
     // Keep the optional outer shadow and outline on the exact same state shape used
     // by the Material 3 row for press/selection feedback.
     val styledModifier = modifier
-        .voyageWavyShadow(outlineShape, itemShadowElevation)
+        .alohaWavyShadow(outlineShape, itemShadowElevation)
         .then(
             LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
                 Modifier.border(it.dp, colorScheme.outlineVariant, outlineShape)
@@ -787,17 +787,17 @@ fun SegmentedListItem(
     val (animatedShapes, outlineShape) = itemShapes.animatedAlohaShapes(LocalSegmentedShapeConfig.current, isPressed)
     // Reuse Material 3's existing item graphics layer for the container shadow.
     val itemShadowElevation = if (LocalMaterialShadowContainers.current) 1.dp else 0.dp
-    val usesVoyageWaveShadow = outlineShape is WavyShape
+    val usesAlohaWaveShadow = outlineShape is WavyShape
     val itemElevation = ListItemDefaults.elevation(
-        // WavyShape draws its shadow through Voyage's dedicated native Paint path.
+        // WavyShape draws its shadow through Aloha's dedicated native Paint path.
         // Keep Material3 from drawing a second graphics-layer shadow.
-        elevation = if (usesVoyageWaveShadow) 0.dp else itemShadowElevation,
-        draggedElevation = if (usesVoyageWaveShadow) 0.dp else itemShadowElevation,
+        elevation = if (usesAlohaWaveShadow) 0.dp else itemShadowElevation,
+        draggedElevation = if (usesAlohaWaveShadow) 0.dp else itemShadowElevation,
     )
     // Keep the optional outer shadow and outline on the exact same state shape used
     // by the Material 3 row for press/selection feedback.
     val styledModifier = modifier
-        .voyageWavyShadow(outlineShape, itemShadowElevation)
+        .alohaWavyShadow(outlineShape, itemShadowElevation)
         .then(
             LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
                 Modifier.border(it.dp, colorScheme.outlineVariant, outlineShape)
@@ -844,17 +844,17 @@ fun SegmentedListItem(
     val (animatedShapes, outlineShape) = itemShapes.animatedAlohaShapes(LocalSegmentedShapeConfig.current, isPressed)
     // Reuse Material 3's existing item graphics layer for the container shadow.
     val itemShadowElevation = if (LocalMaterialShadowContainers.current) 1.dp else 0.dp
-    val usesVoyageWaveShadow = outlineShape is WavyShape
+    val usesAlohaWaveShadow = outlineShape is WavyShape
     val itemElevation = ListItemDefaults.elevation(
-        // WavyShape draws its shadow through Voyage's dedicated native Paint path.
+        // WavyShape draws its shadow through Aloha's dedicated native Paint path.
         // Keep Material3 from drawing a second graphics-layer shadow.
-        elevation = if (usesVoyageWaveShadow) 0.dp else itemShadowElevation,
-        draggedElevation = if (usesVoyageWaveShadow) 0.dp else itemShadowElevation,
+        elevation = if (usesAlohaWaveShadow) 0.dp else itemShadowElevation,
+        draggedElevation = if (usesAlohaWaveShadow) 0.dp else itemShadowElevation,
     )
     // Keep the optional outer shadow and outline on the exact same state shape used
     // by the Material 3 row for press/selection feedback.
     val styledModifier = modifier
-        .voyageWavyShadow(outlineShape, itemShadowElevation)
+        .alohaWavyShadow(outlineShape, itemShadowElevation)
         .then(
             LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
                 Modifier.border(it.dp, colorScheme.outlineVariant, outlineShape)

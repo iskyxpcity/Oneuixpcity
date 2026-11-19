@@ -44,7 +44,7 @@ fun ExpressiveScaffold(
                     if (LocalMaterialShadowTopBars.current) {
                         if (topBarShape is WavyShape) {
                             Modifier
-                                .voyageWavyShadow(topBarShape, 2.dp)
+                                .alohaWavyShadow(topBarShape, 2.dp)
                                 .clip(topBarShape)
                         } else {
                             Modifier.shadow(2.dp, topBarShape, clip = true)

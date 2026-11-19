@@ -12,14 +12,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * Voyage's dedicated WavyShape shadow renderer.
+ * Aloha's dedicated WavyShape shadow renderer.
  *
- * Voyage does not send its wave outline through the normal graphics-layer
+ * Aloha does not send its wave outline through the normal graphics-layer
  * elevation shadow. It converts the outline to a Path and draws a transparent
  * Paint with a native shadow layer (radius = elevation px, y = radius * 0.9).
  * Other shapes deliberately keep their existing Material shadow path.
  */
-internal fun Modifier.voyageWavyShadow(
+internal fun Modifier.alohaWavyShadow(
     shape: androidx.compose.ui.graphics.Shape,
     elevation: Dp,
 ): Modifier {
@@ -34,7 +34,7 @@ internal fun Modifier.voyageWavyShadow(
         }
         val radiusPx = elevation.toPx()
         val shadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            // Voyage uses a transparent fill; only the native shadow is visible.
+            // Aloha uses a transparent fill; only the native shadow is visible.
             color = android.graphics.Color.TRANSPARENT
             setShadowLayer(
                 radiusPx,
@@ -44,7 +44,7 @@ internal fun Modifier.voyageWavyShadow(
             )
         }
 
-        // Voyage installs this as a behind-content draw node: the shadow
+        // Aloha installs this as a behind-content draw node: the shadow
         // is painted first, then the component content is drawn over it.
         onDrawBehind {
             drawIntoCanvas { canvas ->

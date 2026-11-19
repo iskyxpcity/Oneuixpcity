@@ -139,7 +139,7 @@ internal fun alohaSliderContainerModifier(
     val containerShape = alohaCornerShape(20.dp)
     val containerShadow = if (LocalMaterialShadowSliders.current) {
         if (containerShape is WavyShape) {
-            Modifier.voyageWavyShadow(containerShape, 2.dp)
+            Modifier.alohaWavyShadow(containerShape, 2.dp)
         } else {
             Modifier.shadow(2.dp, containerShape, clip = false)
         }

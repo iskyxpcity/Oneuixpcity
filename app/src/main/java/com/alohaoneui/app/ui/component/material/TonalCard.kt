@@ -33,7 +33,7 @@ fun TonalCard(
     val actualShape = shape ?: alohaCornerShape(20.dp)
     Card(
         onClick = onClick,
-        modifier = modifier.voyageWavyShadow(
+        modifier = modifier.alohaWavyShadow(
             actualShape,
             if (LocalMaterialShadowContainers.current) 2.dp else 0.dp,
         ),
@@ -65,7 +65,7 @@ fun TonalCard(
 ) {
     val actualShape = shape ?: alohaCornerShape(20.dp)
     Card(
-        modifier = modifier.voyageWavyShadow(
+        modifier = modifier.alohaWavyShadow(
             actualShape,
             if (LocalMaterialShadowContainers.current) 2.dp else 0.dp,
         ),

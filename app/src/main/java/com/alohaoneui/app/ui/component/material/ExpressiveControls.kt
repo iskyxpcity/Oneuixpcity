@@ -134,7 +134,7 @@ fun ExpressiveButton(
     val outlineWidth = LocalMaterialOutlineWidth.current
     Button(
         onClick = { haptic.performHapticFeedback(HapticFeedbackType.VirtualKey); onClick() },
-        modifier = modifier.voyageWavyShadow(
+        modifier = modifier.alohaWavyShadow(
             actualShape,
             if (hasShadow) if (pressExpansion.value > 0.1f) 3.dp else 2.dp else 0.dp,
         ),
@@ -191,7 +191,7 @@ fun ExpressiveTextButton(
     val styledModifier = modifier
         .then(
             if (hasShadow && actualShape is WavyShape) {
-                Modifier.voyageWavyShadow(actualShape, shadowElevation)
+                Modifier.alohaWavyShadow(actualShape, shadowElevation)
             } else if (hasShadow) {
                 Modifier.shadow(shadowElevation, actualShape)
             } else Modifier
@@ -280,7 +280,7 @@ fun ExpressiveIconButton(
     val styledModifier = modifier
         .then(
             if (hasShadow && actualShape is WavyShape) {
-                Modifier.voyageWavyShadow(actualShape, shadowElevation)
+                Modifier.alohaWavyShadow(actualShape, shadowElevation)
             } else if (hasShadow) {
                 Modifier.shadow(shadowElevation, actualShape)
             } else Modifier
@@ -325,7 +325,7 @@ fun ExpressiveOutlinedTextField(
     // unfocused strokes provide the visual separation from the dialog/list surface.
     val styledModifier = modifier.then(
         if (LocalMaterialShadowButtons.current) {
-            if (actualShape is WavyShape) Modifier.voyageWavyShadow(actualShape, 2.dp)
+            if (actualShape is WavyShape) Modifier.alohaWavyShadow(actualShape, 2.dp)
             else Modifier.shadow(2.dp, actualShape)
         } else Modifier
     )
@@ -427,7 +427,7 @@ fun ExpressiveSurface(
     } else {
         0.dp
     }
-    val surfaceModifier = modifier.voyageWavyShadow(actualShape, actualElevation)
+    val surfaceModifier = modifier.alohaWavyShadow(actualShape, actualElevation)
     val materialElevation = if (actualShape is WavyShape) 0.dp else actualElevation
     if (onClick == null) {
         androidx.compose.material3.Surface(
