@@ -2,6 +2,7 @@ package com.alohaoneui.app.ui.screen.tools
 
 import android.os.Build
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -72,6 +73,7 @@ import com.alohaoneui.app.ui.component.material.SegmentedDropdownItem
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.ExpressiveSwitch
 import com.alohaoneui.app.ui.component.material.ExpressiveTextButton
+import com.alohaoneui.app.ui.component.material.ExpressiveButtonGroup
 import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
 import com.alohaoneui.app.ui.component.material.ExpressiveButton
 import com.alohaoneui.app.ui.component.material.TopBarBackButton
@@ -892,6 +894,8 @@ private fun MaterialPowerActionRow(
     val index = actions.indexOfFirst { it.name == name }
     val action = actions.getOrNull(index) ?: return
     val visiblePosition = actions.take(index + 1).count { it.visible }
+    val moveUpInteraction = remember(name) { MutableInteractionSource() }
+    val moveDownInteraction = remember(name) { MutableInteractionSource() }
 
     SegmentedListItem(
         headlineContent = { Text(alohaOneUISettingTitle(spec)) },
@@ -911,29 +915,77 @@ private fun MaterialPowerActionRow(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                ExpressiveTextButton(
-                    enabled = index > 0,
-                    onClick = {
-                        toolsViewModel.onSystemUIEvent(
-                            SystemUIEvent.Other.PowerMenuActions(
-                                actions.movePowerAction(index, index - 1)
-                            )
-                        )
-                    },
+                ExpressiveButtonGroup(
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(stringResource(R.string.alohaoneui_moveUp))
-                }
-                ExpressiveTextButton(
-                    enabled = index in 0 until actions.lastIndex,
-                    onClick = {
-                        toolsViewModel.onSystemUIEvent(
-                            SystemUIEvent.Other.PowerMenuActions(
-                                actions.movePowerAction(index, index + 1)
+                    customItem(
+                        buttonGroupContent = {
+                            ExpressiveTextButton(
+                                enabled = index > 0,
+                                onClick = {
+                                    toolsViewModel.onSystemUIEvent(
+                                        SystemUIEvent.Other.PowerMenuActions(
+                                            actions.movePowerAction(index, index - 1)
+                                        )
+                                    )
+                                },
+                                modifier = Modifier,
+                                interactionSource = moveUpInteraction,
+                                shapeIndex = 0,
+                                shapeCount = 2,
+                            ) {
+                                Text(stringResource(R.string.alohaoneui_moveUp))
+                            }
+                        },
+                        menuContent = { menuState ->
+                            androidx.compose.material3.DropdownMenuItem(
+                                text = { Text(stringResource(R.string.alohaoneui_moveUp)) },
+                                enabled = index > 0,
+                                onClick = {
+                                    menuState.dismiss()
+                                    toolsViewModel.onSystemUIEvent(
+                                        SystemUIEvent.Other.PowerMenuActions(
+                                            actions.movePowerAction(index, index - 1)
+                                        )
+                                    )
+                                },
                             )
-                        )
-                    },
-                ) {
-                    Text(stringResource(R.string.alohaoneui_moveDown))
+                        },
+                    )
+                    customItem(
+                        buttonGroupContent = {
+                            ExpressiveTextButton(
+                                enabled = index in 0 until actions.lastIndex,
+                                onClick = {
+                                    toolsViewModel.onSystemUIEvent(
+                                        SystemUIEvent.Other.PowerMenuActions(
+                                            actions.movePowerAction(index, index + 1)
+                                        )
+                                    )
+                                },
+                                modifier = Modifier,
+                                interactionSource = moveDownInteraction,
+                                shapeIndex = 1,
+                                shapeCount = 2,
+                            ) {
+                                Text(stringResource(R.string.alohaoneui_moveDown))
+                            }
+                        },
+                        menuContent = { menuState ->
+                            androidx.compose.material3.DropdownMenuItem(
+                                text = { Text(stringResource(R.string.alohaoneui_moveDown)) },
+                                enabled = index in 0 until actions.lastIndex,
+                                onClick = {
+                                    menuState.dismiss()
+                                    toolsViewModel.onSystemUIEvent(
+                                        SystemUIEvent.Other.PowerMenuActions(
+                                            actions.movePowerAction(index, index + 1)
+                                        )
+                                    )
+                                },
+                            )
+                        },
+                    )
                 }
                 ExpressiveSwitch(
                     checked = action.visible,

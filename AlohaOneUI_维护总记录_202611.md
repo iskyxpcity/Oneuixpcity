@@ -1666,3 +1666,153 @@
 - 兼容性修正：第一次编译发现 Miuix colorScheme 不提供 onSurfaceVariant；改为 onSurface 后通过编译。
 - 最新源码提交 c972f9ed27927e140d4de4dfb1fee5b044286e82；Actions run 42582283904 全部成功：源码验证、Kotlin/Android 编译、owner-signed APK、包名与签名证书校验、Artifact 保留。产物 AlohaOneUI-Signed-Test-APK，artifact id 13657707527。
 - 这轮完成了折叠父项箭头和展开状态的公共接入，并确认全部已识别的状态栏条件子项均有 expanded 状态；真机上仍需逐页检查实际折叠/展开形状和动画，不能仅以构建通过宣称视觉验收完成。仅测试分支修改，未合并 main。
+
+## 2026-11-09｜Material 3 Expressive 按钮按压动效统一（进行中）
+
+### 用户确认的目标
+- 全项目 Material 3 按钮统一采用扩大后弹性收缩复位的按压反馈。
+- 独立按钮按压时扩大，松开后弹性恢复；并排按钮组应采用 Material 3 Expressive ButtonGroup 的联动宽度变化（按压项扩大、相邻项压缩），不能把单纯缩放冒充 ButtonGroup。
+- 保留现有颜色、形状、描边、阴影、布局和点击行为。
+- Miuix 页面继续使用 Miuix 组件，不混入 Material 3 组件。
+
+### 本轮已提交到测试分支
+- 测试分支：`test/material3-expressive-button-motion-20261109`，从当时 main 的 `2c03aa4830edff9fca27c6e9725a3f5a735a4a34` 切出。
+- 新增 `ui/component/material/ExpressiveButtonMotion.kt`：基于 Compose InteractionSource 的按压状态，以弹簧动画将控件缩放至 1.045，松开回到 1.0；只改变绘制层，不改变测量尺寸和周围布局。
+- 已接入共享 Material 3 `ExpressiveButton`、`ExpressiveTextButton`、`ExpressiveIconButton`、`ExpressiveToggleButton`。
+- 本轮尚未完成全项目按钮调用点审计、ButtonGroup 联动容器接入、构建验证及设备视觉验收；不得标记为完成。
+
+### 后续必须完成
+1. 全量搜索 Material 3 原生 Button / TextButton / IconButton / FilledTonalButton / ElevatedButton / OutlinedButton / ToggleButton 等直接调用点，统一接入共享交互或确认其属于特殊交互而保留。
+2. 对并排操作按钮组实现官方 ButtonGroup 宽度联动动画，避免只对单个按钮做缩放。
+3. 检查弹窗、设置详情、顶部操作、底部操作、选择器、空状态和错误状态等按钮场景；Miuix 体系排除在 Material 3 改造之外。
+4. 运行完整 Android 构建与测试，修复所有错误；生成 APK 后再做视觉验收。
+5. 通过测试分支验证后再合并 main。
+
+### 继续进展（2026-11-09）
+- 在共享按钮封装中增加可注入的 `MutableInteractionSource` 与 `pressMotionEnabled`，用于让按钮组复用同一交互源并关闭独立缩放，避免宽度联动与缩放叠加。
+- 新增 `ExpressiveButtonGroup`，封装官方 Material 3 `ButtonGroup`、15% 默认扩张比例、官方 overflow indicator 与 ButtonGroupScope DSL；调用方可用 `customItem` 配合 `Modifier.animateWidth(source)`，并把同一 source 传入 `ExpressiveButton/ExpressiveTextButton/ExpressiveIconButton/ExpressiveToggleButton`。
+- 已把 GitHub Actions 构建工作流的测试分支过滤扩展为 `test/**`，否则新建测试分支不会触发项目 APK 构建。
+- 构建已触发：Actions run #2873，run id `42621129845`，当前状态待最终结果；链接：https://github.com/iskyxpcity/Oneuixpcity/actions/runs/42621129845。
+- 全项目按钮调用点与并排按钮组迁移仍在进行；本轮尚未取得构建成功结论，不能合并 main。
+
+
+### 继续进展（2026-11-09，编译修复与按钮组迁移）
+- 前一轮 Actions run #2877（run id `42623728754`，提交 `ba6a2a56f6d52f6cea38577b3471e4d2b8f2fcd0`）已成功完成，确认修复后的 Material 3 ButtonGroup 封装和三个主题数值弹窗可通过 Kotlin/Android 编译。
+- 修复 #2876 编译错误：`ColorPaletteScreenMaterial.kt` 缺少 `ExpressiveButtonGroup` 导入，并为其显式增加 `ExperimentalMaterial3ExpressiveApi` opt-in。修复提交 `ba6a2a56`。
+- `AlohaOneUICategoryScreen.kt` 的电源菜单“上移/下移”并排操作按钮已迁移到官方 `ExpressiveButtonGroup`；每项通过独立 InteractionSource + `Modifier.animateWidth` 实现按压扩张/相邻项压缩，复用同一 source 并关闭 standalone scale，保留原 enabled 条件与事件逻辑。提交 `e5225917`。
+- `HomeDeviceTools.kt` 的 Material 设备信息三段式切换控件已迁移到官方 `ExpressiveButtonGroup`，保留 leading/middle/trailing 形状、RadioButton 语义、选中逻辑和 Miuix TabRow 分支；每个切换项使用独立 InteractionSource 驱动官方宽度联动。提交 `7f0defc1`。
+- 已核对 `GlobalShortcutActionsScreen.kt` 与 `TopBarBackButton.kt` 使用共享 `ExpressiveIconButton`；`AlohaOneUISpecialControls.kt` 使用共享 `ExpressiveButton`，因此可继承独立按钮弹性按压反馈。
+- 最新 Actions run #2879（run id `42625589091`，提交 `7f0defc13562cfb4af326d6fd79b708a790c5fd8`）已进入 `:app:compileDebugKotlin`，截至本记录更新时仍在编译；必须等待最终成功后才确认两处按钮组迁移无编译问题。
+- 全项目 Material 3 调用点审计仍未完成；后续继续检查其他屏幕、弹窗、选择器及底部/顶部操作。当前仍仅测试分支，PR #31 未合并 main；尚未完成 APK 与设备视觉验收。
+
+
+### 继续进展（2026-11-09，第二批按钮组迁移与构建）
+- 已将 `StatusComboStyleOneCategoryControls.kt` 中 Material 版三段式“常规/尺寸/颜色”分类按钮，以及颜色编辑弹窗内“深色/浅色”切换，迁移为官方 `ExpressiveButtonGroup`；保留 Miuix TabRow 分支、形状、触觉反馈和选中事件。提交 `1b12b600`。
+- 已将 `ColorPaletteScreenMaterial.kt` 的系统/浅色/深色/AMOLED 模式按钮组迁移为官方 ButtonGroup；保留原图标、颜色、分段形状、语义和触觉反馈。初次构建发现 `alohaSegmentedShape` 在 ButtonGroup 的非 Composable DSL 作用域中调用；已将 shape 计算移入每个 `buttonGroupContent`，提交 `c582474a`。
+- 通用 `ExpressiveConfirmDialog` 与 `ConfirmDialogMaterial` 的取消/确认操作现在由 `ExpressiveDialogActionButtons` 统一呈现为同一官方 ButtonGroup；只有单按钮的对话框继续使用独立弹性按压动画。提交 `63d48598`、`4405ea3e`。
+- #2884 的 Kotlin 编译、签名 APK 构建、包名/证书校验及 Artifact 保留全部成功；其后包含主题模式按钮组修正的最新完整构建 #2886（run id `42628586331`，提交 `c582474aa7daaaff3bcd5267510a5bb3f635ff52`）也已全部成功，签名 APK 已构建并保留为 Actions Artifact。
+- 已完成对主要 Material UI screen 与共享组件中的按钮调用点静态审计：独立按钮使用共享 `ExpressiveButton/ExpressiveTextButton/ExpressiveIconButton/ExpressiveToggleButton`；识别出的并排 Material 按钮组已迁移到官方 ButtonGroup。自定义卡片式点击项不属于 Material Button 控件，暂保留其既有交互，不把卡片缩放误称为按钮组联动。
+- 仍需继续检查项目其他非屏幕组件/特殊操作入口，并做设备实际触控与布局视觉验收；不能把构建成功等同于所有页面视觉验收完成。仅测试分支修改，PR #31 未合并 main。
+
+
+### 继续进展（2026-11-09，下载弹窗与最新签名构建）
+- 继续审计共享弹窗组件时发现 `DownloadDialogMaterial` 仍分别提供取消/确认按钮槽位。已改用 `ExpressiveDialogActionButtons`，并为公共动作组增加 `confirmEnabled`，确保无效 URL 时确认按钮及其溢出菜单项都保持禁用。Miuix 下载弹窗中的 Miuix TextButton 完全未改。提交 `66796f11`、`30172765`、`bc5c7e41`。
+- 对项目主要 Material screen、共享 UI component、mod UI category/component 完成进一步调用点扫描：实际 Material Button 控件均走共享 Expressive 按钮封装或已迁移的官方 ButtonGroup；mod 详情页的 `AlohaOneUIActionButton` 也统一映射到 Material `ExpressiveButton` / Miuix `MiuixButton`。DownloadDialog 是此次补出的最后一处原生 Material 对话框双按钮槽位。
+- 最新完整构建 Actions run #2890（run id `42629746033`，提交 `bc5c7e4135a0675c619c020339f823c8a976c261`）全部成功：源代码验证、Kotlin 编译、owner-signed APK 构建、包名与固定证书校验、Artifact 保留均成功。Artifact：`AlohaOneUI-Signed-Test-APK`，id `13680293805`，尚未过期。
+- 目前已识别的 Material 3 按钮调用点与并排操作组均已接入统一体系；Miuix 原生按钮、底部导航等非 Button 控件，以及卡片式语义点击项不强行改造成按钮，避免改变原有交互和视觉布局。
+- 后续工作转为设备上的按压幅度、回弹速度、按钮组宽度联动、窄屏溢出菜单和不同主题配色验收；通过设备验收前仍不标记为最终完成。测试分支与 PR #31 保持未合并 main。
+
+
+### 动效反馈调整（2026-11-09，按设备反馈修正）
+- 用户反馈：按钮动效过快、按压扩张不足、按钮组回缩时邻项文字被挤压/裁切。
+- 已调整独立 Material 按钮弹簧：按压 scale 从 `1.045` 增至 `1.085`；Spring stiffness 从 Medium 降到 Low，阻尼设为 `0.72`，让扩张和回弹更明显、节奏更缓。提交 `ebe686a4`。
+- 全局 `ExpressiveButtonGroup` 默认 `expandedRatio` 从 Material 默认 `0.15` 提升为 `0.30`，按压按钮扩张更明显。提交 `87f39a3c`。
+- ButtonGroup 的 `animateWidth` 各调用点明确使用 `compressionLimit = 8.dp`，限制相邻按钮压缩量，减少字体被挤压/截断；覆盖状态栏分类与颜色、主题模式切换、设备信息按钮组、通用对话框操作。提交 `37850bf9`、`977059ca`、`02ec6843`、`225d455d`。
+- 最新构建 #2897（run id `42756130676`）排队中；当前调参尚未通过新 APK 构建验证，待构建成功后继续真机验收。测试分支不合并 main。
+
+
+## 2026-11-09 Material3按钮动效与按钮组行为修正（续）
+- 修复短按时扩张动画被松手事件立即反向打断：统一按压动效改用 `Animatable` 和 Interaction 收集，按下后完整执行扩张至 `1.085f`，Release/Cancel 排队处理并弹簧回到 `1f`；低刚度弹簧保留较舒展的播放过程。
+- 按钮组邻项行为按要求改为只被撑开、不被挤压：相关 `ButtonGroupScope.animateWidth` 的 `compressionLimit` 从 `8.dp` 调整为 `0.dp`（状态栏分类按钮、Material颜色调色板、首页设备工具按钮、通用弹窗按钮组）。
+- 仍需以CI编译和真机触控观感确认；代码提交不等同于真机动画验收。
+
+- **实现方案再次更正（按用户确认的详情选项卡效果）**：移除仅视觉缩放方案，`ExpressiveButtonMotion.kt` 改为共享 `rememberMaterialExpressivePressExpansion`，将按压扩张值作为按钮内容左右真实 `Spacer` 宽度动画（每侧默认 12dp），按钮背景/圆角/描边/阴影仍由 Material3 原控件和 Aloha 主题提供；按钮的测量宽度随动画增加，ButtonGroup 兄弟项应由布局自然向两侧移动，不主动压缩邻项。`ExpressiveButton`、`ExpressiveTextButton`、`ExpressiveIconButton`、`ExpressiveToggleButton` 已接入。InteractionSource 的 Press 持续到 Release/Cancel，因此短按与长按均维持扩张，松开后使用低刚度弹簧回弹。提交：`ee87d97e`、`e44930d1`、`acc9e152`、`584681fc`。
+- **当前验证状态**：Actions run #2915（run id `42792884869`，提交 `584681fc`）待启动/排队；此前本轮中间提交构建已被新提交取消。还未获得新方案 APK 和真机视觉验收结果，不能提前宣称已构建通过或动画完全符合参考。测试分支与 PR #31 保持未合并 main。
+
+## 2026-11-10：修复 Material 全局圆角滑块松手闪退
+
+- 用户反馈：在 Material 主题中调整全局“圆角大小”滑块，尤其松开滑块时应用闪退；上传诊断日志显示异常为 `IllegalArgumentException: Corner size in Px can't be negative`，其中一个角半径约为 `-0.11019009px`。日志没有出现 `OutOfMemoryError`，因此没有证据支持内存泄漏判断。
+- 根因已由源码调用链确认：`SegmentedList.kt` 的 `alohaSegmentedShape()` 对四个角分别使用欠阻尼 `spring(dampingRatio = 0.45f, stiffness = 300f)`。全局圆角缩放值变化时，动画目标可能降至 `0.dp`；弹簧回弹会短暂越过零点，产生负的 `Dp` 值。
+- 闪退触发点：列表行使用该 Shape 作为 Material 3 `SegmentedListItem` 的形状，并将同一形状用于 `Modifier.shadow()` / `Modifier.border()`。Compose 的 `CornerBasedShape` 会在进入自定义 `AlohaPathShape.createOutline()` 之前解析并验证 CornerSize，因此自定义轮廓生成器内部原有的半径限制无法拦截这个负值。
+- 已在测试分支 `test/material3-expressive-button-motion-20261109` 修复：四个弹簧动画值在传入 `CutCornerShape`、`AlohaPathShape`、`RoundedCornerShape` 之前统一执行 `coerceAtLeast(0.dp)`。不更改弹簧参数、目标圆角、全局缩放范围或视觉设计，只阻止弹簧过冲产生非法负圆角。
+- 产品源码提交：`243e73e115775ba0f322e456436d566c0320c7cc`（`fix: clamp animated Material corner radii before shape creation`）。`main` 未修改。
+- 当前尚未核验该提交对应的 GitHub Actions 构建结果，也未生成/验收新的 APK；不能宣称设备闪退已经实测消除。下一步必须检查最新 Actions 编译与签名步骤，若失败按日志继续修复；构建成功后再核对 APK 包名、版本、签名与 SHA-256，并在设备上复测圆角滑块拖动、松手及 0/最大值边界。
+
+## 2026-11-10：Material 全项目按钮统一主页按压形态
+
+- 用户确认圆角滑块负半径闪退已在设备上消失；本轮继续以主页“设备状态信息”中的三个分段按钮作为 Material 按钮交互基准。
+- 已检查主页实现：`HomeDeviceTools.kt` 使用 `ExpressiveButtonGroup` + `ExpressiveToggleButton`；按钮按压通过共享 `rememberMaterialExpressivePressExpansion` 向左右各扩展 16dp，并将扩展进度传入 `alohaSegmentedShape(index = -1, count = 1, vertical = false, pressProgress = ...)`，让按钮宽度扩展与四角形态同步过渡。
+- 已核对多个页面的按钮接入路径：状态栏时间格式编辑、三合一样式设置、其他功能、电源菜单操作、SystemUI 详情和状态栏网速设置等页面通过 `AlohaOneUIActionButton` 进入 Material 共用 `ExpressiveButton`；主页与状态栏“三合一样式一”中的分段选择按钮已经直接使用 `ExpressiveButtonGroup` / `ExpressiveToggleButton`。设置页等大量 `SegmentedListItem` 是列表行/详情项，不应误改成操作按钮。
+- 发现此前共用的 `ExpressiveButton`、`ExpressiveTextButton`、`ExpressiveIconButton` 虽然复用了主页的 16dp Spring 横向扩展，但默认 Shape 仍分别为固定 12dp/40dp 圆角，没有像主页按钮一样把同一扩展进度同步给 `alohaSegmentedShape`；因此按压时只有宽度变化，框体形态没有完整跟随。
+- 已统一修复 `app/src/main/java/com/alohaoneui/app/ui/component/material/ExpressiveControls.kt`：三个共用 Material 按钮组件在未显式传入自定义 Shape 时，均使用与主页一致的单按钮 `alohaSegmentedShape(index = -1, count = 1, vertical = false)`，并将 `pressExpansion.value / 16f` 限制在 `0..1` 后传入 `pressProgress`。保留显式自定义 Shape、现有点击回调、按钮颜色、阴影/描边设置和 Miuix 分支，不更改业务行为。
+- 产品源码提交：`7882cbe9d122c16fc2a5ea49f3d04142b97b9a4a`（`fix: match shared Material buttons to Home press shape motion`），仅写入 `test/material3-expressive-button-motion-20261109`，`main` 未修改。
+- 本轮已完成共享按钮层的第一批统一，并核查了上述页面接入点；尚不能宣称项目所有页面的每一种按钮/第三方控件都已完成逐项核验。后续需继续扫描其余 Material 页面与自定义控件，检查是否绕过共用按钮组件，以及不同按钮组是否保留主页的联动、形状、按压/回弹与颜色语义。
+- 当前尚未核验本次提交对应的 GitHub Actions 构建、签名与 APK；没有新的 APK 可交付。下一步检查最新 HEAD 的 Actions，修复构建问题并验收后，再逐页继续排查遗漏的按钮实现。
+
+
+## 2026-11-10：按用户澄清更正 Material 按钮组与独立按钮规则
+
+- 用户明确更正上一轮理解：按钮组需要整体居中，组内按钮颜色统一跟随 Material 动态主题色；独立按钮只联动主题形状形变，不应横向扩大。
+- ExpressiveButton、ExpressiveTextButton、ExpressiveIconButton 已移除按压时左右 Spacer 宽度扩展；仍通过同一 rememberMaterialExpressivePressExpansion Spring 进度驱动 alohaSegmentedShape，所以单按钮只改变主题圆角/轮廓形态，不改变测量宽度，也不挤压相邻内容。
+- 为兼容既有调用参数，保留 pressMotionEnabled API；独立按钮的主题形变仍持续响应按压。电源菜单上移/下移等由 ButtonGroup animateWidth 负责的外部宽度联动不再被该参数误关掉形状动画。
+- ColorPaletteScreenMaterial.kt 的模式切换按钮组移除自定义半透明选中色与固定 surface 色，恢复 ExpressiveToggleButton 的统一主题动态色：选中使用 colorScheme.primary/onPrimary，未选中使用 surfaceContainerHighest/onSurface。
+- 主页设备信息按钮组、状态栏三合一分类按钮组与调色板模式按钮组的 spacedBy 均明确设置 Alignment.CenterHorizontally；调色板的三个数值弹窗操作组从 End 调整为 Center。其余未显式指定的按钮组沿用 ExpressiveButtonGroup 默认居中排列。
+- 本轮源码提交依次为：68f6ef5（独立按钮仅形变）、f676523（调色板按钮组居中与主题动态色）、0ca2615（状态栏按钮组居中）、ef19fd8（图标按钮内容槽类型修正）。均仅提交到 test/material3-expressive-button-motion-20261109，未修改 main。
+- 这是按用户澄清对上一轮实现的纠正；仍需等待最新 HEAD 的 Actions 完整构建与签名校验，并检查是否存在其它显式靠右排列的 Material 按钮组或自定义固定颜色组。真机视觉验收尚未完成。
+
+
+## 2026-11-10：补齐 Material 按钮阴影与统一点击触觉
+
+- 用户指出按钮仍缺少主题按钮阴影联动与点击震动。本轮将两项行为纳入共享 Material 按钮组件，不要求每个页面重复实现。
+- ExpressiveButton 保留主题开关控制的 Button elevation：默认 2dp、按压 3dp、禁用 0dp；点击统一触发 VirtualKey 触觉反馈。
+- ExpressiveTextButton 与 ExpressiveIconButton 增加跟随 LocalMaterialShadowButtons 的动态阴影：常态 2dp、按压 3dp、关闭主题阴影时 0dp；阴影使用当前动态形状，随按钮形变同步。两类按钮点击统一触发 VirtualKey 触觉反馈。
+- ExpressiveToggleButton 增加共享点击触觉反馈，沿用主题按钮阴影开关控制 ToggleButton elevation；移除其内容左右 Spacer 扩张，确保独立/组内 toggle 不再通过内容槽强制增加宽度，形状仍由 Spring 进度驱动。
+- 删除状态栏分类切换与调色板模式切换中原有的重复局部震动，避免共享组件触发后双震；下拉菜单项等非共享按钮保留原有触觉逻辑。
+- 代码提交：1cf0fb6（共享普通/文字/图标按钮阴影与触觉）、54a3044（ToggleButton 触觉、主题阴影与去除宽度扩张），随后清理页面重复触觉。均仅在测试分支，尚未完成 Actions 编译与真机验收。
+
+- 后续整理提交：`e08d75a`（移除状态栏组内重复触觉）、`8e7e660`（移除调色板组内重复触觉）、`cb69f4e`（补充动画状态委托导入）、`7ef53d5`（清理状态栏无用触觉导入）。最新源码 HEAD 为 `7ef53d5`；相关 Actions 已触发，当前仍待编译完成。
+- ToggleButton 阴影值进一步显式统一为常态/悬停/聚焦 2dp、按压 3dp、禁用 0dp（`463dfc3`），不依赖 Material 默认 token 的隐式数值。
+
+
+## 2026-11-10：Material 按钮组横向扩张调整为每侧 12dp
+
+- 用户确认将组内 ToggleButton 的按压横向扩张从每侧 4.8dp 调整为每侧 12dp；两侧合计最多增加 24dp。
+- 已核对共享按压动画基准仍为 `expansionPerSide = 16.dp`，扩张 Spring `stiffness = 300f, dampingRatio = 0.35f`，回缩 Spring `stiffness = 100f, dampingRatio = 0.35f`。为避免改变共享形状动画进度与独立按钮规则，仅将 `ExpressiveToggleButton.kt` 的组内宽度系数由 `0.30f` 改为 `0.75f`，即 `16dp × 0.75 = 12dp` 每侧；不改共享动画基准、Spring 参数、单按钮宽度或 Miuix。
+- 产品源码提交：`110c3714598a6cf42882bbb6bc7c13211b157d0a`（`fix: set Material toggle group expansion to 12dp per side`），仅提交到 `test/material3-expressive-button-motion-20261109`，未修改 `main`。
+- 当前仅确认源码提交成功；对应 GitHub Actions 构建、签名 APK 与真机按钮组视觉/触控验收尚待完成，不提前宣称构建通过。
+
+
+## 2026-11-10：更正按钮组 12dp 扩张的统一控制层
+
+- 复核上一条实现后发现，110c3714 虽然数值上得到每侧 12dp，但把 0.75f 乘数放在 ExpressiveToggleButton 子控件内部，仍由每个子按钮自行计算，不符合“按钮组统一主题组件集中控制”的架构要求。此前记录将其描述为最终实现不准确，现明确更正。
+- 已将唯一的组内扩张上限集中到 ExpressiveButtonGroup：新增 groupExpansionPerSide: Dp = 12.dp，由组容器通过 LocalMaterialButtonGroupExpansionPerSide 向整个 ButtonGroup 内容作用域提供；负值会钳制为 0dp。
+- ExpressiveToggleButton 不再包含 0.75f 等局部比例常量，而是读取统一容器提供的每侧上限，并乘以既有 shapeProgress（0..1）作为实时宽度。最大按压扩张为每侧 12dp、两侧合计 24dp；组外 CompositionLocal 默认 0dp，因此独立 ToggleButton 只做形状变化、不增加宽度。
+- 保留共享按压动画内部 16.dp 目标值及形状进度归一化；扩张 Spring stiffness = 300f, dampingRatio = 0.35f、回缩 Spring stiffness = 100f, dampingRatio = 0.35f 完全未改。Material 动态颜色、阴影、触觉反馈、按钮组居中行为及 Miuix 均未改。
+- 更正提交：a57434d7（统一容器提供扩张上限）、819ecd6a（ToggleButton 改为读取容器上限），仅测试分支 test/material3-expressive-button-motion-20261109；未修改 main。
+- 当前仅确认两处源码更新提交成功；仍需检查最终 HEAD 的 Actions 编译、签名 APK 构建和包名/证书校验。构建成功也不代替真机按钮组触控与视觉验收。
+
+- 额外兼容性修正：将 groupExpansionPerSide 参数放在原有 overflowIndicator 参数之后、content 之前，避免改变 ExpressiveButtonGroup 既有前置参数的 Kotlin 位置参数顺序。提交 b3087b7f；测试分支内完成，main 未修改。
+
+- 最终收敛：为避免给全项目按钮组 API 增加可变参数，12dp 上限改为 ExpressiveControls.kt 内部私有常量 MaterialButtonGroupExpansionPerSide；ExpressiveButtonGroup 只负责向组作用域提供该常量，不向页面暴露独立配置项。这样所有页面共用同一个固定主题值，原有 ExpressiveButtonGroup 函数签名保持不变。提交 0118cf12，覆盖前一条关于公开 groupExpansionPerSide 参数的记录。
+
+
+## 2026-11-10：修复非首页按钮组未扩张
+
+- 用户反馈仅首页按钮组出现横向扩张。回查所有 `ExpressiveButtonGroup` 实际调用点，发现首页 `HomeDeviceTools.kt` 的 `ExpressiveToggleButton` 显式传入 `shapeIndex/shapeCount`；其他页面（包括 `StatusComboStyleOneCategoryControls.kt`、`ColorPaletteScreenMaterial.kt`）依赖 `ButtonGroup` 提供的形状，未传这两个可选参数。
+- 根因是 `ExpressiveToggleButton.kt` 错误地使用 `shapeCount > 1` 判断是否属于按钮组。未显式传 `shapeCount` 的合法组内按钮默认值为 1，因此虽然处于 `ExpressiveButtonGroup` 的统一作用域内，仍被挡掉横向扩张。这正是首页有效、其他页面无效的原因。
+- 已删除 `shapeCount > 1` 门槛：是否处于按钮组由 `LocalMaterialButtonGroupExpansionPerSide` 作用域决定；只要在统一 `ExpressiveButtonGroup` 内且 `pressMotionEnabled` 开启，就使用统一每侧 12dp 上限乘以既有按压进度。`shapeIndex/shapeCount` 只负责形状分段，不再兼任组成员检测。
+- 保留组外默认 0dp，因此独立按钮不横向扩大；保留扩张 Spring 300f/0.35f、回缩 Spring 100f/0.35f、内部16dp按压动画目标、Material动态颜色、阴影和触觉反馈；不改 Miuix。
+- 修复提交：922f0f7a（`fix: expand every toggle inside shared Material button groups`），仅测试分支 `test/material3-expressive-button-motion-20261109`。
+- `ExpressiveButtonGroup` 的已定位调用点包含首页设备信息分组、状态栏三合一分类页、颜色主题页，以及功能页的移动操作文本按钮组。后三类需要分别按其控件类型和现有动画策略验证；本次针对缺失 `shapeCount` 的 ToggleButton 组修复。尚未取得本提交对应 Actions 构建结果，不能提前宣称 APK 构建通过。
+
+- 构建核验补记：修复提交 `922f0f7a` 对应 Actions Build #2983（run `42939592485`）。源码校验、编译、加载签名密钥、owner-signed APK 构建、包名/稳定证书验证及 Artifact 保存步骤均成功。Artifact `AlohaOneUI-Signed-Test-APK`（ID `13819887600`，28,690,948 bytes）已生成。注意 GitHub run 顶层 conclusion 显示 cancelled，但 `build` job 本身为 success，签名 APK 构建与包名/证书验证步骤均成功；不将顶层状态描述为全流程 success。Artifact 页面：https://github.com/iskyxpcity/Oneuixpcity/actions/runs/42939592485 。

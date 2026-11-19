@@ -611,11 +611,8 @@ object AlohaOneUIFeatureCatalog {
             AlohaOneUIVisibility.IntEquals("other.watchPairingConnectionMode", 1),
     )
 
-    private fun preferenceValue(preference: Preference, path: String): String {
-        var current: JsonElement = preferenceValueJson.encodeToJsonElement(
-            Preference.serializer(),
-            preference,
-        )
+    private fun preferenceValue(preferenceJson: JsonObject, path: String): String {
+        var current: JsonElement = preferenceJson
         for (key in path.split('.')) {
             current = (current as? JsonObject)?.get(key) ?: return ""
         }
@@ -624,19 +621,19 @@ object AlohaOneUIFeatureCatalog {
 
     private fun visibilityMatches(
         rule: AlohaOneUIVisibility,
-        preference: Preference,
+        preferenceJson: JsonObject,
     ): Boolean = when (rule) {
         AlohaOneUIVisibility.Always -> true
         is AlohaOneUIVisibility.Bool ->
-            preferenceValue(preference, rule.path).toBooleanStrictOrNull() == rule.expected
+            preferenceValue(preferenceJson, rule.path).toBooleanStrictOrNull() == rule.expected
         is AlohaOneUIVisibility.IntEquals ->
-            preferenceValue(preference, rule.path).toIntOrNull() == rule.value
+            preferenceValue(preferenceJson, rule.path).toIntOrNull() == rule.value
         is AlohaOneUIVisibility.StringContains ->
-            preferenceValue(preference, rule.path).contains(rule.token)
+            preferenceValue(preferenceJson, rule.path).contains(rule.token)
         is AlohaOneUIVisibility.All ->
-            rule.rules.all { visibilityMatches(it, preference) }
+            rule.rules.all { visibilityMatches(it, preferenceJson) }
         is AlohaOneUIVisibility.Not ->
-            !visibilityMatches(rule.rule, preference)
+            !visibilityMatches(rule.rule, preferenceJson)
         is AlohaOneUIVisibility.AndroidAtLeast -> Build.VERSION.SDK_INT >= rule.sdk
         is AlohaOneUIVisibility.AndroidAtMost -> Build.VERSION.SDK_INT <= rule.sdk
         is AlohaOneUIVisibility.AndroidEquals -> Build.VERSION.SDK_INT == rule.sdk
@@ -649,22 +646,31 @@ object AlohaOneUIFeatureCatalog {
     /**
      * Number of enabled AlohaOneUI feature injections represented by the feature catalog.
      *
+     * Serialize the preference snapshot once, then reuse its JSON tree for every catalog
+     * lookup. The previous implementation encoded the complete Preference object once per
+     * inspected setting, multiplying serialization work during each preference emission.
+     *
      * Count category entries rather than unique preference paths: a shared feature that
      * injects into two target apps is two actual injection targets. Child value fields and
      * power-menu action rows are not counted separately.
      */
     fun enabledInjectionCount(preference: Preference): Int {
+        val preferenceJson = preferenceValueJson.encodeToJsonElement(
+            Preference.serializer(),
+            preference,
+        ) as? JsonObject ?: JsonObject(emptyMap())
+
         val catalogCount = AlohaOneUICategory.entries.sumOf { category ->
             settings(category).count { spec ->
-                if (!visibilityMatches(spec.visibility, preference)) {
+                if (!visibilityMatches(spec.visibility, preferenceJson)) {
                     false
                 } else {
                     when (spec.type) {
                         AlohaOneUISettingType.Toggle ->
-                            preferenceValue(preference, spec.path).toBooleanStrictOrNull() == true
+                            preferenceValue(preferenceJson, spec.path).toBooleanStrictOrNull() == true
                         AlohaOneUISettingType.ChoiceInt ->
                             spec.path == "other.watchPairingConnectionMode" &&
-                                preferenceValue(preference, spec.path).toIntOrNull() != 0
+                                preferenceValue(preferenceJson, spec.path).toIntOrNull() != 0
                         else -> false
                     }
                 }

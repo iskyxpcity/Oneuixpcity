@@ -1,6 +1,7 @@
 package com.alohaoneui.app.ui.screen.home
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,17 +45,29 @@ fun HomePager(
         },
     )
 
-    when (LocalUiMode.current) {
-        UiMode.Miuix -> HomePagerMiuix(
-            state = uiState,
-            actions = actions,
-            bottomInnerPadding = bottomInnerPadding,
+    val sharedLsposedStatus = LocalLsposedHomeStatus.current
+    val injectionCount = rememberLsposedInjectionCount()
+    val homeLsposedStatus = remember(sharedLsposedStatus, injectionCount) {
+        sharedLsposedStatus.copy(
+            injectionCount = if (sharedLsposedStatus.active) injectionCount else 0,
         )
+    }
 
-        UiMode.Material -> HomePagerMaterial(
-            state = uiState,
-            actions = actions,
-            bottomInnerPadding = bottomInnerPadding,
-        )
+    // Only the Home page consumes the full dashboard status. Tools and Status
+    // continue reading the shared activation state from MainScreen.
+    CompositionLocalProvider(LocalLsposedHomeStatus provides homeLsposedStatus) {
+        when (LocalUiMode.current) {
+            UiMode.Miuix -> HomePagerMiuix(
+                state = uiState,
+                actions = actions,
+                bottomInnerPadding = bottomInnerPadding,
+            )
+
+            UiMode.Material -> HomePagerMaterial(
+                state = uiState,
+                actions = actions,
+                bottomInnerPadding = bottomInnerPadding,
+            )
+        }
     }
 }

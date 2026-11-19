@@ -7,6 +7,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
@@ -19,6 +20,7 @@ import com.alohaoneui.app.statusbar.SystemUiPingProbe
 import com.alohaoneui.common.Preference
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.withContext
 
 @Immutable
@@ -65,7 +67,6 @@ fun rememberLsposedHomeStatus(): LsposedHomeStatus {
     val lifecycleOwner = LocalLifecycleOwner.current
     val configuredScopes = remember(context) { configuredScopeCount(context) }
     val framework by LsposedFrameworkStatus.state.collectAsState()
-    val preference by context.alohaOneUIDataStore.data.collectAsState(initial = Preference())
 
     LaunchedEffect(lifecycleOwner, context) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
@@ -79,10 +80,6 @@ fun rememberLsposedHomeStatus(): LsposedHomeStatus {
         }
     }
 
-    val featureInjectionCount = remember(preference) {
-        AlohaOneUIFeatureCatalog.enabledInjectionCount(preference)
-    }
-
     val actualScopeCount = when {
         framework.connected && framework.scopeKnown -> framework.scope.size
         else -> 0
@@ -94,7 +91,26 @@ fun rememberLsposedHomeStatus(): LsposedHomeStatus {
         scopeKnown = framework.scopeKnown,
         scopeActive = framework.systemUiScopeActive,
         injected = framework.connected && framework.pingAlive,
-        injectionCount = if (framework.active) featureInjectionCount else 0,
+        injectionCount = 0,
         scopeCount = actualScopeCount,
     )
+}
+
+
+/**
+ * The feature catalog is dashboard-only data. Keep its DataStore subscription
+ * inside HomePager and perform the catalog scan away from the UI thread so
+ * preference writes do not invalidate the entire main pager.
+ */
+@Composable
+fun rememberLsposedInjectionCount(): Int {
+    val context = LocalContext.current.applicationContext
+    val count by produceState(initialValue = 0, context) {
+        context.alohaOneUIDataStore.data.collectLatest { preference ->
+            value = withContext(Dispatchers.Default) {
+                AlohaOneUIFeatureCatalog.enabledInjectionCount(preference)
+            }
+        }
+    }
+    return count
 }

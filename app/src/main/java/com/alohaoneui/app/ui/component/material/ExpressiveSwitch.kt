@@ -181,7 +181,10 @@ fun ExpressiveSwitch(
         androidx.compose.material3.Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
-            modifier = modifier,
+            modifier = modifier.then(
+                if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, RoundedCornerShape(50))
+                else Modifier,
+            ),
             thumbContent = thumbContent,
             enabled = enabled,
             colors = colors,
@@ -198,7 +201,10 @@ fun ExpressiveSwitch(
         androidx.compose.material.Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
-            modifier = modifier,
+            modifier = modifier.then(
+                if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, RoundedCornerShape(50))
+                else Modifier,
+            ),
             enabled = enabled,
             interactionSource = interactionSource,
             colors = androidx.compose.material.SwitchDefaults.colors(

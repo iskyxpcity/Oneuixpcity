@@ -101,7 +101,6 @@ import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 import androidx.compose.foundation.border
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.shadow
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
 import kotlinx.coroutines.launch
 
@@ -117,133 +116,64 @@ private data class SegmentedShapeConfig(val index: Int, val count: Int, val vert
 private val LocalSegmentedShapeConfig = compositionLocalOf<SegmentedShapeConfig?> { null }
 
 /**
- * G² continuity profile used by the shared path renderer.
- *
- * The four profile values are, in source order: extended fraction, arc fraction,
- * Bezier curvature scale, and arc curvature scale. The profile is deliberately
- * kept separate from the Squircle smoothing parameter: Aloha uses this profile
- * to construct a cubic/arc transition, not the b2t0 smoothing shortcut.
+ * Precomputes a cubic-Hermite approximation of the canonical PH quintic once.
+ * Runtime Shape creation only rotates and scales these fixed normalized controls.
  */
-private data class AlohaG2Profile(
-    val extendedFraction: Double,
-    val arcFraction: Double,
-    val bezierCurvatureScale: Double,
-    val arcCurvatureScale: Double,
-) {
-    data class Point(val x: Double, val y: Double) {
-        operator fun plus(other: Point) = Point(x + other.x, y + other.y)
-        operator fun minus(other: Point) = Point(x - other.x, y - other.y)
-        operator fun times(scale: Double) = Point(x * scale, y * scale)
+private fun createAlohaPhQuinticCubicSpans(): FloatArray {
+    val c = 0.80925643f
+    val count = 8
+    val dt = 1f / count
+    val result = FloatArray(count * 6)
+
+    fun x(t: Float): Float {
+        val u = 1f - t
+        val u2 = u * u
+        val t2 = t * t
+        val b1 = 5f * u2 * u2 * t
+        val b2 = 10f * u2 * u * t2
+        val b3 = 10f * u2 * t * t2
+        val b4 = 5f * u * t2 * t2
+        val b5 = t2 * t2 * t
+        return c * (b1 + b2) + b3 + b4 + b5
+    }
+    fun y(t: Float): Float {
+        val u = 1f - t
+        val u2 = u * u
+        val t2 = t * t
+        val b3 = 10f * u2 * t * t2
+        val b4 = 5f * u * t2 * t2
+        val b5 = t2 * t2 * t
+        return (1f - c) * (b3 + b4) + b5
+    }
+    fun dx(t: Float): Float {
+        val u = 1f - t
+        val u2 = u * u
+        val t2 = t * t
+        return 5f * c * u2 * u2 + 30f * (1f - c) * u2 * t2
+    }
+    fun dy(t: Float): Float {
+        val u = 1f - t
+        val u2 = u * u
+        val t2 = t * t
+        return 30f * (1f - c) * u2 * t2 + 5f * c * t2 * t2
     }
 
-    data class Cubic(val p0: Point, val p1: Point, val p2: Point, val p3: Point)
-
-    /**
-     * The returned cubic is
-     * the Bezier segment that joins the G² profile to its circular arc.
-     */
-    fun cubic(): Cubic {
-        val angle = arcFraction * Math.PI / 2.0
-        val sin = kotlin.math.sin(angle)
-        val cos = kotlin.math.cos(angle)
-        val p0 = Point(-extendedFraction, 0.0)
-        if (bezierCurvatureScale == 1.0 && arcCurvatureScale == 1.0) {
-            val denominator = cos + 1.0
-            val tangent = sin / denominator
-            return Cubic(
-                p0,
-                Point((1.0 - 1.5 / denominator) * tangent, 0.0),
-                Point(tangent, 0.0),
-                Point(sin, 1.0 - cos),
-            )
-        }
-
-        val inverseArcCurvature = 1.0 / arcCurvatureScale
-        val diagonal = 1.0 / kotlin.math.sqrt(2.0)
-        val p1 = Point(0.0, 1.0) +
-            Point(diagonal, -diagonal) * (1.0 - inverseArcCurvature) +
-            Point(sin, -cos) * inverseArcCurvature
-        val p2 = Point(1.0, 0.0)
-        val p3 = Point(cos, sin)
-
-        val dx = p1.x - p0.x
-        val dy = p1.y - p0.y
-        val determinant = (p2.x * p3.y) - (p2.y * p3.x)
-        val tangentNumerator = (dx * p2.y) + (-dy * p2.x)
-        val curvatureTerm = (((1.5 * bezierCurvatureScale) * tangentNumerator * tangentNumerator) /
-            determinant / determinant / determinant)
-        val firstControlScale = (-((dy * p3.x) - (dx * p3.y)) / determinant) - curvatureTerm
-        val secondControlScale = (-tangentNumerator) / determinant
-        val c1x = p0.x + maxOf(0.0, p2.x * firstControlScale)
-        val c1y = p0.y + maxOf(0.0, p2.y * firstControlScale)
-        val c2x = p1.x - maxOf(0.0, p3.x * secondControlScale)
-        val c2y = p1.y - maxOf(0.0, p3.y * secondControlScale)
-        // fqw0.m95419o() returns wcf(p0, solvedControl1, solvedControl2, p1):
-        // in this general branch p1 is the cubic endpoint; p2/p3 are tangent
-        // direction points used to solve the controls, not the endpoint.
-        return Cubic(p0, Point(c1x, c1y), Point(c2x, c2y), p1)
+    for (index in 0 until count) {
+        val t0 = index * dt
+        val t1 = (index + 1) * dt
+        val c1x = x(t0) + dx(t0) * dt / 3f
+        val c1y = y(t0) + dy(t0) * dt / 3f
+        val c2x = x(t1) - dx(t1) * dt / 3f
+        val c2y = y(t1) - dy(t1) * dt / 3f
+        val offset = index * 6
+        result[offset] = c1x
+        result[offset + 1] = c1y
+        result[offset + 2] = c2x
+        result[offset + 3] = c2y
+        result[offset + 4] = x(t1)
+        result[offset + 5] = y(t1)
     }
-
-    /**
-     * The corner solver computes eight independent width/height progress values:
-     * ((halfExtent / cornerRadius) - 1) / smooth.extendedFraction, clamped
-     * to [0, 1]. A zero radius is handled separately by the path builder.
-     */
-    fun aspectProgress(halfExtent: Float, cornerRadius: Float): Double {
-        if (!cornerRadius.isFinite() || !halfExtent.isFinite()) return 0.0
-        // In ban.m5206I(), a zero radius with a positive half-extent produces
-        // +infinity before clamping, so its aspect progress is 1 (not 0).
-        // Keep a zero-sized degenerate shape finite.
-        if (cornerRadius <= 0f) return if (halfExtent > 0f) 1.0 else 0.0
-        return (((halfExtent.toDouble() / cornerRadius.toDouble()) - 1.0) /
-            extendedFraction).coerceIn(0.0, 1.0)
-    }
-
-    /**
-     * Parameter interpolation is performed independently for each corner. The renderer does not
-     * interpolate a single profile per corner: it computes an aspect progress
-     * for each adjacent half-extent, uses the pair minimum for the shared
-     * corner profile, then scales the extended/arc/Bezier values independently.
-     */
-    fun interpolateFromCapsule(progress: Double, sharedCornerProgress: Double = progress): AlohaG2Profile {
-        val t = progress.coerceIn(0.0, 1.0)
-        val shared = sharedCornerProgress.coerceIn(0.0, 1.0)
-        fun mix(from: Double, to: Double, amount: Double) = from + (to - from) * amount
-        return AlohaG2Profile(
-            extendedFraction = mix(capsule.extendedFraction, smooth.extendedFraction, shared) * t,
-            // ban.m5206I() derives d65/d66/d67/d68 from the shared
-            // minimum of the two adjacent axis-progress values, not from
-            // the per-axis progress. This matters for asymmetric corners.
-            arcFraction = mix(capsule.arcFraction, smooth.arcFraction, shared),
-            bezierCurvatureScale = mix(capsule.bezierCurvatureScale, smooth.bezierCurvatureScale, t),
-            arcCurvatureScale = mix(capsule.arcCurvatureScale, smooth.arcCurvatureScale, shared),
-        )
-    }
-
-    /** Eight progress values in the same TL/TR/BR/BL paired order as ban.m5206I(). */
-    fun cornerProgresses(
-        width: Float, height: Float,
-        topStart: Float, topEnd: Float, bottomEnd: Float, bottomStart: Float,
-    ): DoubleArray {
-        val halfWidth = width.toDouble() / 2.0
-        val halfHeight = height.toDouble() / 2.0
-        return doubleArrayOf(
-            aspectProgress(halfHeight.toFloat(), topStart),
-            aspectProgress(halfWidth.toFloat(), topStart),
-            aspectProgress(halfWidth.toFloat(), topEnd),
-            aspectProgress(halfHeight.toFloat(), topEnd),
-            aspectProgress(halfHeight.toFloat(), bottomEnd),
-            aspectProgress(halfWidth.toFloat(), bottomEnd),
-            aspectProgress(halfWidth.toFloat(), bottomStart),
-            aspectProgress(halfHeight.toFloat(), bottomStart),
-        )
-    }
-
-    companion object {
-        // Constants for the Smooth G² and capsule profiles.
-        val smooth = AlohaG2Profile(0.5286651, 0.5555555555555556, 1.0732051, 1.0732051)
-        val capsule = AlohaG2Profile(0.396498825, 0.0, 1.0, 1.0)
-    }
+    return result
 }
 
 private class AlohaPathShape private constructor(
@@ -323,10 +253,55 @@ private class AlohaPathShape private constructor(
     }
 
     private companion object {
+        private val PH_QUINTIC_CUBIC_SPANS = createAlohaPhQuinticCubicSpans()
+
         // Bounded process-wide LRU: reuse equal outlines across rows/components,
         // while limiting retained Path objects when users explore many radii.
         private val outlineCache = object : java.util.LinkedHashMap<OutlineKey, Outline>(128, 0.75f, true) {
             override fun removeEldestEntry(eldest: MutableMap.MutableEntry<OutlineKey, Outline>?): Boolean = size > 768
+        }
+    }
+
+    private fun appendPhQuinticCorner(
+        path: Path,
+        originX: Float,
+        originY: Float,
+        radius: Float,
+        orientation: Int,
+    ) {
+        fun mapX(x: Float, y: Float): Float = when (orientation) {
+            1 -> -y
+            2 -> -x
+            3 -> y
+            else -> x
+        }
+        fun mapY(x: Float, y: Float): Float = when (orientation) {
+            1 -> x
+            2 -> -y
+            3 -> -x
+            else -> y
+        }
+
+        // Six normalized values per span: C1.x/y, C2.x/y, endpoint.x/y.
+        // The eight cubic Hermite spans are generated once in the companion object.
+        val spans = PH_QUINTIC_CUBIC_SPANS
+        var offset = 0
+        while (offset < spans.size) {
+            val c1x = spans[offset]
+            val c1y = spans[offset + 1]
+            val c2x = spans[offset + 2]
+            val c2y = spans[offset + 3]
+            val endX = spans[offset + 4]
+            val endY = spans[offset + 5]
+            path.cubicTo(
+                originX + radius * mapX(c1x, c1y),
+                originY + radius * mapY(c1x, c1y),
+                originX + radius * mapX(c2x, c2y),
+                originY + radius * mapY(c2x, c2y),
+                originX + radius * mapX(endX, endY),
+                originY + radius * mapY(endX, endY),
+            )
+            offset += 6
         }
     }
 
@@ -386,124 +361,23 @@ private class AlohaPathShape private constructor(
                 path.cubicTo(0f, tl * smooth, tl * smooth, 0f, tl, 0f)
             }
             3 -> {
-                // Aloha G² Smooth profile: use the control-point scale derived from
-                // dan.m88494l() rather than reusing the Squircle smoothing=48 shortcut.
-                // The profile is source-defined (dan.f104767lI); its second control
-                // point supplies the tangent scale used at each radius-sized corner.
-                data class CornerInsets(val horizontal: Float, val vertical: Float)
-
-                val progress = AlohaG2Profile.smooth.cornerProgresses(w, h, tl, tr, br, bl)
-                val tlShared = minOf(progress[0], progress[1])
-                val trShared = minOf(progress[2], progress[3])
-                val brShared = minOf(progress[4], progress[5])
-                val blShared = minOf(progress[6], progress[7])
-
-                data class ProfileInsets(val horizontal: Float, val vertical: Float)
-
-                fun profileInsets(axisProgress: Double, cornerProgress: Double): ProfileInsets {
-                    val profile = AlohaG2Profile.smooth
-                        .interpolateFromCapsule(axisProgress, cornerProgress)
-                    val cubic = profile.cubic()
-                    // Use the solved Bezier controls, not p2/p3 (which are
-                    // tangent-direction construction points in fqw0.m95419o()).
-                    // The old p2.x lookup was always 1.0 and therefore collapsed
-                    // every corner to the same arbitrary 8% inset.
-                    val xSpan = (cubic.p3.x - cubic.p0.x).let { kotlin.math.abs(it) }
-                    val ySpan = (cubic.p3.y - cubic.p0.y).let { kotlin.math.abs(it) }
-                    val horizontal = if (xSpan > 1e-9) {
-                        kotlin.math.abs(cubic.p1.x - cubic.p0.x) / xSpan
-                    } else 0.0
-                    val vertical = if (ySpan > 1e-9) {
-                        kotlin.math.abs(cubic.p3.y - cubic.p2.y) / ySpan
-                    } else 0.0
-                    return ProfileInsets(
-                        horizontal.coerceIn(0.0, 1.0).toFloat(),
-                        vertical.coerceIn(0.0, 1.0).toFloat(),
-                    )
-                }
-
-                fun cornerInsets(horizontalIndex: Int, verticalIndex: Int, shared: Double): CornerInsets {
-                    val horizontal = profileInsets(progress[horizontalIndex], shared)
-                    val vertical = profileInsets(progress[verticalIndex], shared)
-                    return CornerInsets(
-                        horizontal = horizontal.horizontal,
-                        vertical = vertical.vertical,
-                    )
-                }
-
-                val tlInset = cornerInsets(1, 0, tlShared)
-                val trInset = cornerInsets(2, 3, trShared)
-                val brInset = cornerInsets(5, 4, brShared)
-                val blInset = cornerInsets(6, 7, blShared)
+                // PH quintic G² corner profile (Farouki, 2014), approximated by
+                // cached cubic spans. The source curve has zero endpoint curvature;
+                // the high-resolution approximation closely preserves that transition.
+                // Four rotated/reflected copies preserve asymmetric corner radii.
                 path.moveTo(tl, 0f)
                 path.lineTo(w - tr, 0f)
-                if (tr > 0f) path.cubicTo(w - tr * trInset.horizontal, 0f, w, tr * trInset.vertical, w, tr)
+                if (tr > 0f) appendPhQuinticCorner(path, w - tr, 0f, tr, 0)
+                else path.lineTo(w, 0f)
                 path.lineTo(w, h - br)
-                if (br > 0f) path.cubicTo(w, h - br * brInset.vertical, w - br * brInset.horizontal, h, w - br, h)
+                if (br > 0f) appendPhQuinticCorner(path, w, h - br, br, 1)
+                else path.lineTo(w, h)
                 path.lineTo(bl, h)
-                if (bl > 0f) path.cubicTo(bl * blInset.horizontal, h, 0f, h - bl * blInset.vertical, 0f, h - bl)
+                if (bl > 0f) appendPhQuinticCorner(path, bl, h, bl, 2)
+                else path.lineTo(0f, h)
                 path.lineTo(0f, tl)
-                if (tl > 0f) path.cubicTo(0f, tl * tlInset.vertical, tl * tlInset.horizontal, 0f, tl, 0f)
-            }
-            4 -> {
-                // Lightweight shared Wavy geometry: fixed dp-based cubic waves on
-                // straight edges and rounded corner arcs. Avoid perimeter sampling,
-                // per-sample objects, trigonometry and intermediate displacement lists.
-                val minDimension = minOf(w, h)
-                if (w <= 0f || h <= 0f || minDimension <= 0f) {
-                    path.addRoundRect(androidx.compose.ui.geometry.RoundRect(0f, 0f, w, h))
-                } else {
-                    val amplitude = minOf(
-                        0.8f * densityScale,
-                        minDimension * 0.035f
-                    )
-                    val halfWaveLength = (8f * densityScale).coerceAtLeast(1f)
-
-                    fun waveEdge(
-                        startX: Float, startY: Float,
-                        endX: Float, endY: Float,
-                        normalX: Float, normalY: Float,
-                    ) {
-                        val dx = endX - startX
-                        val dy = endY - startY
-                        val length = kotlin.math.sqrt(dx * dx + dy * dy)
-                        if (length <= 0.5f) {
-                            path.lineTo(endX, endY)
-                            return
-                        }
-                        val count = kotlin.math.ceil(length / halfWaveLength).toInt().coerceAtLeast(1)
-                        val stepX = dx / count
-                        val stepY = dy / count
-                        for (i in 0 until count) {
-                            val x0 = startX + stepX * i
-                            val y0 = startY + stepY * i
-                            val x1 = startX + stepX * (i + 1)
-                            val y1 = startY + stepY * (i + 1)
-                            val sign = if (i % 2 == 0) 1f else -1f
-                            path.cubicTo(
-                                x0 + stepX / 3f + normalX * amplitude * sign,
-                                y0 + stepY / 3f + normalY * amplitude * sign,
-                                x0 + stepX * 2f / 3f + normalX * amplitude * sign,
-                                y0 + stepY * 2f / 3f + normalY * amplitude * sign,
-                                x1, y1
-                            )
-                        }
-                    }
-
-                    path.moveTo(tl, 0f)
-                    waveEdge(tl, 0f, w - tr, 0f, 0f, -1f)
-                    if (tr > 0f) path.arcTo(Rect(w - 2f * tr, 0f, w, 2f * tr), -90f, 90f, false)
-                    else path.lineTo(w, 0f)
-                    waveEdge(w, tr, w, h - br, 1f, 0f)
-                    if (br > 0f) path.arcTo(Rect(w - 2f * br, h - 2f * br, w, h), 0f, 90f, false)
-                    else path.lineTo(w, h)
-                    waveEdge(w - br, h, bl, h, 0f, 1f)
-                    if (bl > 0f) path.arcTo(Rect(0f, h - 2f * bl, 2f * bl, h), 90f, 90f, false)
-                    else path.lineTo(0f, h)
-                    waveEdge(0f, h - bl, 0f, tl, -1f, 0f)
-                    if (tl > 0f) path.arcTo(Rect(0f, 0f, 2f * tl, 2f * tl), 180f, 90f, false)
-                    else path.lineTo(0f, 0f)
-                }
+                if (tl > 0f) appendPhQuinticCorner(path, 0f, tl, tl, 3)
+                else path.lineTo(0f, 0f)
             }
             5 -> {
                 path.moveTo(tl, 0f)
@@ -553,8 +427,11 @@ fun alohaCornerShape(radius: androidx.compose.ui.unit.Dp): CornerBasedShape {
     val densityScale = LocalDensity.current.density
     return when (style) {
         1 -> remember(style, scaledRadius) { CutCornerShape(scaledRadius) }
-        2, 3, 4, 5, 6 -> remember(style, scaledRadius, densityScale) {
+        2, 3, 5, 6 -> remember(style, scaledRadius, densityScale) {
             AlohaPathShape(style, densityScale, scaledRadius, scaledRadius, scaledRadius, scaledRadius)
+        }
+        4 -> remember(style, scaledRadius, densityScale) {
+            WavyShape(densityScale, scaledRadius, scaledRadius, scaledRadius, scaledRadius)
         }
         else -> remember(style, scaledRadius) { RoundedCornerShape(scaledRadius) }
     }
@@ -579,51 +456,120 @@ fun alohaOneUISegmentedColors(): ListItemColors = ListItemDefaults.segmentedColo
 
 /**
  * Segmented-row corner rule:
- * 16dp outer / 4dp inner corners, animated with dampingRatio=0.4 and stiffness=200.
+ * 25dp outer / 4dp inner corners, animated with dampingRatio=0.4 and stiffness=200.
  * vertical=true joins rows top-to-bottom; false joins selection buttons left-to-right.
  */
 @Composable
-fun alohaSegmentedShape(index: Int, count: Int, vertical: Boolean = true, pressed: Boolean = false): CornerBasedShape {
+fun alohaSegmentedShape(
+    index: Int,
+    count: Int,
+    vertical: Boolean = true,
+    pressed: Boolean = false,
+    pressProgress: Float? = null,
+    animateCorners: Boolean = true,
+): CornerBasedShape {
     val single = count == 1 || index == -1
     val first = single || index == 0
     val last = single || index == count - 1
-    // The setting exposes a 0.0..2.0 scale. Preserve the full range so values
-    // above 1.0 enlarge corner geometry instead of silently behaving like 1.0.
+    // Keep the exact detail-row corner geometry and active theme scale. The optional
+    // progress path interpolates each real corner continuously with the button's
+    // width expansion instead of switching the whole shape at a pressed threshold.
     val cornerScale = LocalMaterialCornerScale.current.coerceIn(0f, 2f)
     val densityScale = LocalDensity.current.density
-    // Outer items morph into the middle item's 4dp geometry. Middle items
-    // contract to the requested 8dp pressed radius. Both targets remain linked to the live theme scale.
     val pressedRadius = when {
         !pressed -> null
         count > 1 && (first || last) -> 4.dp
         else -> 8.dp
     }
+    val progress = pressProgress?.coerceIn(0f, 1f)
+    fun corner(rest: Dp, pressedValue: Dp): Dp {
+        val radius = if (progress != null) {
+            rest + (pressedValue - rest) * progress
+        } else {
+            pressedRadius ?: rest
+        }
+        return radius * cornerScale
+    }
 
-    val topStart by animateDpAsState(
-        targetValue = (pressedRadius ?: if (first) 16.dp else 4.dp) * cornerScale,
-        animationSpec = spring(dampingRatio = 0.45f, stiffness = 300f),
-        label = "alohaSegmentTopStart",
-    )
-    val topEnd by animateDpAsState(
-        targetValue = (pressedRadius ?: if (if (vertical) first else last) 16.dp else 4.dp) * cornerScale,
-        animationSpec = spring(dampingRatio = 0.45f, stiffness = 300f),
-        label = "alohaSegmentTopEnd",
-    )
-    val bottomEnd by animateDpAsState(
-        targetValue = (pressedRadius ?: if (last) 16.dp else 4.dp) * cornerScale,
-        animationSpec = spring(dampingRatio = 0.45f, stiffness = 300f),
-        label = "alohaSegmentBottomEnd",
-    )
-    val bottomStart by animateDpAsState(
-        targetValue = (pressedRadius ?: if (if (vertical) last else first) 16.dp else 4.dp) * cornerScale,
-        animationSpec = spring(dampingRatio = 0.45f, stiffness = 300f),
-        label = "alohaSegmentBottomStart",
-    )
+    val outerPressedRadius = if (count > 1 && (first || last)) 4.dp else 8.dp
+    val restingTopStart = if (first) 25.dp else 4.dp
+    val restingTopEnd = if (if (vertical) first else last) 25.dp else 4.dp
+    val restingBottomEnd = if (last) 25.dp else 4.dp
+    val restingBottomStart = if (if (vertical) last else first) 25.dp else 4.dp
+
+    // Press progress already comes from the shared spring-driven Animatable.
+    // Do not wrap each frame in four additional animateDpAsState(snap()) nodes:
+    // resolve the interpolated radii directly and let the single press animation
+    // drive the WavyShape outline. The non-progress path retains the original
+    // spring animation for list rows and other callers.
+    val topStart = if (progress != null || !animateCorners) {
+        corner(restingTopStart, outerPressedRadius)
+    } else {
+        val value by animateDpAsState(
+            targetValue = corner(restingTopStart, outerPressedRadius),
+            animationSpec = spring(dampingRatio = 0.45f, stiffness = 300f),
+            label = "alohaSegmentTopStart",
+        )
+        value
+    }
+    val topEnd = if (progress != null || !animateCorners) {
+        corner(restingTopEnd, outerPressedRadius)
+    } else {
+        val value by animateDpAsState(
+            targetValue = corner(restingTopEnd, outerPressedRadius),
+            animationSpec = spring(dampingRatio = 0.45f, stiffness = 300f),
+            label = "alohaSegmentTopEnd",
+        )
+        value
+    }
+    val bottomEnd = if (progress != null || !animateCorners) {
+        corner(restingBottomEnd, outerPressedRadius)
+    } else {
+        val value by animateDpAsState(
+            targetValue = corner(restingBottomEnd, outerPressedRadius),
+            animationSpec = spring(dampingRatio = 0.45f, stiffness = 300f),
+            label = "alohaSegmentBottomEnd",
+        )
+        value
+    }
+    val bottomStart = if (progress != null || !animateCorners) {
+        corner(restingBottomStart, outerPressedRadius)
+    } else {
+        val value by animateDpAsState(
+            targetValue = corner(restingBottomStart, outerPressedRadius),
+            animationSpec = spring(dampingRatio = 0.45f, stiffness = 300f),
+            label = "alohaSegmentBottomStart",
+        )
+        value
+    }
+
+    // An underdamped spring can briefly overshoot below its target when the
+    // global corner scale changes (including a transition to 0.dp). CornerBasedShape
+    // validates resolved radii before AlohaPathShape.createOutline() can clamp them,
+    // so sanitize every animated value before constructing any CornerBasedShape.
+    val safeTopStart = topStart.coerceAtLeast(0.dp)
+    val safeTopEnd = topEnd.coerceAtLeast(0.dp)
+    val safeBottomEnd = bottomEnd.coerceAtLeast(0.dp)
+    val safeBottomStart = bottomStart.coerceAtLeast(0.dp)
 
     return when (LocalMaterialShapeStyle.current) {
-        1 -> CutCornerShape(topStart, topEnd, bottomEnd, bottomStart)
-        2, 3, 4, 5, 6 -> AlohaPathShape(LocalMaterialShapeStyle.current, densityScale, topStart, topEnd, bottomEnd, bottomStart)
-        else -> RoundedCornerShape(topStart, topEnd, bottomEnd, bottomStart)
+        1 -> CutCornerShape(safeTopStart, safeTopEnd, safeBottomEnd, safeBottomStart)
+        2, 3, 5, 6 -> AlohaPathShape(LocalMaterialShapeStyle.current, densityScale, safeTopStart, safeTopEnd, safeBottomEnd, safeBottomStart)
+        4 -> {
+            android.os.Trace.beginSection("AlohaWavy#shape_create")
+            try {
+                WavyShape(
+                    densityScale,
+                    safeTopStart,
+                    safeTopEnd,
+                    safeBottomEnd,
+                    safeBottomStart,
+                )
+            } finally {
+                android.os.Trace.endSection()
+            }
+        }
+        else -> RoundedCornerShape(safeTopStart, safeTopEnd, safeBottomEnd, safeBottomStart)
     }
 }
 
@@ -633,7 +579,9 @@ private fun defaultSingleSegmentedShape(index: Int, count: Int): ListItemShapes 
     // states. Apply Aloha's live theme shape to all three slots; otherwise the
     // row silently falls back to Material 3 defaults as soon as it is pressed
     // or selected, even though the normal state follows the active theme shape settings.
-    val themeShape = alohaSegmentedShape(index, count, vertical = true)
+    val themeShape = alohaSegmentedShape(
+        index, count, vertical = true, animateCorners = false,
+    )
     return ListItemDefaults.segmentedShapes(index, count).copy(
         shape = themeShape,
         pressedShape = themeShape,
@@ -733,7 +681,7 @@ fun SegmentedItem(
  */
 @Composable
 private fun MutableInteractionSource.collectIsPressedWithMinimumDuration(
-    minimumPressedMillis: Long = 100L,
+    minimumPressedMillis: Long = 150L,
 ): Boolean {
     val activePresses = remember(this) { mutableStateListOf<PressInteraction.Press>() }
     LaunchedEffect(this) {
@@ -781,13 +729,19 @@ fun SegmentedListItem(
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val isPressed = resolvedInteractionSource.collectIsPressedWithMinimumDuration()
     val (animatedShapes, outlineShape) = itemShapes.animatedAlohaShapes(LocalSegmentedShapeConfig.current, isPressed)
+    // Reuse Material 3's existing item graphics layer for the container shadow.
+    val itemShadowElevation = if (LocalMaterialShadowContainers.current) 1.dp else 0.dp
+    val usesAlohaWaveShadow = outlineShape is WavyShape
+    val itemElevation = ListItemDefaults.elevation(
+        // WavyShape draws its shadow through Aloha's dedicated native Paint path.
+        // Keep Material3 from drawing a second graphics-layer shadow.
+        elevation = if (usesAlohaWaveShadow) 0.dp else itemShadowElevation,
+        draggedElevation = if (usesAlohaWaveShadow) 0.dp else itemShadowElevation,
+    )
     // Keep the optional outer shadow and outline on the exact same state shape used
     // by the Material 3 row for press/selection feedback.
     val styledModifier = modifier
-        .then(
-            if (LocalMaterialShadowContainers.current) Modifier.shadow(1.dp, outlineShape)
-            else Modifier
-        )
+        .alohaWavyShadow(outlineShape, itemShadowElevation)
         .then(
             LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
                 Modifier.border(it.dp, colorScheme.outlineVariant, outlineShape)
@@ -801,6 +755,7 @@ fun SegmentedListItem(
         colors = colors,
         interactionSource = resolvedInteractionSource,
         shapes = animatedShapes,
+        elevation = itemElevation,
         modifier = styledModifier,
         leadingContent = leadingContent,
         trailingContent = trailingContent,
@@ -830,13 +785,19 @@ fun SegmentedListItem(
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val isPressed = resolvedInteractionSource.collectIsPressedWithMinimumDuration()
     val (animatedShapes, outlineShape) = itemShapes.animatedAlohaShapes(LocalSegmentedShapeConfig.current, isPressed)
+    // Reuse Material 3's existing item graphics layer for the container shadow.
+    val itemShadowElevation = if (LocalMaterialShadowContainers.current) 1.dp else 0.dp
+    val usesAlohaWaveShadow = outlineShape is WavyShape
+    val itemElevation = ListItemDefaults.elevation(
+        // WavyShape draws its shadow through Aloha's dedicated native Paint path.
+        // Keep Material3 from drawing a second graphics-layer shadow.
+        elevation = if (usesAlohaWaveShadow) 0.dp else itemShadowElevation,
+        draggedElevation = if (usesAlohaWaveShadow) 0.dp else itemShadowElevation,
+    )
     // Keep the optional outer shadow and outline on the exact same state shape used
     // by the Material 3 row for press/selection feedback.
     val styledModifier = modifier
-        .then(
-            if (LocalMaterialShadowContainers.current) Modifier.shadow(1.dp, outlineShape)
-            else Modifier
-        )
+        .alohaWavyShadow(outlineShape, itemShadowElevation)
         .then(
             LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
                 Modifier.border(it.dp, colorScheme.outlineVariant, outlineShape)
@@ -847,6 +808,7 @@ fun SegmentedListItem(
         checked = checked,
         onCheckedChange = onCheckedChange,
         shapes = animatedShapes,
+        elevation = itemElevation,
         modifier = styledModifier,
         enabled = enabled,
         colors = colors,
@@ -880,13 +842,19 @@ fun SegmentedListItem(
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val isPressed = resolvedInteractionSource.collectIsPressedWithMinimumDuration()
     val (animatedShapes, outlineShape) = itemShapes.animatedAlohaShapes(LocalSegmentedShapeConfig.current, isPressed)
+    // Reuse Material 3's existing item graphics layer for the container shadow.
+    val itemShadowElevation = if (LocalMaterialShadowContainers.current) 1.dp else 0.dp
+    val usesAlohaWaveShadow = outlineShape is WavyShape
+    val itemElevation = ListItemDefaults.elevation(
+        // WavyShape draws its shadow through Aloha's dedicated native Paint path.
+        // Keep Material3 from drawing a second graphics-layer shadow.
+        elevation = if (usesAlohaWaveShadow) 0.dp else itemShadowElevation,
+        draggedElevation = if (usesAlohaWaveShadow) 0.dp else itemShadowElevation,
+    )
     // Keep the optional outer shadow and outline on the exact same state shape used
     // by the Material 3 row for press/selection feedback.
     val styledModifier = modifier
-        .then(
-            if (LocalMaterialShadowContainers.current) Modifier.shadow(1.dp, outlineShape)
-            else Modifier
-        )
+        .alohaWavyShadow(outlineShape, itemShadowElevation)
         .then(
             LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
                 Modifier.border(it.dp, colorScheme.outlineVariant, outlineShape)
@@ -897,6 +865,7 @@ fun SegmentedListItem(
         selected = selected,
         onClick = onClick,
         shapes = animatedShapes,
+        elevation = itemElevation,
         modifier = styledModifier,
         enabled = enabled,
         colors = colors,

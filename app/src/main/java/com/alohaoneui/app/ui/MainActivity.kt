@@ -138,7 +138,6 @@ class MainActivity : ComponentActivity() {
             val selectedMainPage by viewModel.selectedMainPage.collectAsStateWithLifecycle()
             val appSettings = uiState.appSettings
             val uiMode = uiState.uiMode
-            val lsposedStatus = rememberLsposedHomeStatus()
             val darkMode = appSettings.colorMode.isDark ||
                 (appSettings.colorMode.isSystem && isSystemInDarkTheme())
 
@@ -171,7 +170,6 @@ class MainActivity : ComponentActivity() {
                 LocalEnableFloatingBottomBar provides uiState.enableFloatingBottomBar,
                 LocalEnableFloatingBottomBarBlur provides uiState.enableFloatingBottomBarBlur,
                 LocalUiMode provides uiMode,
-                LocalLsposedHomeStatus provides lsposedStatus,
             ) {
                 AlohaOneUITheme(appSettings = appSettings, uiMode = uiMode) {
                     val mainScreenEntry = @Composable {
@@ -259,7 +257,7 @@ class MainActivity : ComponentActivity() {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .layerBackdrop(switchBackdrop),
+                                
                         ) {
                             Box(
                                 modifier = Modifier
@@ -270,7 +268,7 @@ class MainActivity : ComponentActivity() {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .layerBackdrop(updateDialogBackdrop),
+                                
                         ) {
                             CompositionLocalProvider(
                                 LocalMaterialSwitchBackdrop provides switchBackdrop,
@@ -374,7 +372,11 @@ fun MainScreen(
 
     MainScreenBackHandler(mainPagerState, navController, enablePredictiveBack)
 
-    CompositionLocalProvider(LocalMainPagerState provides mainPagerState) {
+    val lsposedStatus = rememberLsposedHomeStatus()
+    CompositionLocalProvider(
+        LocalMainPagerState provides mainPagerState,
+        LocalLsposedHomeStatus provides lsposedStatus,
+    ) {
         val contentReady = rememberContentReady()
 
         // Re-read the actual window bounds so fold/unfold and freeform resizing adapt
@@ -407,7 +409,7 @@ fun MainScreen(
                             enabled = enableSwipeBack,
                         ),
                         state = mainPagerState.pagerState,
-                        beyondViewportPageCount = if (contentReady) 3 else 0,
+                        beyondViewportPageCount = 0,
                         userScrollEnabled = enableSwipeBack && !interceptPagerAxis,
                         pageNestedScrollConnection = if (interceptPagerAxis) {
                             PagerGestureNestedScrollConnection

@@ -42,11 +42,15 @@ fun ExpressiveScaffold(
                 .fillMaxWidth()
                 .then(
                     if (LocalMaterialShadowTopBars.current) {
-                        Modifier.shadow(2.dp, topBarShape)
+                        if (topBarShape is WavyShape) {
+                            Modifier
+                                .alohaWavyShadow(topBarShape, 2.dp)
+                                .clip(topBarShape)
+                        } else {
+                            Modifier.shadow(2.dp, topBarShape, clip = true)
+                        }
                     } else Modifier
                 )
-                // Clip the app-bar content to the same frame used by its shadow/outline.
-                .clip(topBarShape)
                 .then(
                     LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
                         Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, topBarShape)
