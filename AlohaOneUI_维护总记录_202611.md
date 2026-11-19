@@ -1841,3 +1841,13 @@
 - 单按钮路径才应用自定义 CornerBasedShape 按压插值，以及独立 ToggleButton 的波浪阴影绘制。
 - 修正提交：`a16884ef5eb0be7f685b6095fc084cae5f16b794`。仍只在 `test/single-button-motion-shadow-fix-20261119`，未修改 `main`。
 - 本次修正需要重新通过 CI 编译和签名验证后，再交付新的测试 APK；此前 Build #3164 APK 不应作为本次修正后的测试包。
+
+
+### 2026-11-19 补充：Material 详情选项卡独立按钮入口排查
+
+- 本轮严格限定 Material 主题，不将 Miuix 纳入修复目标。
+- 对详情选项卡组件调用进行追踪，确认普通详情操作按钮集中通过 `AlohaOneUIActionButton` 进入 Material `ExpressiveButton` 共用实现；不应在每个页面重复添加独立动画代码。
+- 发现主题中心「主题商店地区」选择网格的 Material 芯片是例外：直接使用 `ExpressiveSurface(onClick)`，只有容器点击与容器阴影，没有进入单按钮的 Spring 按压形状插值和按钮阴影动画路径。
+- 已将该 Material 芯片改为 `ExpressiveButton`，保留原有选中/未选中颜色、12dp 圆角、文字排版和网格宽度；由统一单按钮组件接管按压形变及按钮阴影。仅改 Material 分支，Miuix 分支原样保留且不作为本轮目标。
+- 代码提交：`4dbc732cfbb22ec3910b397fe355518d56aa40cf`，仅在 `test/single-button-motion-shadow-fix-20261119`，未修改 `main`。
+- 对应 Actions Build #3166（run `44520152231`）已启动，当前等待编译、签名及产物验证。尚不能宣称该修复构建通过或全项目排查完成。
