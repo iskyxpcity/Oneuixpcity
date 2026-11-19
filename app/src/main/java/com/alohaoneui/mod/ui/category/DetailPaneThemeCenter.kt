@@ -16,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -50,7 +51,7 @@ import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.basic.Switch as MiuixSwitch
 import com.alohaoneui.app.ui.component.material.ExpressiveSwitch
-import com.alohaoneui.app.ui.component.material.ExpressiveSurface
+import com.alohaoneui.app.ui.component.material.ExpressiveButton
 import com.alohaoneui.app.ui.component.material.alohaCornerShape
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 
@@ -227,12 +228,14 @@ private fun ThemeStoreRegionChip(label: String, selected: Boolean, modifier: Mod
     when (LocalUiMode.current) {
         UiMode.Material -> {
             val scheme = MaterialTheme.colorScheme
-            ExpressiveSurface(
-                modifier = modifier,
-                shape = alohaCornerShape(12.dp),
-                color = if (selected) scheme.primary else scheme.surfaceContainerHighest,
-                contentColor = if (selected) scheme.onPrimary else scheme.onSurface,
+            ExpressiveButton(
                 onClick = onClick,
+                modifier = modifier.fillMaxWidth(),
+                shape = alohaCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (selected) scheme.primary else scheme.surfaceContainerHighest,
+                    contentColor = if (selected) scheme.onPrimary else scheme.onSurface,
+                ),
             ) {
                 Box(
                     modifier = Modifier
