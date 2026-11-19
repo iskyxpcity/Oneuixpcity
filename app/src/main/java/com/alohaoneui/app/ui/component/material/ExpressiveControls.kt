@@ -166,18 +166,25 @@ fun ExpressiveButton(
     val shapeProgress = if (pressMotionEnabled) {
         (pressExpansion.value / 16f).coerceIn(0f, 1f)
     } else 0f
-    val actualShape = shape?.withAlohaPressProgress(shapeProgress, shapeIndex, shapeCount)
-        ?: alohaSegmentedShape(
-            index = shapeIndex,
-            count = shapeCount,
-            vertical = false,
-            pressProgress = shapeProgress,
-        )
+    val groupExpansionPerSide = LocalMaterialButtonGroupExpansionPerSide.current
+    val isGroupMember = groupExpansionPerSide > 0.dp
+    // Only standalone controls interpolate a caller-supplied shape. Group members
+    // keep the exact segmented-shape behavior used by the connected button group.
+    val actualShape = if (!isGroupMember) {
+        shape?.withAlohaPressProgress(shapeProgress, shapeIndex, shapeCount)
+            ?: alohaSegmentedShape(index = shapeIndex, count = shapeCount, vertical = false, pressProgress = shapeProgress)
+    } else {
+        shape ?: alohaSegmentedShape(index = shapeIndex, count = shapeCount, vertical = false, pressProgress = shapeProgress)
+    }
     val hasShadow = LocalMaterialShadowButtons.current
-    val shadowElevation by animateDpAsState(
+    val animatedShadowElevation by animateDpAsState(
         targetValue = if (hasShadow && pressExpansion.value > 0.1f) 3.dp else if (hasShadow) 2.dp else 0.dp,
         label = "buttonShadow",
     )
+    // Preserve the group's original elevation switching; animate only standalone buttons.
+    val shadowElevation = if (isGroupMember) {
+        if (hasShadow) if (pressExpansion.value > 0.1f) 3.dp else 2.dp else 0.dp
+    } else animatedShadowElevation
     val haptic = LocalHapticFeedback.current
     val outlineWidth = LocalMaterialOutlineWidth.current
     Button(
@@ -196,7 +203,6 @@ fun ExpressiveButton(
         ),
         border = outlineWidth.takeIf { it > 0f }?.let { BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant) },
         content = {
-            val groupExpansionPerSide = LocalMaterialButtonGroupExpansionPerSide.current
             val groupExpansion = if (pressMotionEnabled) groupExpansionPerSide * shapeProgress else 0.dp
             Spacer(Modifier.width(groupExpansion))
             content()
@@ -223,13 +229,14 @@ fun ExpressiveTextButton(
     val shapeProgress = if (pressMotionEnabled) {
         (pressExpansion.value / 16f).coerceIn(0f, 1f)
     } else 0f
-    val actualShape = shape?.withAlohaPressProgress(shapeProgress, shapeIndex, shapeCount)
-        ?: alohaSegmentedShape(
-            index = shapeIndex,
-            count = shapeCount,
-            vertical = false,
-            pressProgress = shapeProgress,
-        )
+    val groupExpansionPerSide = LocalMaterialButtonGroupExpansionPerSide.current
+    val isGroupMember = groupExpansionPerSide > 0.dp
+    val actualShape = if (!isGroupMember) {
+        shape?.withAlohaPressProgress(shapeProgress, shapeIndex, shapeCount)
+            ?: alohaSegmentedShape(index = shapeIndex, count = shapeCount, vertical = false, pressProgress = shapeProgress)
+    } else {
+        shape ?: alohaSegmentedShape(index = shapeIndex, count = shapeCount, vertical = false, pressProgress = shapeProgress)
+    }
     val outlineWidth = LocalMaterialOutlineWidth.current
     val hasShadow = LocalMaterialShadowButtons.current
     val haptic = LocalHapticFeedback.current
@@ -255,7 +262,6 @@ fun ExpressiveTextButton(
         colors = colors,
         interactionSource = actualInteractionSource,
         content = {
-            val groupExpansionPerSide = LocalMaterialButtonGroupExpansionPerSide.current
             val groupExpansion = if (pressMotionEnabled) groupExpansionPerSide * shapeProgress else 0.dp
             Spacer(Modifier.width(groupExpansion))
             content()
@@ -313,13 +319,13 @@ fun ExpressiveIconButton(
     val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val pressExpansion = rememberMaterialExpressivePressExpansion(actualInteractionSource, enabled)
     val shapeProgress = if (pressMotionEnabled) (pressExpansion.value / 16f).coerceIn(0f, 1f) else 0f
-    val actualShape = shape?.withAlohaPressProgress(shapeProgress)
-        ?: alohaSegmentedShape(
-            index = -1,
-            count = 1,
-            vertical = false,
-            pressProgress = shapeProgress,
-        )
+    val groupExpansionPerSide = LocalMaterialButtonGroupExpansionPerSide.current
+    val actualShape = if (groupExpansionPerSide > 0.dp) {
+        shape ?: alohaSegmentedShape(index = -1, count = 1, vertical = false, pressProgress = shapeProgress)
+    } else {
+        shape?.withAlohaPressProgress(shapeProgress)
+            ?: alohaSegmentedShape(index = -1, count = 1, vertical = false, pressProgress = shapeProgress)
+    }
     val outlineWidth = LocalMaterialOutlineWidth.current
     val hasShadow = LocalMaterialShadowButtons.current
     val haptic = LocalHapticFeedback.current

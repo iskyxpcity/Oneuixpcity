@@ -70,6 +70,8 @@ fun ExpressiveToggleButton(
         pressedShape = animatedShape,
         checkedShape = animatedShape,
     )
+    val groupExpansionPerSide = LocalMaterialButtonGroupExpansionPerSide.current
+    val isGroupMember = groupExpansionPerSide > 0.dp
     val hasShadow = LocalMaterialShadowButtons.current
     val usesAlohaWaveShadow = animatedShape is WavyShape
     val shadowElevation by animateDpAsState(
@@ -79,17 +81,19 @@ fun ExpressiveToggleButton(
     ToggleButton(
         checked = checked,
         onCheckedChange = { value -> haptic.performHapticFeedback(HapticFeedbackType.VirtualKey); onCheckedChange(value) },
-        modifier = modifier.alohaWavyShadow(
-            animatedShape,
-            if (usesAlohaWaveShadow) shadowElevation else 0.dp,
-        ),
+        modifier = if (!isGroupMember && usesAlohaWaveShadow) modifier.alohaWavyShadow(animatedShape, shadowElevation) else modifier,
         enabled = enabled,
         colors = colors,
         shapes = expressiveShapes,
         border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
             BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
         },
-        elevation = ToggleButtonDefaults.elevation(
+        elevation = if (isGroupMember) {
+            if (hasShadow) ToggleButtonDefaults.elevation(
+                defaultElevation = 2.dp, pressedElevation = 3.dp, focusedElevation = 2.dp,
+                hoveredElevation = 2.dp, disabledElevation = 0.dp,
+            ) else null
+        } else ToggleButtonDefaults.elevation(
             defaultElevation = if (hasShadow && !usesAlohaWaveShadow) 2.dp else 0.dp,
             pressedElevation = if (hasShadow && !usesAlohaWaveShadow) 3.dp else 0.dp,
             focusedElevation = if (hasShadow && !usesAlohaWaveShadow) 2.dp else 0.dp,
@@ -101,7 +105,6 @@ fun ExpressiveToggleButton(
             // The group container supplies the one shared expansion limit.
             // Outside ExpressiveButtonGroup the CompositionLocal is 0.dp,
             // so standalone toggles only morph their themed shape.
-            val groupExpansionPerSide = LocalMaterialButtonGroupExpansionPerSide.current
             // Group membership comes from ExpressiveButtonGroup's scope, not
             // shapeCount: some pages rely on Material's supplied button shapes
             // and intentionally leave shapeIndex/shapeCount at their defaults.
