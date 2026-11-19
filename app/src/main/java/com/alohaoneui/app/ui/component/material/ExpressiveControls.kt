@@ -6,6 +6,8 @@ import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.foundation.shape.CornerBasedShape
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -42,17 +44,60 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
+
+/**
+ * Interpolate an explicitly supplied CornerBasedShape as well as the default
+ * Aloha shape. This keeps standalone press morphing active when a screen supplies
+ * its own rounded or wave shape.
+ */
+private class AlohaPressCornerSize(
+    private val base: CornerSize,
+    private val pressedRadius: androidx.compose.ui.unit.Dp,
+    private val progress: Float,
+) : CornerSize {
+    override fun toPx(
+        shapeSize: Size,
+        density: Density,
+        layoutDirection: LayoutDirection,
+    ): Float {
+        val start = base.toPx(shapeSize, density, layoutDirection)
+        val end = with(density) { pressedRadius.toPx() }
+        return start + (end - start) * progress
+    }
+}
+
+private fun Shape.withAlohaPressProgress(
+    progress: Float,
+    shapeIndex: Int = -1,
+    shapeCount: Int = 1,
+): Shape {
+    val corners = this as? CornerBasedShape ?: return this
+    val fraction = progress.coerceIn(0f, 1f)
+    if (fraction <= 0f) return this
+    val isOuterSegment = shapeCount > 1 &&
+        (shapeIndex == 0 || shapeIndex == shapeCount - 1)
+    val pressedRadius = if (isOuterSegment) 4.dp else 8.dp
+    return corners.copy(
+        topStart = AlohaPressCornerSize(corners.topStart, pressedRadius, fraction),
+        topEnd = AlohaPressCornerSize(corners.topEnd, pressedRadius, fraction),
+        bottomEnd = AlohaPressCornerSize(corners.bottomEnd, pressedRadius, fraction),
+        bottomStart = AlohaPressCornerSize(corners.bottomStart, pressedRadius, fraction),
+    )
+}
 
 /**
  * The group container is the single source of truth for horizontal press expansion.
@@ -123,21 +168,23 @@ fun ExpressiveButton(
     val shapeProgress = if (pressMotionEnabled) {
         (pressExpansion.value / 16f).coerceIn(0f, 1f)
     } else 0f
-    val actualShape = shape ?: alohaSegmentedShape(
-        index = shapeIndex,
-        count = shapeCount,
-        vertical = false,
-        pressProgress = shapeProgress,
-    )
+    val actualShape = shape?.withAlohaPressProgress(shapeProgress, shapeIndex, shapeCount)
+        ?: alohaSegmentedShape(
+            index = shapeIndex,
+            count = shapeCount,
+            vertical = false,
+            pressProgress = shapeProgress,
+        )
     val hasShadow = LocalMaterialShadowButtons.current
+    val shadowElevation by animateDpAsState(
+        targetValue = if (hasShadow && pressExpansion.value > 0.1f) 3.dp else if (hasShadow) 2.dp else 0.dp,
+        label = "buttonShadow",
+    )
     val haptic = LocalHapticFeedback.current
     val outlineWidth = LocalMaterialOutlineWidth.current
     Button(
         onClick = { haptic.performHapticFeedback(HapticFeedbackType.VirtualKey); onClick() },
-        modifier = modifier.alohaWavyShadow(
-            actualShape,
-            if (hasShadow) if (pressExpansion.value > 0.1f) 3.dp else 2.dp else 0.dp,
-        ),
+        modifier = modifier.alohaWavyShadow(actualShape, shadowElevation),
         enabled = enabled,
         interactionSource = actualInteractionSource,
         shape = actualShape,
@@ -178,12 +225,13 @@ fun ExpressiveTextButton(
     val shapeProgress = if (pressMotionEnabled) {
         (pressExpansion.value / 16f).coerceIn(0f, 1f)
     } else 0f
-    val actualShape = shape ?: alohaSegmentedShape(
-        index = shapeIndex,
-        count = shapeCount,
-        vertical = false,
-        pressProgress = shapeProgress,
-    )
+    val actualShape = shape?.withAlohaPressProgress(shapeProgress, shapeIndex, shapeCount)
+        ?: alohaSegmentedShape(
+            index = shapeIndex,
+            count = shapeCount,
+            vertical = false,
+            pressProgress = shapeProgress,
+        )
     val outlineWidth = LocalMaterialOutlineWidth.current
     val hasShadow = LocalMaterialShadowButtons.current
     val haptic = LocalHapticFeedback.current
@@ -267,12 +315,13 @@ fun ExpressiveIconButton(
     val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val pressExpansion = rememberMaterialExpressivePressExpansion(actualInteractionSource, enabled)
     val shapeProgress = if (pressMotionEnabled) (pressExpansion.value / 16f).coerceIn(0f, 1f) else 0f
-    val actualShape = shape ?: alohaSegmentedShape(
-        index = -1,
-        count = 1,
-        vertical = false,
-        pressProgress = shapeProgress,
-    )
+    val actualShape = shape?.withAlohaPressProgress(shapeProgress)
+        ?: alohaSegmentedShape(
+            index = -1,
+            count = 1,
+            vertical = false,
+            pressProgress = shapeProgress,
+        )
     val outlineWidth = LocalMaterialOutlineWidth.current
     val hasShadow = LocalMaterialShadowButtons.current
     val haptic = LocalHapticFeedback.current

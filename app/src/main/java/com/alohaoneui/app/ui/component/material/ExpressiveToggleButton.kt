@@ -1,5 +1,6 @@
 package com.alohaoneui.app.ui.component.material
 
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.RowScope
@@ -69,25 +70,32 @@ fun ExpressiveToggleButton(
         pressedShape = animatedShape,
         checkedShape = animatedShape,
     )
+    val hasShadow = LocalMaterialShadowButtons.current
+    val usesAlohaWaveShadow = animatedShape is WavyShape
+    val shadowElevation by animateDpAsState(
+        targetValue = if (hasShadow && pressExpansion.value > 0.1f) 3.dp else if (hasShadow) 2.dp else 0.dp,
+        label = "toggleButtonShadow",
+    )
     ToggleButton(
         checked = checked,
         onCheckedChange = { value -> haptic.performHapticFeedback(HapticFeedbackType.VirtualKey); onCheckedChange(value) },
-        modifier = modifier,
+        modifier = modifier.alohaWavyShadow(
+            animatedShape,
+            if (usesAlohaWaveShadow) shadowElevation else 0.dp,
+        ),
         enabled = enabled,
         colors = colors,
         shapes = expressiveShapes,
         border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
             BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
         },
-        elevation = if (LocalMaterialShadowButtons.current) {
-            ToggleButtonDefaults.elevation(
-                defaultElevation = 2.dp,
-                pressedElevation = 3.dp,
-                focusedElevation = 2.dp,
-                hoveredElevation = 2.dp,
-                disabledElevation = 0.dp,
-            )
-        } else null,
+        elevation = ToggleButtonDefaults.elevation(
+            defaultElevation = if (hasShadow && !usesAlohaWaveShadow) 2.dp else 0.dp,
+            pressedElevation = if (hasShadow && !usesAlohaWaveShadow) 3.dp else 0.dp,
+            focusedElevation = if (hasShadow && !usesAlohaWaveShadow) 2.dp else 0.dp,
+            hoveredElevation = if (hasShadow && !usesAlohaWaveShadow) 2.dp else 0.dp,
+            disabledElevation = 0.dp,
+        ),
         interactionSource = actualInteractionSource,
         content = {
             // The group container supplies the one shared expansion limit.
