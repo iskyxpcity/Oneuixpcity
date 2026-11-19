@@ -1831,3 +1831,13 @@
 - GitHub Actions Build #3164（run `44513077703`）已成功：源码校验、Kotlin 编译、owner-signed APK 构建、包名/稳定证书验证及 Artifact 保存全部成功。
 - 签名 APK Artifact：`AlohaOneUI-Signed-Test-APK`，ID `14524665551`，大小 28,705,556 bytes，SHA-256 `32a71a1fb6edaa80da1be1a6d1f8cf3da863ceb4fc5512f6783d865662595679`。构建页面：https://github.com/iskyxpcity/Oneuixpcity/actions/runs/44513077703 。
 - 当前状态：源码和签名构建已通过；仍需在设备上验证独立普通按钮、文字按钮、图标按钮、ToggleButton 的按压形变和阴影是否恢复。未合并 `main`。
+
+
+### 2026-11-19 补正：单按钮修复与按钮组隔离
+
+- 用户指出上一轮改动影响了按钮组。确认原因：单按钮自定义形状插值和阴影驱动逻辑直接落在按钮组也会调用的共用控件路径中，未先判断是否处于 `ExpressiveButtonGroup`。
+- 已在测试分支修正：以 `LocalMaterialButtonGroupExpansionPerSide > 0.dp` 识别按钮组成员。
+- 按钮组路径恢复原有行为：不再应用单按钮自定义 Shape 插值；普通按钮组恢复原先的阴影阈值切换；ToggleButton 恢复原有 modifier 和 elevation 行为；按钮组宽度扩张常量仍为 12.dp，未改按钮组横向扩张和弹簧参数。
+- 单按钮路径才应用自定义 CornerBasedShape 按压插值，以及独立 ToggleButton 的波浪阴影绘制。
+- 修正提交：`a16884ef5eb0be7f685b6095fc084cae5f16b794`。仍只在 `test/single-button-motion-shadow-fix-20261119`，未修改 `main`。
+- 本次修正需要重新通过 CI 编译和签名验证后，再交付新的测试 APK；此前 Build #3164 APK 不应作为本次修正后的测试包。
