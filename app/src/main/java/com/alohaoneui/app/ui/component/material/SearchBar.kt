@@ -157,6 +157,7 @@ fun SearchAppBar(
                     if (isSearchExpanded) {
                         ExpressiveIconButton(
                             onClick = { collapseAndClear() },
+                            shadowEnabled = false,
                             content = { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
                         )
                     } else {
@@ -167,6 +168,7 @@ fun SearchAppBar(
                     if (isSearchExpanded && currentQuery.isNotEmpty()) {
                         ExpressiveIconButton(
                             onClick = { clearSearchText() },
+                            shadowEnabled = false,
                             content = { Icon(Icons.Filled.Close, null) }
                         )
                     }
@@ -196,6 +198,7 @@ fun SearchAppBar(
                         Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, topBarShape)
                     } ?: Modifier
                 )
+            CompositionLocalProvider(LocalMaterialShadowContainers provides false) {
             ExpressiveLargeTopAppBar(
                 modifier = topBarModifier,
                 title = title,
@@ -204,6 +207,7 @@ fun SearchAppBar(
                 windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
                 scrollBehavior = scrollBehavior
             )
+            }
 
             val searchFieldShape = alohaCornerShape(16.dp)
             val searchOutlineWidth = LocalMaterialOutlineWidth.current
