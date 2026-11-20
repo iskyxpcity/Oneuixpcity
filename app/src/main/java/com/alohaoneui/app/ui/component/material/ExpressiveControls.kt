@@ -185,6 +185,8 @@ fun ExpressiveButton(
     // Preserve the group's original elevation switching; animate only standalone buttons.
     val shadowElevation = if (isGroupMember) {
         if (hasShadow) if (pressExpansion.value > 0.1f) 3.dp else 2.dp else 0.dp
+    } else if (actualShape is WavyShape && hasShadow) {
+        1.dp
     } else animatedShadowElevation
     val haptic = LocalHapticFeedback.current
     val outlineWidth = LocalMaterialOutlineWidth.current
@@ -241,11 +243,11 @@ fun ExpressiveTextButton(
     val outlineWidth = LocalMaterialOutlineWidth.current
     val hasShadow = LocalMaterialShadowButtons.current
     val haptic = LocalHapticFeedback.current
-    val shadowElevation by animateDpAsState(if (hasShadow && pressExpansion.value > 0.1f) 3.dp else if (hasShadow) 2.dp else 0.dp, label = "textButtonShadow")
+    val shadowElevation by animateDpAsState(if (hasShadow && actualShape is WavyShape) 1.dp else if (hasShadow && pressExpansion.value > 0.1f) 3.dp else if (hasShadow) 2.dp else 0.dp, label = "textButtonShadow")
     val styledModifier = modifier
         .then(
             if (hasShadow && actualShape is WavyShape) {
-                Modifier.alohaWavyShadow(actualShape, shadowElevation * 0.5f)
+                Modifier.alohaWavyShadow(actualShape, shadowElevation)
             } else if (hasShadow) {
                 Modifier.shadow(shadowElevation, actualShape)
             } else Modifier
@@ -330,11 +332,11 @@ fun ExpressiveIconButton(
     val outlineWidth = LocalMaterialOutlineWidth.current
     val hasShadow = LocalMaterialShadowButtons.current
     val haptic = LocalHapticFeedback.current
-    val shadowElevation by animateDpAsState(if (hasShadow && pressExpansion.value > 0.1f) 3.dp else if (hasShadow) 2.dp else 0.dp, label = "iconButtonShadow")
+    val shadowElevation by animateDpAsState(if (hasShadow && actualShape is WavyShape) 1.dp else if (hasShadow && pressExpansion.value > 0.1f) 3.dp else if (hasShadow) 2.dp else 0.dp, label = "iconButtonShadow")
     val styledModifier = modifier
         .then(
             if (hasShadow && actualShape is WavyShape) {
-                Modifier.alohaWavyShadow(actualShape, shadowElevation * 0.5f)
+                Modifier.alohaWavyShadow(actualShape, shadowElevation)
             } else if (hasShadow) {
                 Modifier.shadow(shadowElevation, actualShape)
             } else Modifier
