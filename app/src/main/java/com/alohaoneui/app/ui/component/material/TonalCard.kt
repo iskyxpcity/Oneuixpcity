@@ -11,6 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,6 +20,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowHostActive
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -51,7 +53,9 @@ fun TonalCard(
         ),
         shape = actualShape,
     ) {
-        content()
+        CompositionLocalProvider(LocalMaterialShadowHostActive provides (LocalMaterialShadowHostActive.current || LocalMaterialShadowContainers.current)) {
+            content()
+        }
     }
 }
 
@@ -81,6 +85,8 @@ fun TonalCard(
         ),
         shape = actualShape,
     ) {
-        content()
+        CompositionLocalProvider(LocalMaterialShadowHostActive provides (LocalMaterialShadowHostActive.current || LocalMaterialShadowContainers.current)) {
+            content()
+        }
     }
 }
