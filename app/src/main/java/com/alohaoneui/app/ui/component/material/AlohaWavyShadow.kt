@@ -1,147 +1,78 @@
 package com.alohaoneui.app.ui.component.material
 
+import android.graphics.Paint
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.BlurEffect
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.asAndroidPath
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.zIndex
-import androidx.compose.ui.graphics.TileMode
-import androidx.compose.ui.graphics.drawscope.ContentDrawScope
-import androidx.compose.ui.graphics.layer.CompositingStrategy
-import androidx.compose.ui.graphics.layer.GraphicsLayer
-import androidx.compose.ui.node.DrawModifierNode
-import androidx.compose.ui.node.ModifierNodeElement
-import androidx.compose.ui.node.invalidateDraw
-import androidx.compose.ui.node.requireGraphicsContext
-import androidx.compose.ui.platform.InspectorInfo
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import kotlin.math.ceil
 
 /**
- * Draws the non-convex WavyShape shadow through an isolated Compose graphics
- * layer. RenderEffect blurs the filled outline itself, so concave wave valleys
- * remain part of the silhouette instead of relying on Paint.setShadowLayer's
- * hardware-canvas path behavior.
+ * Aloha's dedicated WavyShape shadow renderer.
  *
- * The offscreen layer is expanded by three blur radii on every side. This keeps
- * the blur from being clipped at the component bounds. The actual content is
- * drawn afterward and is never blurred.
+ * Aloha does not send its wave outline through the normal graphics-layer
+ * elevation shadow. It converts the outline to a Path and draws a transparent
+ * Paint with a native shadow layer (radius = elevation px, y = radius * 0.9).
+ * Other shapes deliberately keep their existing Material shadow path.
  */
 internal fun Modifier.alohaWavyShadow(
-    shape: Shape,
+    shape: androidx.compose.ui.graphics.Shape,
     elevation: Dp,
 ): Modifier {
     if (shape !is WavyShape || elevation <= 0.dp) return this
-    return this then WavyShadowElement(shape, elevation)
-}
 
-private class WavyShadowElement(
-    private val shape: Shape,
-    private val elevation: Dp,
-) : ModifierNodeElement<WavyShadowNode>() {
-    override fun create(): WavyShadowNode = WavyShadowNode(shape, elevation)
+    return drawWithCache {
+        val outline = shape.createOutline(size, layoutDirection, this)
+        val path = when (outline) {
+            is Outline.Generic -> outline.path
+            is Outline.Rounded -> Path().apply { addRoundRect(outline.roundRect) }
+            is Outline.Rectangle -> Path().apply { addRect(outline.rect) }
+        }
+        val radiusPx = elevation.toPx()
+        val shadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            // Aloha uses a transparent fill; only the native shadow is visible.
+            color = android.graphics.Color.TRANSPARENT
+            setShadowLayer(
+                radiusPx,
+                0f,
+                radiusPx * 0.9f,
+                android.graphics.Color.argb(46, 0, 0, 0),
+            )
+        }
 
-    override fun update(node: WavyShadowNode) {
-        node.shape = shape
-        node.elevation = elevation
-        node.invalidateDraw()
-    }
-
-    override fun InspectorInfo.inspectableProperties() {
-        name = "alohaWavyShadow"
-        properties["shape"] = shape
-        properties["elevation"] = elevation
-    }
-
-    override fun equals(other: Any?): Boolean =
-        this === other || (other is WavyShadowElement &&
-            shape == other.shape && elevation == other.elevation)
-
-    override fun hashCode(): Int = 31 * shape.hashCode() + elevation.hashCode()
-}
-
-private class WavyShadowNode(
-    var shape: Shape,
-    var elevation: Dp,
-) : Modifier.Node(), DrawModifierNode {
-    override val shouldAutoInvalidate: Boolean = false
-
-    private var shadowLayer: GraphicsLayer? = null
-    private var previousBlurRadius = Float.NaN
-    private val shadowColor = Color.Black.copy(alpha = 46f / 255f)
-
-    override fun onAttach() {
-        shadowLayer = requireGraphicsContext().createGraphicsLayer().apply {
-            compositingStrategy = CompositingStrategy.Offscreen
+        // Aloha installs this as a behind-content draw node: the shadow
+        // is painted first, then the component content is drawn over it.
+        onDrawBehind {
+            drawIntoCanvas { canvas ->
+                canvas.nativeCanvas.drawPath(path.asAndroidPath(), shadowPaint)
+            }
         }
     }
-
-    override fun onDetach() {
-        shadowLayer?.let { requireGraphicsContext().releaseGraphicsLayer(it) }
-        shadowLayer = null
-        previousBlurRadius = Float.NaN
-    }
-
-    override fun ContentDrawScope.draw() {
-        val layer = shadowLayer
-        val radius = elevation.toPx()
-        if (layer != null && radius > 0f && size.width > 0f && size.height > 0f) {
-            val offsetY = radius * 0.9f
-            val padding = ceil(radius * 3f + offsetY + 1f).toInt()
-            val layerWidth = ceil(size.width).toInt() + padding * 2
-            val layerHeight = ceil(size.height).toInt() + padding * 2
-            val outline = shape.createOutline(size, layoutDirection, this)
-            val outlinePath = when (outline) {
-                is Outline.Generic -> outline.path
-                is Outline.Rounded -> Path().apply { addRoundRect(outline.roundRect) }
-                is Outline.Rectangle -> Path().apply { addRect(outline.rect) }
-            }
-
-            if (previousBlurRadius != radius) {
-                layer.renderEffect = BlurEffect(radius, radius, TileMode.Decal)
-                previousBlurRadius = radius
-            }
-
-            layer.record(
-                size = IntSize(layerWidth, layerHeight),
-                density = this,
-                layoutDirection = layoutDirection,
-            ) {
-                drawContext.canvas.save()
-                drawContext.canvas.translate(padding.toFloat(), padding.toFloat())
-                drawPath(outlinePath, shadowColor)
-                drawContext.canvas.restore()
-            }
-
-            drawContext.canvas.save()
-            drawContext.canvas.translate(-padding.toFloat(), -padding.toFloat() + offsetY)
-            drawLayer(layer)
-            drawContext.canvas.restore()
-        }
-        drawContent()
-    }
 }
+
 
 /**
  * Button counterpart to the Material 3 container elevation used by detail rows.
- * Ordinary shapes keep the native graphics-layer elevation path; only WavyShape
- * uses the custom non-convex outline renderer above.
+ * It keeps the button's own preference independent while matching the same
+ * graphics-layer shadow geometry for ordinary shapes and Aloha's path renderer
+ * for WavyShape.
  */
 internal fun Modifier.alohaButtonShadow(
-    shape: Shape,
+    shape: androidx.compose.ui.graphics.Shape,
     elevation: Dp,
 ): Modifier {
     if (elevation <= 0.dp) return this
     if (shape is WavyShape) return alohaWavyShadow(shape, elevation)
-    return this.zIndex(1f).graphicsLayer {
-            shadowElevation = elevation.toPx()
-            this.shape = shape
-            clip = false
-        }
+    return zIndex(1f).graphicsLayer {
+        // Match Material3 InteractiveListItem's shadow layer ordering.
+        shadowElevation = elevation.toPx()
+        this.shape = shape
+        clip = false
+    }
 }
