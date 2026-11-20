@@ -13,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowHostActive
 import com.alohaoneui.app.ui.component.material.alohaSegmentedShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ToggleButton
@@ -72,7 +73,7 @@ fun ExpressiveToggleButton(
     )
     val groupExpansionPerSide = LocalMaterialButtonGroupExpansionPerSide.current
     val isGroupMember = groupExpansionPerSide > 0.dp
-    val hasShadow = LocalMaterialShadowButtons.current
+    val hasShadow = LocalMaterialShadowButtons.current && (!LocalMaterialShadowHostActive.current || isGroupMember)
     val usesAlohaWaveShadow = animatedShape is WavyShape
     val shadowElevation by animateDpAsState(
         targetValue = if (hasShadow && pressExpansion.value > 0.1f) 3.dp else if (hasShadow) 2.dp else 0.dp,
