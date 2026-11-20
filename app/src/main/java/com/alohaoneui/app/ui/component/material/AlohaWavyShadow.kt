@@ -4,6 +4,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.layer.CompositingStrategy
@@ -69,7 +73,7 @@ private class WavyShadowNode(
 
     private var shadowLayer: GraphicsLayer? = null
     private var previousBlurRadius = Float.NaN
-    private val shadowColor = Color.Black.copy(alpha = 46f / 255f)
+    private val shadowPaint = Paint().apply { color = Color.Black.copy(alpha = 46f / 255f) }
 
     override fun onAttach() {
         shadowLayer = requireGraphicsContext().createGraphicsLayer().apply {
@@ -105,9 +109,7 @@ private class WavyShadowNode(
             ) {
                 drawContext.canvas.save()
                 drawContext.canvas.translate(padding.toFloat(), padding.toFloat())
-                drawOutline(outline, androidx.compose.ui.graphics.Paint().apply {
-                    color = shadowColor
-                })
+                drawOutline(outline, shadowPaint)
                 drawContext.canvas.restore()
             }
 
@@ -131,11 +133,9 @@ internal fun Modifier.alohaButtonShadow(
 ): Modifier {
     if (elevation <= 0.dp) return this
     if (shape is WavyShape) return alohaWavyShadow(shape, elevation)
-    return androidx.compose.ui.zIndex(1f).let { z ->
-        this.then(z).graphicsLayer {
+    return this.zIndex(1f).graphicsLayer {
             shadowElevation = elevation.toPx()
             this.shape = shape
             clip = false
         }
-    }
 }
