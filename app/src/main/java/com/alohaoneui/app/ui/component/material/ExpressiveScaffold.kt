@@ -59,7 +59,7 @@ fun ExpressiveScaffold(
                     } ?: Modifier
                 )
             Box(modifier = topBarModifier) {
-                CompositionLocalProvider(LocalMaterialShadowContainers provides false) {
+                CompositionLocalProvider(LocalMaterialShadowButtons provides false) {
                     topBar()
                 }
             }
