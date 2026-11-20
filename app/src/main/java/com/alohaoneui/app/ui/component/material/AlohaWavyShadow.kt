@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -51,5 +52,25 @@ internal fun Modifier.alohaWavyShadow(
                 canvas.nativeCanvas.drawPath(path.asAndroidPath(), shadowPaint)
             }
         }
+    }
+}
+
+
+/**
+ * Button counterpart to the Material 3 container elevation used by detail rows.
+ * It keeps the button's own preference independent while matching the same
+ * graphics-layer shadow geometry for ordinary shapes and Aloha's path renderer
+ * for WavyShape.
+ */
+internal fun Modifier.alohaButtonShadow(
+    shape: androidx.compose.ui.graphics.Shape,
+    elevation: Dp,
+): Modifier {
+    if (elevation <= 0.dp) return this
+    if (shape is WavyShape) return alohaWavyShadow(shape, elevation)
+    return graphicsLayer {
+        shadowElevation = elevation.toPx()
+        this.shape = shape
+        clip = false
     }
 }
