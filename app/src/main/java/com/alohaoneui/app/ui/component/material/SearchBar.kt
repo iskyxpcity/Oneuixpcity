@@ -198,7 +198,7 @@ fun SearchAppBar(
                         Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, topBarShape)
                     } ?: Modifier
                 )
-            CompositionLocalProvider(LocalMaterialShadowContainers provides false) {
+            CompositionLocalProvider(LocalMaterialShadowButtons provides false) {
             ExpressiveLargeTopAppBar(
                 modifier = topBarModifier,
                 title = title,
