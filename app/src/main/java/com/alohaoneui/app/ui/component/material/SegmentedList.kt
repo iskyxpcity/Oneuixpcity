@@ -99,6 +99,7 @@ import com.alohaoneui.app.ui.theme.LocalMaterialCornerScale
 import com.alohaoneui.app.ui.theme.LocalMaterialShapeStyle
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowHostActive
 import androidx.compose.foundation.border
 import androidx.compose.ui.draw.alpha
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
@@ -748,6 +749,7 @@ fun SegmentedListItem(
             } ?: Modifier
         )
         .then(if (!enabled) Modifier.alpha(0.5f) else Modifier)
+    CompositionLocalProvider(LocalMaterialShadowHostActive provides (LocalMaterialShadowHostActive.current || itemShadowElevation > 0.dp)) {
     SegmentedListItem(
         onClick = onClick ?: {},
         onLongClick = onLongClick,
@@ -764,6 +766,7 @@ fun SegmentedListItem(
         verticalAlignment = Alignment.CenterVertically,
         content = headlineContent
     )
+    }
 }
 
 @Composable
@@ -804,6 +807,7 @@ fun SegmentedListItem(
             } ?: Modifier
         )
         .then(if (!enabled) Modifier.alpha(0.5f) else Modifier)
+    CompositionLocalProvider(LocalMaterialShadowHostActive provides (LocalMaterialShadowHostActive.current || itemShadowElevation > 0.dp)) {
     SegmentedListItem(
         checked = checked,
         onCheckedChange = onCheckedChange,
@@ -821,6 +825,7 @@ fun SegmentedListItem(
         onLongClick = onLongClick,
         content = headlineContent
     )
+    }
 }
 
 @Composable
@@ -861,6 +866,7 @@ fun SegmentedListItem(
             } ?: Modifier
         )
         .then(if (!enabled) Modifier.alpha(0.5f) else Modifier)
+    CompositionLocalProvider(LocalMaterialShadowHostActive provides (LocalMaterialShadowHostActive.current || itemShadowElevation > 0.dp)) {
     SegmentedListItem(
         selected = selected,
         onClick = onClick,
@@ -878,6 +884,7 @@ fun SegmentedListItem(
         onLongClick = onLongClick,
         content = headlineContent
     )
+    }
 }
 
 @Composable
