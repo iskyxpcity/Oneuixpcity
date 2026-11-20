@@ -76,20 +76,20 @@ fun ExpressiveToggleButton(
     val hasShadow = LocalMaterialShadowContainers.current
     val usesAlohaWaveShadow = animatedShape is WavyShape
     val shadowElevation by animateDpAsState(
-        targetValue = if (hasShadow && usesAlohaWaveShadow) 1.dp else if (hasShadow && pressExpansion.value > 0.1f) 3.dp else if (hasShadow) 2.dp else 0.dp,
+        targetValue = if (hasShadow) 1.dp else 0.dp,
         label = "toggleButtonShadow",
     )
     ToggleButton(
         checked = checked,
         onCheckedChange = { value -> haptic.performHapticFeedback(HapticFeedbackType.VirtualKey); onCheckedChange(value) },
-        modifier = if (!isGroupMember && usesAlohaWaveShadow) modifier.alohaWavyShadow(animatedShape, shadowElevation) else modifier,
+        modifier = if (usesAlohaWaveShadow) modifier.alohaWavyShadow(animatedShape, shadowElevation) else modifier,
         enabled = enabled,
         colors = colors,
         shapes = expressiveShapes,
         border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
             BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
         },
-        elevation = if (usesAlohaWaveShadow && !isGroupMember) {
+        elevation = if (usesAlohaWaveShadow) {
             // The custom 1dp Aloha wave shadow is drawn by the modifier above.
             // Keep Material's native elevation at zero to avoid a second shadow.
             ToggleButtonDefaults.elevation(
@@ -98,14 +98,14 @@ fun ExpressiveToggleButton(
             )
         } else if (isGroupMember) {
             if (hasShadow) ToggleButtonDefaults.elevation(
-                defaultElevation = 2.dp, pressedElevation = 3.dp, focusedElevation = 2.dp,
-                hoveredElevation = 2.dp, disabledElevation = 0.dp,
+                defaultElevation = 1.dp, pressedElevation = 1.dp, focusedElevation = 1.dp,
+                hoveredElevation = 1.dp, disabledElevation = 0.dp,
             ) else null
         } else ToggleButtonDefaults.elevation(
-            defaultElevation = if (hasShadow && !usesAlohaWaveShadow) 2.dp else 0.dp,
-            pressedElevation = if (hasShadow && !usesAlohaWaveShadow) 3.dp else 0.dp,
-            focusedElevation = if (hasShadow && !usesAlohaWaveShadow) 2.dp else 0.dp,
-            hoveredElevation = if (hasShadow && !usesAlohaWaveShadow) 2.dp else 0.dp,
+            defaultElevation = if (hasShadow && !usesAlohaWaveShadow) 1.dp else 0.dp,
+            pressedElevation = if (hasShadow && !usesAlohaWaveShadow) 1.dp else 0.dp,
+            focusedElevation = if (hasShadow && !usesAlohaWaveShadow) 1.dp else 0.dp,
+            hoveredElevation = if (hasShadow && !usesAlohaWaveShadow) 1.dp else 0.dp,
             disabledElevation = 0.dp,
         ),
         interactionSource = actualInteractionSource,
