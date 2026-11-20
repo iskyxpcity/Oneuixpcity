@@ -168,6 +168,7 @@ fun ExpressiveButton(
         (pressExpansion.value / 16f).coerceIn(0f, 1f)
     } else 0f
     val groupExpansionPerSide = LocalMaterialButtonGroupExpansionPerSide.current
+    val isGroupMember = groupExpansionPerSide > 0.dp
     // Only standalone controls interpolate a caller-supplied shape. Group members
     // keep the exact segmented-shape behavior used by the connected button group.
     val actualShape = if (!isGroupMember) {
@@ -176,7 +177,6 @@ fun ExpressiveButton(
     } else {
         shape ?: alohaSegmentedShape(index = shapeIndex, count = shapeCount, vertical = false, pressProgress = shapeProgress)
     }
-    val isGroupMember = groupExpansionPerSide > 0.dp
     val hasShadow = LocalMaterialShadowButtons.current && (!LocalMaterialShadowHostActive.current || isGroupMember)
     val animatedShadowElevation by animateDpAsState(
         targetValue = if (hasShadow && pressExpansion.value > 0.1f) 3.dp else if (hasShadow) 2.dp else 0.dp,
