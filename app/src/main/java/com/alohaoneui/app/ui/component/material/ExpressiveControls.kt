@@ -183,16 +183,16 @@ fun ExpressiveButton(
         label = "buttonShadow",
     )
     // Preserve the group's original elevation switching; animate only standalone buttons.
-    val shadowElevation = if (isGroupMember) {
-        if (hasShadow) if (pressExpansion.value > 0.1f) 3.dp else 2.dp else 0.dp
-    } else if (actualShape is WavyShape && hasShadow) {
+    val shadowElevation = if (actualShape is WavyShape && hasShadow) {
         1.dp
+    } else if (isGroupMember) {
+        if (hasShadow) if (pressExpansion.value > 0.1f) 3.dp else 2.dp else 0.dp
     } else animatedShadowElevation
     val haptic = LocalHapticFeedback.current
     val outlineWidth = LocalMaterialOutlineWidth.current
     Button(
         onClick = { haptic.performHapticFeedback(HapticFeedbackType.VirtualKey); onClick() },
-        modifier = modifier.alohaWavyShadow(actualShape, if (actualShape is WavyShape) shadowElevation * 0.5f else shadowElevation),
+        modifier = modifier.alohaWavyShadow(actualShape, if (actualShape is WavyShape) shadowElevation),
         enabled = enabled,
         interactionSource = actualInteractionSource,
         shape = actualShape,
