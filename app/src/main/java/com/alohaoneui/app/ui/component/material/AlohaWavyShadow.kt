@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -68,7 +69,8 @@ internal fun Modifier.alohaButtonShadow(
 ): Modifier {
     if (elevation <= 0.dp) return this
     if (shape is WavyShape) return alohaWavyShadow(shape, elevation)
-    return graphicsLayer {
+    return zIndex(1f).graphicsLayer {
+        // Match Material3 InteractiveListItem's shadow layer ordering.
         shadowElevation = elevation.toPx()
         this.shape = shape
         clip = false

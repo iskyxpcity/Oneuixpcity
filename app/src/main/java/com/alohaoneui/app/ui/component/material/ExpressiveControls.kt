@@ -240,13 +240,12 @@ fun ExpressiveTextButton(
     // Text buttons retain their own independent button-shadow setting.
     val hasShadow = LocalMaterialShadowButtons.current
     val haptic = LocalHapticFeedback.current
-    val shadowElevation by animateDpAsState(if (hasShadow) 1.dp else 0.dp, label = "textButtonShadow")
+    // Ordinary text buttons use Material3's own Surface elevation path, like
+    // SegmentedListItem. Only WavyShape uses Aloha's dedicated native path.
     val styledModifier = modifier
         .then(
             if (hasShadow && actualShape is WavyShape) {
-                Modifier.alohaButtonShadow(actualShape, shadowElevation)
-            } else if (hasShadow) {
-                Modifier.alohaButtonShadow(actualShape, shadowElevation)
+                Modifier.alohaWavyShadow(actualShape, 1.dp)
             } else Modifier
         )
         .then(
@@ -260,6 +259,15 @@ fun ExpressiveTextButton(
         enabled = enabled,
         shape = actualShape,
         colors = colors,
+        elevation = if (hasShadow && actualShape !is WavyShape) {
+            ButtonDefaults.buttonElevation(
+                defaultElevation = 1.dp,
+                pressedElevation = 1.dp,
+                focusedElevation = 1.dp,
+                hoveredElevation = 1.dp,
+                disabledElevation = 0.dp,
+            )
+        } else null,
         interactionSource = actualInteractionSource,
         content = {
             val groupExpansion = if (pressMotionEnabled) groupExpansionPerSide * shapeProgress else 0.dp
@@ -501,6 +509,52 @@ fun ExpressiveSurface(
     }
 }
 
+
+/**
+ * A filled clickable surface owned by the button-shadow preference.
+ * Use this for compact value chips; ordinary ExpressiveSurface remains owned
+ * exclusively by the container-shadow preference.
+ */
+@Composable
+fun ExpressiveButtonSurface(
+    modifier: Modifier = Modifier,
+    shape: Shape? = null,
+    color: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.surface,
+    contentColor: androidx.compose.ui.graphics.Color = androidx.compose.material3.contentColorFor(color),
+    border: BorderStroke? = null,
+    shadowElevation: androidx.compose.ui.unit.Dp? = null,
+    tonalElevation: androidx.compose.ui.unit.Dp = 0.dp,
+    onClick: (() -> Unit)? = null,
+    interactionSource: MutableInteractionSource? = null,
+    content: @Composable () -> Unit,
+) {
+    val actualShape = shape ?: alohaCornerShape(20.dp)
+    val outlineWidth = LocalMaterialOutlineWidth.current
+    val actualBorder = border ?: outlineWidth.takeIf { it > 0f }?.let {
+        BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
+    }
+    val actualElevation = if (LocalMaterialShadowButtons.current) shadowElevation ?: 1.dp else 0.dp
+    val surfaceModifier = modifier.alohaWavyShadow(actualShape, actualElevation)
+    val materialElevation = if (actualShape is WavyShape) 0.dp else actualElevation
+    if (onClick == null) {
+        androidx.compose.material3.Surface(
+            modifier = surfaceModifier, shape = actualShape, color = color, contentColor = contentColor,
+            tonalElevation = tonalElevation, shadowElevation = materialElevation, border = actualBorder,
+            content = {
+                CompositionLocalProvider(LocalMaterialShadowHostActive provides (LocalMaterialShadowHostActive.current || actualElevation > 0.dp)) { content() }
+            },
+        )
+    } else {
+        androidx.compose.material3.Surface(
+            onClick = onClick, modifier = surfaceModifier, shape = actualShape, color = color,
+            contentColor = contentColor, tonalElevation = tonalElevation,
+            shadowElevation = materialElevation, border = actualBorder,
+            interactionSource = interactionSource, content = {
+                CompositionLocalProvider(LocalMaterialShadowHostActive provides (LocalMaterialShadowHostActive.current || actualElevation > 0.dp)) { content() }
+            },
+        )
+    }
+}
 
 /** Shared Material top app bar; screens inherit Aloha theme colors unless intentionally overridden. */
 @Composable
