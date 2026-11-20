@@ -76,13 +76,13 @@ fun ExpressiveToggleButton(
     val hasShadow = LocalMaterialShadowButtons.current
     val usesAlohaWaveShadow = animatedShape is WavyShape
     val shadowElevation by animateDpAsState(
-        targetValue = if (hasShadow && pressExpansion.value > 0.1f) 3.dp else if (hasShadow) 2.dp else 0.dp,
+        targetValue = if (hasShadow && usesAlohaWaveShadow) 1.dp else if (hasShadow && pressExpansion.value > 0.1f) 3.dp else if (hasShadow) 2.dp else 0.dp,
         label = "toggleButtonShadow",
     )
     ToggleButton(
         checked = checked,
         onCheckedChange = { value -> haptic.performHapticFeedback(HapticFeedbackType.VirtualKey); onCheckedChange(value) },
-        modifier = if (!isGroupMember && usesAlohaWaveShadow) modifier.alohaWavyShadow(animatedShape, shadowElevation * 0.5f) else modifier,
+        modifier = if (!isGroupMember && usesAlohaWaveShadow) modifier.alohaWavyShadow(animatedShape, shadowElevation) else modifier,
         enabled = enabled,
         colors = colors,
         shapes = expressiveShapes,
