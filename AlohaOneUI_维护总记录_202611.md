@@ -1861,3 +1861,14 @@
 - 仅修改 Material 主题的统一按钮封装和主题中心地区按钮调用；Miuix 分支未改，按钮组识别、组内横向扩张及 Spring 参数均未改，`main` 未修改。
 - 代码提交：`5f1a9c003ff015dad12c1a5349b61aa53d1e7b70`（统一封装扩展）；`15018ab8ea9eec8de35c12e4ce703c0195628059`（主题商店地区调用切换）。
 - Build #3167（run `44522814499`）和 Build #3168（run `44522822151`）已触发；以最终 HEAD `15018ab8` 对应的 #3168 为准，等待编译、签名和产物验证。当前尚未取得设备视觉验收结果。
+
+
+### 2026-11-19：统一 Material 阴影宿主，避免容器内按钮重复投影
+
+- 用户要求统一阴影。本轮继续限定 Material 主题，不修改 Miuix，也不触碰 `main`。
+- 确认此前各控件内部的 WavyShape 与 Material 原生 elevation 已按形状分流，主要重复投影风险来自父级有阴影的 Material 容器与内部独立按钮同时承担阴影，而非简单地在每个按钮内部重复绘制。
+- 在 `Theme.kt` 新增 `LocalMaterialShadowHostActive`，作为统一的 Material 阴影宿主上下文。Material `SegmentedListItem`（普通/checked/selected 三种入口）、`ExpressiveSurface`、`TonalCard` 在自身实际承担容器阴影时向内容树提供宿主状态。
+- `ExpressiveButton`、`ExpressiveTextButton`、`ExpressiveIconButton`、`ExpressiveToggleButton` 在宿主内部抑制独立按钮自身的重复阴影；在无阴影宿主时仍遵循全局 `LocalMaterialShadowButtons` 开关。按钮组成员明确豁免宿主抑制，保留原组内阴影分支。
+- 本轮未调整按钮形状、按压/回弹 Spring、组内每侧 12dp 横向扩张、颜色、点击触觉，也未修改任何 Miuix 文件。当前修改是公共组件层的统一机制，不是页面临时补丁。
+- 源码提交：`aea70d02619182c3f2d608845c0bf15985e807c6`（宿主 Local）；`7ecfd337a64fe6853b8eafa9d4fb81618d3e5a91`（普通/文字/图标按钮及 Surface）；`a0618a3d2c579e6985734123b1d1fcc25fe87fe4`（ToggleButton）；`be0fd1532c98e050e980c86846d6d800018387b7`（SegmentedListItem）；`60c45152b741a0918a9b51e0aafe38e8e181e8eb`（TonalCard）；`c8ee3f579ddb01375c4cc82f63a9a48cc8121c51`（修正重复声明）。全部仅在 `test/single-button-motion-shadow-fix-20261119`。
+- 验证状态：源码已提交；连续提交期间自动构建互相取消，且发现并修正一处重复的组成员变量声明。最新 HEAD 为 `c8ee3f579ddb01375c4cc82f63a9a48cc8121c51`。仍需以该最终 HEAD 完成 GitHub Actions 编译、签名 APK 与包名/证书校验，再进行设备视觉验收；当前没有可交付的新 APK，也不能宣称修复已通过真机验证。
