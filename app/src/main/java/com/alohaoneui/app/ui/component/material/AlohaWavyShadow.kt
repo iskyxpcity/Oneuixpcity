@@ -4,12 +4,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.TileMode
-import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.drawPath
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.layer.CompositingStrategy
 import androidx.compose.ui.graphics.layer.GraphicsLayer
@@ -74,7 +75,7 @@ private class WavyShadowNode(
 
     private var shadowLayer: GraphicsLayer? = null
     private var previousBlurRadius = Float.NaN
-    private val shadowPaint = Paint().apply { color = Color.Black.copy(alpha = 46f / 255f) }
+    private val shadowColor = Color.Black.copy(alpha = 46f / 255f)
 
     override fun onAttach() {
         shadowLayer = requireGraphicsContext().createGraphicsLayer().apply {
@@ -97,6 +98,11 @@ private class WavyShadowNode(
             val layerWidth = ceil(size.width).toInt() + padding * 2
             val layerHeight = ceil(size.height).toInt() + padding * 2
             val outline = shape.createOutline(size, layoutDirection, this)
+            val outlinePath = when (outline) {
+                is Outline.Generic -> outline.path
+                is Outline.Rounded -> Path().apply { addRoundRect(outline.roundRect) }
+                is Outline.Rectangle -> Path().apply { addRect(outline.rect) }
+            }
 
             if (previousBlurRadius != radius) {
                 layer.renderEffect = BlurEffect(radius, radius, TileMode.Decal)
@@ -110,7 +116,7 @@ private class WavyShadowNode(
             ) {
                 drawContext.canvas.save()
                 drawContext.canvas.translate(padding.toFloat(), padding.toFloat())
-                drawOutline(outline, shadowPaint)
+                drawPath(outlinePath, shadowColor)
                 drawContext.canvas.restore()
             }
 
