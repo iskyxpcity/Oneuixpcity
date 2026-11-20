@@ -82,7 +82,7 @@ fun ExpressiveToggleButton(
     ToggleButton(
         checked = checked,
         onCheckedChange = { value -> haptic.performHapticFeedback(HapticFeedbackType.VirtualKey); onCheckedChange(value) },
-        modifier = if (!isGroupMember && usesAlohaWaveShadow) modifier.alohaWavyShadow(animatedShape, shadowElevation) else modifier,
+        modifier = if (!isGroupMember && usesAlohaWaveShadow) modifier.alohaWavyShadow(animatedShape, shadowElevation * 0.5f) else modifier,
         enabled = enabled,
         colors = colors,
         shapes = expressiveShapes,
