@@ -334,10 +334,8 @@ fun ExpressiveIconButton(
     val shadowElevation by animateDpAsState(if (hasShadow) 1.dp else 0.dp, label = "iconButtonShadow")
     val styledModifier = modifier
         .then(
-            if (hasShadow && actualShape is WavyShape) {
-                Modifier.alohaWavyShadow(actualShape, shadowElevation)
-            } else if (hasShadow) {
-                Modifier.shadow(shadowElevation, actualShape)
+            if (hasShadow) {
+                Modifier.alohaButtonShadow(actualShape, shadowElevation)
             } else Modifier
         )
         .then(
