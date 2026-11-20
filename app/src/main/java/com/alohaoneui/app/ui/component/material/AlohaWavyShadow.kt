@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.layer.CompositingStrategy
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.node.DrawModifierNode
