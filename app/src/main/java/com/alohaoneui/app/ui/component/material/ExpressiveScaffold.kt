@@ -13,12 +13,14 @@ import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowTopBars
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 import androidx.compose.ui.graphics.Color
 
 @Composable
@@ -57,7 +59,9 @@ fun ExpressiveScaffold(
                     } ?: Modifier
                 )
             Box(modifier = topBarModifier) {
-                topBar()
+                CompositionLocalProvider(LocalMaterialShadowContainers provides false) {
+                    topBar()
+                }
             }
         },
         bottomBar = bottomBar,
