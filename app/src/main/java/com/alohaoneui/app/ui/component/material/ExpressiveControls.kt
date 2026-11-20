@@ -43,7 +43,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -245,9 +244,9 @@ fun ExpressiveTextButton(
     val styledModifier = modifier
         .then(
             if (hasShadow && actualShape is WavyShape) {
-                Modifier.alohaWavyShadow(actualShape, shadowElevation)
+                Modifier.alohaButtonShadow(actualShape, shadowElevation)
             } else if (hasShadow) {
-                Modifier.shadow(shadowElevation, actualShape)
+                Modifier.alohaButtonShadow(actualShape, shadowElevation)
             } else Modifier
         )
         .then(
@@ -381,8 +380,7 @@ fun ExpressiveOutlinedTextField(
     // unfocused strokes provide the visual separation from the dialog/list surface.
     val styledModifier = modifier.then(
         if (LocalMaterialShadowButtons.current) {
-            if (actualShape is WavyShape) Modifier.alohaWavyShadow(actualShape, 2.dp)
-            else Modifier.shadow(2.dp, actualShape)
+            Modifier.alohaButtonShadow(actualShape, 2.dp)
         } else Modifier
     )
     OutlinedTextField(
@@ -431,7 +429,7 @@ fun ExpressiveOutlinedTextField(
     val actualShape = alohaCornerShape(12.dp)
     // Use the same native Material 3 outline and container hierarchy for inline editors.
     val styledModifier = modifier.then(
-        if (LocalMaterialShadowButtons.current) Modifier.shadow(2.dp, actualShape)
+        if (LocalMaterialShadowButtons.current) Modifier.alohaButtonShadow(actualShape, 2.dp)
         else Modifier
     )
     OutlinedTextField(
