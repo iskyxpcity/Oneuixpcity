@@ -177,7 +177,8 @@ fun ExpressiveButton(
     } else {
         shape ?: alohaSegmentedShape(index = shapeIndex, count = shapeCount, vertical = false, pressProgress = shapeProgress)
     }
-    val hasShadow = LocalMaterialShadowButtons.current
+    // Buttons share the same global container-shadow switch as detail surfaces.
+    val hasShadow = LocalMaterialShadowContainers.current
     val animatedShadowElevation by animateDpAsState(
         targetValue = if (hasShadow && pressExpansion.value > 0.1f) 3.dp else if (hasShadow) 2.dp else 0.dp,
         label = "buttonShadow",
@@ -241,7 +242,8 @@ fun ExpressiveTextButton(
         shape ?: alohaSegmentedShape(index = shapeIndex, count = shapeCount, vertical = false, pressProgress = shapeProgress)
     }
     val outlineWidth = LocalMaterialOutlineWidth.current
-    val hasShadow = LocalMaterialShadowButtons.current
+    // Text buttons use the shared container-shadow setting.
+    val hasShadow = LocalMaterialShadowContainers.current
     val haptic = LocalHapticFeedback.current
     val shadowElevation by animateDpAsState(if (hasShadow && actualShape is WavyShape) 1.dp else if (hasShadow && pressExpansion.value > 0.1f) 3.dp else if (hasShadow) 2.dp else 0.dp, label = "textButtonShadow")
     val styledModifier = modifier
@@ -330,7 +332,8 @@ fun ExpressiveIconButton(
             ?: alohaSegmentedShape(index = -1, count = 1, vertical = false, pressProgress = shapeProgress)
     }
     val outlineWidth = LocalMaterialOutlineWidth.current
-    val hasShadow = LocalMaterialShadowButtons.current
+    // Icon buttons use the shared container-shadow setting.
+    val hasShadow = LocalMaterialShadowContainers.current
     val haptic = LocalHapticFeedback.current
     val shadowElevation by animateDpAsState(if (hasShadow && actualShape is WavyShape) 1.dp else if (hasShadow && pressExpansion.value > 0.1f) 3.dp else if (hasShadow) 2.dp else 0.dp, label = "iconButtonShadow")
     val styledModifier = modifier
