@@ -180,15 +180,11 @@ fun ExpressiveButton(
     // Buttons share the same global container-shadow switch as detail surfaces.
     val hasShadow = LocalMaterialShadowContainers.current
     val animatedShadowElevation by animateDpAsState(
-        targetValue = if (hasShadow && pressExpansion.value > 0.1f) 3.dp else if (hasShadow) 2.dp else 0.dp,
+        targetValue = if (hasShadow) 1.dp else 0.dp,
         label = "buttonShadow",
     )
     // Preserve the group's original elevation switching; animate only standalone buttons.
-    val shadowElevation = if (actualShape is WavyShape && hasShadow) {
-        1.dp
-    } else if (isGroupMember) {
-        if (hasShadow) if (pressExpansion.value > 0.1f) 3.dp else 2.dp else 0.dp
-    } else animatedShadowElevation
+    val shadowElevation = if (hasShadow) 1.dp else 0.dp
     val haptic = LocalHapticFeedback.current
     val outlineWidth = LocalMaterialOutlineWidth.current
     Button(
@@ -199,10 +195,10 @@ fun ExpressiveButton(
         shape = actualShape,
         colors = colors,
         elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = if (hasShadow && actualShape !is WavyShape) 2.dp else 0.dp,
-            pressedElevation = if (hasShadow && actualShape !is WavyShape) 3.dp else 0.dp,
-            focusedElevation = if (hasShadow && actualShape !is WavyShape) 2.dp else 0.dp,
-            hoveredElevation = if (hasShadow && actualShape !is WavyShape) 2.dp else 0.dp,
+            defaultElevation = if (hasShadow && actualShape !is WavyShape) 1.dp else 0.dp,
+            pressedElevation = if (hasShadow && actualShape !is WavyShape) 1.dp else 0.dp,
+            focusedElevation = if (hasShadow && actualShape !is WavyShape) 1.dp else 0.dp,
+            hoveredElevation = if (hasShadow && actualShape !is WavyShape) 1.dp else 0.dp,
             disabledElevation = 0.dp,
         ),
         border = outlineWidth.takeIf { it > 0f }?.let { BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant) },
@@ -245,7 +241,7 @@ fun ExpressiveTextButton(
     // Text buttons use the shared container-shadow setting.
     val hasShadow = LocalMaterialShadowContainers.current
     val haptic = LocalHapticFeedback.current
-    val shadowElevation by animateDpAsState(if (hasShadow && actualShape is WavyShape) 1.dp else if (hasShadow && pressExpansion.value > 0.1f) 3.dp else if (hasShadow) 2.dp else 0.dp, label = "textButtonShadow")
+    val shadowElevation by animateDpAsState(if (hasShadow) 1.dp else 0.dp, label = "textButtonShadow")
     val styledModifier = modifier
         .then(
             if (hasShadow && actualShape is WavyShape) {
@@ -319,6 +315,7 @@ fun ExpressiveIconButton(
     shape: Shape? = null,
     framed: Boolean = false,
     pressMotionEnabled: Boolean = true,
+    shadowEnabled: Boolean = true,
     content: @Composable () -> Unit,
 ) {
     val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
@@ -333,9 +330,9 @@ fun ExpressiveIconButton(
     }
     val outlineWidth = LocalMaterialOutlineWidth.current
     // Icon buttons use the shared container-shadow setting.
-    val hasShadow = LocalMaterialShadowContainers.current
+    val hasShadow = shadowEnabled && LocalMaterialShadowContainers.current
     val haptic = LocalHapticFeedback.current
-    val shadowElevation by animateDpAsState(if (hasShadow && actualShape is WavyShape) 1.dp else if (hasShadow && pressExpansion.value > 0.1f) 3.dp else if (hasShadow) 2.dp else 0.dp, label = "iconButtonShadow")
+    val shadowElevation by animateDpAsState(if (hasShadow) 1.dp else 0.dp, label = "iconButtonShadow")
     val styledModifier = modifier
         .then(
             if (hasShadow && actualShape is WavyShape) {
