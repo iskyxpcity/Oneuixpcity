@@ -89,10 +89,12 @@ fun ExpressiveToggleButton(
         border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
             BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
         },
-        elevation = if (usesAlohaWaveShadow && hasShadow) {
+        elevation = if (usesAlohaWaveShadow && !isGroupMember) {
+            // The custom 1dp Aloha wave shadow is drawn by the modifier above.
+            // Keep Material's native elevation at zero to avoid a second shadow.
             ToggleButtonDefaults.elevation(
-                defaultElevation = 1.dp, pressedElevation = 1.dp, focusedElevation = 1.dp,
-                hoveredElevation = 1.dp, disabledElevation = 0.dp,
+                defaultElevation = 0.dp, pressedElevation = 0.dp, focusedElevation = 0.dp,
+                hoveredElevation = 0.dp, disabledElevation = 0.dp,
             )
         } else if (isGroupMember) {
             if (hasShadow) ToggleButtonDefaults.elevation(
