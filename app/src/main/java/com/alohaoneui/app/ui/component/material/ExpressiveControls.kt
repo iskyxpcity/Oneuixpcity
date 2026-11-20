@@ -168,7 +168,6 @@ fun ExpressiveButton(
         (pressExpansion.value / 16f).coerceIn(0f, 1f)
     } else 0f
     val groupExpansionPerSide = LocalMaterialButtonGroupExpansionPerSide.current
-    val isGroupMember = groupExpansionPerSide > 0.dp
     // Only standalone controls interpolate a caller-supplied shape. Group members
     // keep the exact segmented-shape behavior used by the connected button group.
     val actualShape = if (!isGroupMember) {
