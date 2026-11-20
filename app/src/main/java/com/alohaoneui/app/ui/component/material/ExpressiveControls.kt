@@ -192,7 +192,7 @@ fun ExpressiveButton(
     val outlineWidth = LocalMaterialOutlineWidth.current
     Button(
         onClick = { haptic.performHapticFeedback(HapticFeedbackType.VirtualKey); onClick() },
-        modifier = modifier.alohaWavyShadow(actualShape, if (actualShape is WavyShape) shadowElevation),
+        modifier = modifier.alohaWavyShadow(actualShape, shadowElevation),
         enabled = enabled,
         interactionSource = actualInteractionSource,
         shape = actualShape,
