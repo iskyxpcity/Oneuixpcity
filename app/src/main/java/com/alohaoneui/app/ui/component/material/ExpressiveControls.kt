@@ -107,17 +107,17 @@ internal val LocalMaterialButtonGroupExpansionPerSide = compositionLocalOf { 0.d
 
 /**
  * Single source of truth for every Material button-family shadow.
- * Standalone buttons inside an already-elevated surface suppress their own
- * shadow; connected group members preserve the group's established shadow.
+ * Every independent button keeps its own shadow when the button-shadow
+ * preference is enabled, even when it is placed inside a container surface.
+ * Button-group members use the same elevation so the group does not silently
+ * lose its button shadow merely because its parent already has a container shadow.
  */
 @Composable
 internal fun alohaButtonShadowElevation(
     isGroupMember: Boolean = false,
     enabled: Boolean = true,
 ): androidx.compose.ui.unit.Dp =
-    if (enabled && LocalMaterialShadowButtons.current &&
-        (!LocalMaterialShadowHostActive.current || isGroupMember)
-    ) 1.dp else 0.dp
+    if (enabled && LocalMaterialShadowButtons.current) 1.dp else 0.dp
 
 /**
  * Project-wide Material 3 Expressive button-group container.
@@ -385,7 +385,7 @@ fun ExpressiveOutlinedTextField(
     // Input frames belong to the container-shadow preference, not the button preference.
     val styledModifier = modifier.then(
         if (LocalMaterialShadowContainers.current) {
-            Modifier.alohaButtonShadow(actualShape, 2.dp)
+            Modifier.alohaContainerShadow(actualShape, 2.dp)
         } else Modifier
     )
     OutlinedTextField(
@@ -434,7 +434,7 @@ fun ExpressiveOutlinedTextField(
     val actualShape = alohaCornerShape(12.dp)
     // Inline input frames follow container shadows, independently of button shadows.
     val styledModifier = modifier.then(
-        if (LocalMaterialShadowContainers.current) Modifier.alohaButtonShadow(actualShape, 2.dp)
+        if (LocalMaterialShadowContainers.current) Modifier.alohaContainerShadow(actualShape, 2.dp)
         else Modifier
     )
     OutlinedTextField(
@@ -538,8 +538,10 @@ fun ExpressiveButtonSurface(
     val actualElevation = if (alohaButtonShadowElevation() > 0.dp) {
         (shadowElevation ?: 1.dp).coerceIn(0.dp, 1.dp)
     } else 0.dp
-    val surfaceModifier = modifier.alohaWavyShadow(actualShape, actualElevation)
-    val materialElevation = if (actualShape is WavyShape) 0.dp else actualElevation
+    // Keep the button-surface reference on the same Material3 native
+    // elevation renderer for every shape; WavyShape must not lose its shadow.
+    val surfaceModifier = modifier
+    val materialElevation = actualElevation
     if (onClick == null) {
         androidx.compose.material3.Surface(
             modifier = surfaceModifier, shape = actualShape, color = color, contentColor = contentColor,
