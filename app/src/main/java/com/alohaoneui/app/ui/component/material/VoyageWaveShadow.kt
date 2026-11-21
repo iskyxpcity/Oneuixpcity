@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
  * wgo0. The cache builder creates the outline Path and Paint once; the
  * behind-content callback only submits that Path/Paint to the Compose Canvas.
  */
+@Composable
 internal fun Modifier.voyageWavyShadow(
     shape: Shape,
     elevation: Dp,
@@ -69,12 +70,14 @@ private fun Outline.toVoyagePath(): Path = when (this) {
 private const val VOYAGE_WAVE_SHADOW_COLOR: Int = 0x2E000000
 
 /** Existing call sites retain their name while using Voyage's exact cache-draw path. */
+@Composable
 internal fun Modifier.alohaWavyShadow(
     shape: Shape,
     elevation: Dp,
 ): Modifier = voyageWavyShadow(shape, elevation)
 
 /** Ordinary shapes keep the existing Material graphics-layer shadow behavior. */
+@Composable
 internal fun Modifier.alohaButtonShadow(
     shape: Shape,
     elevation: Dp,
