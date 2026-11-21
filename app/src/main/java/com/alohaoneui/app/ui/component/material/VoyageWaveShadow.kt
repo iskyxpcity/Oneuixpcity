@@ -6,7 +6,8 @@ import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.asFrameworkPaint
+import android.graphics.Paint as AndroidPaint
+import androidx.compose.ui.graphics.asComposePaint
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.toArgb
@@ -67,6 +68,7 @@ private class VoyageWaveShadowNode(
 
     private var cachedGeometryKey: VoyageWaveGeometryKey? = null
     private var cachedPath: Path? = null
+    private var cachedNativePaint: AndroidPaint? = null
     private var cachedPaint: Paint? = null
     private var cachedElevationPx = Float.NaN
 
@@ -95,14 +97,17 @@ private class VoyageWaveShadowNode(
 
             val path = cachedPath
             if (path != null) {
-                val paint = cachedPaint ?: Paint().also { created ->
-                    created.color = Color.Transparent
-                    created.asFrameworkPaint().setFlags(7)
-                    cachedPaint = created
+                val nativePaint = cachedNativePaint ?: AndroidPaint(7).also { created ->
+                    created.color = Color.Transparent.toArgb()
+                    cachedNativePaint = created
+                    cachedPaint = created.asComposePaint()
+                }
+                val paint = cachedPaint ?: nativePaint.asComposePaint().also {
+                    cachedPaint = it
                 }
 
                 if (cachedElevationPx != elevationPx) {
-                    paint.asFrameworkPaint().setShadowLayer(
+                    nativePaint.setShadowLayer(
                         elevationPx,
                         0f,
                         elevationPx * 0.9f,
@@ -124,6 +129,7 @@ private class VoyageWaveShadowNode(
     override fun onDetach() {
         cachedGeometryKey = null
         cachedPath = null
+        cachedNativePaint = null
         cachedPaint = null
         cachedElevationPx = Float.NaN
     }
