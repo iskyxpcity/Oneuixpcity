@@ -16,17 +16,6 @@ import kotlin.math.min
 import kotlin.math.sin
 
 /**
- * Immutable geometry identity shared with the retained Voyage wave-shadow node.
- */
-internal data class WavyShapeGeometryKey(
-    val density: Float,
-    val topStart: CornerSize,
-    val topEnd: CornerSize,
-    val bottomEnd: CornerSize,
-    val bottomStart: CornerSize,
-)
-
-/**
  * Voyage-compatible perimeter wave shape.
  *
  * The wave is evaluated against one continuous rounded-rectangle perimeter:
@@ -62,14 +51,6 @@ internal class WavyShape private constructor(
         bottomStart: CornerSize,
     ): CornerBasedShape = WavyShape(
         density, topStart, topEnd, bottomEnd, bottomStart,
-    )
-
-    internal val shadowGeometryKey = WavyShapeGeometryKey(
-        density = density,
-        topStart = topStart,
-        topEnd = topEnd,
-        bottomEnd = bottomEnd,
-        bottomStart = bottomStart,
     )
 
     // Match Voyage's per-Shape single-entry Outline cache. The original
