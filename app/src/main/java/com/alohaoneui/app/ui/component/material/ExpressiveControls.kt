@@ -346,14 +346,15 @@ fun ExpressiveIconButton(
     val hasShadow = shadowElevationTarget > 0.dp
     val haptic = LocalHapticFeedback.current
     val shadowElevation by animateDpAsState(shadowElevationTarget, label = "iconButtonShadow")
+    // Keep the shadow layer outside the content clip so the outline is not cut off.
     val styledModifier = modifier
+        .then(if (hasShadow) Modifier.alohaButtonShadow(actualShape, shadowElevation) else Modifier)
         .then(
             if (framed && outlineWidth > 0f) {
                 Modifier.border(outlineWidth.dp, MaterialTheme.colorScheme.outlineVariant, actualShape)
             } else Modifier
         )
         .clip(actualShape)
-        .then(if (hasShadow) Modifier.alohaButtonShadow(actualShape, shadowElevation) else Modifier)
     IconButton(
         onClick = { haptic.performHapticFeedback(HapticFeedbackType.VirtualKey); onClick() },
         modifier = styledModifier,
