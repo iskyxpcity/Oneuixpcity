@@ -177,7 +177,7 @@ fun ExpressiveButton(
         shape ?: alohaSegmentedShape(index = shapeIndex, count = shapeCount, vertical = false, pressProgress = shapeProgress)
     }
     // Buttons retain their own independent button-shadow setting.
-    val hasShadow = LocalMaterialShadowButtons.current
+    val hasShadow = LocalMaterialShadowButtons.current && !LocalMaterialShadowHostActive.current
     val animatedShadowElevation by animateDpAsState(
         targetValue = if (hasShadow) 1.dp else 0.dp,
         label = "buttonShadow",
@@ -238,7 +238,7 @@ fun ExpressiveTextButton(
     }
     val outlineWidth = LocalMaterialOutlineWidth.current
     // Text buttons retain their own independent button-shadow setting.
-    val hasShadow = LocalMaterialShadowButtons.current
+    val hasShadow = LocalMaterialShadowButtons.current && !LocalMaterialShadowHostActive.current
     val haptic = LocalHapticFeedback.current
     // Ordinary text buttons use Material3's own Surface elevation path, like
     // SegmentedListItem. Only WavyShape uses Aloha's dedicated native path.
