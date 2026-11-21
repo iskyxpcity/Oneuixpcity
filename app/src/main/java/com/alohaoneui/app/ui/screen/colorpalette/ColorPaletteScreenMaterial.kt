@@ -127,7 +127,6 @@ import com.alohaoneui.app.ui.component.material.alohaCornerShape
 import com.alohaoneui.app.ui.component.material.iconShapeForStyle
 import com.alohaoneui.app.ui.theme.ColorMode
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
-import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowSliders
 import com.alohaoneui.app.ui.theme.rememberAlohaOneUIColorScheme
 import com.alohaoneui.app.ui.theme.keyColorOptions
@@ -465,7 +464,6 @@ fun ColorPaletteScreenMaterial(
                                         shape = alohaCornerShape(12.dp),
                                         color = MaterialTheme.colorScheme.primaryContainer,
                                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        shadowElevation = if (LocalMaterialShadowButtons.current) 2.dp else 0.dp,
                                         border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
                                             BorderStroke(it.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f))
                                         },
@@ -644,7 +642,6 @@ fun ColorPaletteScreenMaterial(
                                         shape = alohaCornerShape(12.dp),
                                         color = MaterialTheme.colorScheme.primaryContainer,
                                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        shadowElevation = if (LocalMaterialShadowButtons.current) 2.dp else 0.dp,
                                         border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
                                             BorderStroke(it.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f))
                                         },
@@ -855,7 +852,6 @@ fun ColorPaletteScreenMaterial(
                                         shape = alohaCornerShape(12.dp),
                                         color = MaterialTheme.colorScheme.primaryContainer,
                                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        shadowElevation = if (LocalMaterialShadowButtons.current) 2.dp else 0.dp,
                                         border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
                                             BorderStroke(it.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f))
                                         },
@@ -1232,9 +1228,6 @@ private fun ColorButtonMaterial(
         interactionSource = interactionSource,
         shape = alohaCornerShape(20.dp),
         color = colorScheme.surfaceContainer,
-        shadowElevation = if (LocalMaterialShadowButtons.current) {
-            if (isSelected) 2.dp else 1.dp
-        } else 0.dp,
         modifier = Modifier
             .size(72.dp)
             .then(
