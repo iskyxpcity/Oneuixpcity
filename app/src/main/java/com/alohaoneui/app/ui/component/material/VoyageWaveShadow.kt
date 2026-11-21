@@ -1,7 +1,9 @@
 package com.alohaoneui.app.ui.component.material
 
 import android.graphics.Paint as AndroidPaint
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowHostActive
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
@@ -25,6 +27,7 @@ internal fun Modifier.voyageWavyShadow(
     shape: Shape,
     elevation: Dp,
 ): Modifier {
+    if (LocalMaterialShadowHostActive.current) return this
     val waveShape = shape as? WavyShape ?: return this
     if (elevation <= 0.dp) return this
 
@@ -76,6 +79,7 @@ internal fun Modifier.alohaButtonShadow(
     shape: Shape,
     elevation: Dp,
 ): Modifier {
+    if (LocalMaterialShadowHostActive.current) return this
     if (elevation <= 0.dp) return this
     if (shape is WavyShape) return voyageWavyShadow(shape, elevation)
     return zIndex(1f).graphicsLayer {
