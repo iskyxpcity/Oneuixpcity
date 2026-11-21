@@ -54,7 +54,6 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.theme.LocalMaterialSliderStyle
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowSliders
-import com.alohaoneui.app.ui.theme.LocalMaterialShadowHostActive
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 
 /**
@@ -138,7 +137,7 @@ internal fun alohaSliderContainerModifier(
     // Fancy has no outer container: its rail itself is the complete visual surface.
     if (style == 1) return Modifier
     val containerShape = alohaCornerShape(20.dp)
-    val containerShadow = if (LocalMaterialShadowSliders.current && !LocalMaterialShadowHostActive.current) {
+    val containerShadow = if (LocalMaterialShadowSliders.current) {
         if (containerShape is WavyShape) {
             Modifier.alohaWavyShadow(containerShape, 2.dp)
         } else {
@@ -256,7 +255,7 @@ fun SegmentedSliderItem(
                             size = thumbSize,
                             activeColor = thumb,
                             inactiveColor = inactive,
-                            shadowEnabled = LocalMaterialShadowSliders.current && !LocalMaterialShadowHostActive.current,
+                            shadowEnabled = LocalMaterialShadowSliders.current,
                             interactionSource = interactionSource,
                             haloVisible = isPressed || isDragged,
                             valueFraction = valueFraction,
