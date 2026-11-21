@@ -74,7 +74,6 @@ fun ExpressiveToggleButton(
     val isGroupMember = groupExpansionPerSide > 0.dp
     val shadowElevationTarget = alohaButtonShadowElevation(isGroupMember = isGroupMember)
     val hasShadow = shadowElevationTarget > 0.dp
-    val usesAlohaWaveShadow = animatedShape is WavyShape
     val shadowElevation by animateDpAsState(
         targetValue = shadowElevationTarget,
         label = "toggleButtonShadow",
@@ -82,32 +81,20 @@ fun ExpressiveToggleButton(
     ToggleButton(
         checked = checked,
         onCheckedChange = { value -> haptic.performHapticFeedback(HapticFeedbackType.VirtualKey); onCheckedChange(value) },
-        modifier = if (usesAlohaWaveShadow) modifier.alohaWavyShadow(animatedShape, shadowElevation) else modifier,
+        modifier = modifier,
         enabled = enabled,
         colors = colors,
         shapes = expressiveShapes,
         border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
             BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
         },
-        elevation = if (usesAlohaWaveShadow) {
-            // The custom 1dp Aloha wave shadow is drawn by the modifier above.
-            // Keep Material's native elevation at zero to avoid a second shadow.
-            ToggleButtonDefaults.elevation(
-                defaultElevation = 0.dp, pressedElevation = 0.dp, focusedElevation = 0.dp,
-                hoveredElevation = 0.dp, disabledElevation = 0.dp,
-            )
-        } else if (isGroupMember) {
-            if (hasShadow) ToggleButtonDefaults.elevation(
-                defaultElevation = 1.dp, pressedElevation = 1.dp, focusedElevation = 1.dp,
-                hoveredElevation = 1.dp, disabledElevation = 0.dp,
-            ) else null
-        } else ToggleButtonDefaults.elevation(
-            defaultElevation = if (hasShadow && !usesAlohaWaveShadow) 1.dp else 0.dp,
-            pressedElevation = if (hasShadow && !usesAlohaWaveShadow) 1.dp else 0.dp,
-            focusedElevation = if (hasShadow && !usesAlohaWaveShadow) 1.dp else 0.dp,
-            hoveredElevation = if (hasShadow && !usesAlohaWaveShadow) 1.dp else 0.dp,
+        elevation = if (hasShadow) ToggleButtonDefaults.elevation(
+            defaultElevation = shadowElevation,
+            pressedElevation = shadowElevation,
+            focusedElevation = shadowElevation,
+            hoveredElevation = shadowElevation,
             disabledElevation = 0.dp,
-        ),
+        ) else null,
         interactionSource = actualInteractionSource,
         content = {
             // The group container supplies the one shared expansion limit.
