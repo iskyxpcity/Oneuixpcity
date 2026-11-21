@@ -273,7 +273,7 @@ fun SegmentedSliderItem(
                             thumbWidth = thumbSize.width,
                             activeColor = active,
                             inactiveColor = inactive,
-                            shadowEnabled = LocalMaterialShadowSliders.current && !LocalMaterialShadowHostActive.current,
+                            shadowEnabled = LocalMaterialShadowSliders.current,
                         )
                     },
                 )
