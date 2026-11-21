@@ -394,10 +394,9 @@ fun ExpressiveOutlinedTextField(
     textStyle: TextStyle? = null,
 ) {
     val actualShape = alohaCornerShape(12.dp)
-    // Keep the field as a real Material 3 outlined input: native focused and
-    // unfocused strokes provide the visual separation from the dialog/list surface.
+    // Input frames belong to the container-shadow preference, not the button preference.
     val styledModifier = modifier.then(
-        if (LocalMaterialShadowButtons.current) {
+        if (LocalMaterialShadowContainers.current) {
             Modifier.alohaButtonShadow(actualShape, 2.dp)
         } else Modifier
     )
@@ -445,9 +444,9 @@ fun ExpressiveOutlinedTextField(
     textStyle: TextStyle = MaterialTheme.typography.bodyLarge,
 ) {
     val actualShape = alohaCornerShape(12.dp)
-    // Use the same native Material 3 outline and container hierarchy for inline editors.
+    // Inline input frames follow container shadows, independently of button shadows.
     val styledModifier = modifier.then(
-        if (LocalMaterialShadowButtons.current) Modifier.alohaButtonShadow(actualShape, 2.dp)
+        if (LocalMaterialShadowContainers.current) Modifier.alohaButtonShadow(actualShape, 2.dp)
         else Modifier
     )
     OutlinedTextField(
