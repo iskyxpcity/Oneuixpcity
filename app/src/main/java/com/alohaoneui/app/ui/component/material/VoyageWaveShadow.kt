@@ -81,7 +81,9 @@ internal fun Modifier.alohaButtonShadow(
     elevation: Dp,
 ): Modifier {
     if (elevation <= 0.dp) return this
-    if (shape is WavyShape) return voyageWavyShadow(shape, elevation)
+    // Button-family shadows use the same native RenderNode path as Material3
+    // Surface. The Voyage cache-draw renderer remains available only to
+    // explicit non-button wave effects.
     return zIndex(1f).graphicsLayer {
         shadowElevation = elevation.toPx()
         this.shape = shape
