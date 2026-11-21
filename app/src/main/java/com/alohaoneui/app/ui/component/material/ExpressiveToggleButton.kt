@@ -74,7 +74,7 @@ fun ExpressiveToggleButton(
     val groupExpansionPerSide = LocalMaterialButtonGroupExpansionPerSide.current
     val isGroupMember = groupExpansionPerSide > 0.dp
     // Toggle buttons retain their own independent button-shadow setting.
-    val hasShadow = LocalMaterialShadowButtons.current && !LocalMaterialShadowHostActive.current
+    val hasShadow = LocalMaterialShadowButtons.current && (!LocalMaterialShadowHostActive.current || isGroupMember)
     val usesAlohaWaveShadow = animatedShape is WavyShape
     val shadowElevation by animateDpAsState(
         targetValue = if (hasShadow) 1.dp else 0.dp,
