@@ -12,8 +12,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
-import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
-import com.alohaoneui.app.ui.theme.LocalMaterialShadowHostActive
 import com.alohaoneui.app.ui.component.material.alohaSegmentedShape
 import com.alohaoneui.app.ui.component.material.alohaButtonShadowElevation
 import androidx.compose.material3.MaterialTheme
