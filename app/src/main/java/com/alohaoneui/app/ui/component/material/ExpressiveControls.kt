@@ -177,7 +177,7 @@ fun ExpressiveButton(
         shape ?: alohaSegmentedShape(index = shapeIndex, count = shapeCount, vertical = false, pressProgress = shapeProgress)
     }
     // Buttons retain their own independent button-shadow setting.
-    val hasShadow = LocalMaterialShadowButtons.current && !LocalMaterialShadowHostActive.current
+    val hasShadow = LocalMaterialShadowButtons.current && (!LocalMaterialShadowHostActive.current || isGroupMember)
     val animatedShadowElevation by animateDpAsState(
         targetValue = if (hasShadow) 1.dp else 0.dp,
         label = "buttonShadow",
@@ -337,7 +337,7 @@ fun ExpressiveIconButton(
     }
     val outlineWidth = LocalMaterialOutlineWidth.current
     // Icon buttons retain their own independent button-shadow setting.
-    val hasShadow = shadowEnabled && LocalMaterialShadowButtons.current && !LocalMaterialShadowHostActive.current
+    val hasShadow = shadowEnabled && LocalMaterialShadowButtons.current && (!LocalMaterialShadowHostActive.current || groupExpansionPerSide > 0.dp)
     val haptic = LocalHapticFeedback.current
     val shadowElevation by animateDpAsState(if (hasShadow) 1.dp else 0.dp, label = "iconButtonShadow")
     val styledModifier = modifier
