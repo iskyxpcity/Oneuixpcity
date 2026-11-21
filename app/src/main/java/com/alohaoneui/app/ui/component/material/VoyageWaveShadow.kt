@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asComposePaint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -77,7 +78,7 @@ internal fun Modifier.alohaButtonShadow(
 ): Modifier {
     if (elevation <= 0.dp) return this
     if (shape is WavyShape) return voyageWavyShadow(shape, elevation)
-    return androidx.compose.ui.zIndex(1f).graphicsLayer {
+    return zIndex(1f).graphicsLayer {
         shadowElevation = elevation.toPx()
         this.shape = shape
         clip = false
