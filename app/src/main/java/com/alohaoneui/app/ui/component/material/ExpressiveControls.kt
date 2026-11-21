@@ -533,7 +533,7 @@ fun ExpressiveButtonSurface(
     val actualBorder = border ?: outlineWidth.takeIf { it > 0f }?.let {
         BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
     }
-    val actualElevation = if (LocalMaterialShadowButtons.current) shadowElevation ?: 1.dp else 0.dp
+    val actualElevation = if (LocalMaterialShadowButtons.current && !LocalMaterialShadowHostActive.current) shadowElevation ?: 1.dp else 0.dp
     val surfaceModifier = modifier.alohaWavyShadow(actualShape, actualElevation)
     val materialElevation = if (actualShape is WavyShape) 0.dp else actualElevation
     if (onClick == null) {
