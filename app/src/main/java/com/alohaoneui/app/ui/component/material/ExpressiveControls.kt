@@ -196,16 +196,16 @@ fun ExpressiveButton(
     val outlineWidth = LocalMaterialOutlineWidth.current
     Button(
         onClick = { haptic.performHapticFeedback(HapticFeedbackType.VirtualKey); onClick() },
-        modifier = modifier.alohaWavyShadow(actualShape, shadowElevation),
+        modifier = modifier,
         enabled = enabled,
         interactionSource = actualInteractionSource,
         shape = actualShape,
         colors = colors,
         elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = if (hasShadow && actualShape !is WavyShape) 1.dp else 0.dp,
-            pressedElevation = if (hasShadow && actualShape !is WavyShape) 1.dp else 0.dp,
-            focusedElevation = if (hasShadow && actualShape !is WavyShape) 1.dp else 0.dp,
-            hoveredElevation = if (hasShadow && actualShape !is WavyShape) 1.dp else 0.dp,
+            defaultElevation = shadowElevation,
+            pressedElevation = shadowElevation,
+            focusedElevation = shadowElevation,
+            hoveredElevation = shadowElevation,
             disabledElevation = 0.dp,
         ),
         border = outlineWidth.takeIf { it > 0f }?.let { BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant) },
@@ -249,31 +249,25 @@ fun ExpressiveTextButton(
     val shadowElevation = alohaButtonShadowElevation(isGroupMember = isGroupMember)
     val hasShadow = shadowElevation > 0.dp
     val haptic = LocalHapticFeedback.current
-    // Ordinary text buttons use Material3's own Surface elevation path, like
-    // SegmentedListItem. Only WavyShape uses Aloha's dedicated native path.
-    val styledModifier = modifier
-        .then(
-            if (hasShadow && actualShape is WavyShape) {
-                Modifier.alohaWavyShadow(actualShape, shadowElevation)
-            } else Modifier
-        )
-        .then(
-            outlineWidth.takeIf { it > 0f }?.let {
-                Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, actualShape)
-            } ?: Modifier
-        )
+    // Every text button uses Material3's native Surface elevation renderer,
+    // matching ExpressiveButtonSurface regardless of the selected shape.
+    val styledModifier = modifier.then(
+        outlineWidth.takeIf { it > 0f }?.let {
+            Modifier.border(it.dp, MaterialTheme.colorScheme.outlineVariant, actualShape)
+        } ?: Modifier
+    )
     TextButton(
         onClick = { haptic.performHapticFeedback(HapticFeedbackType.VirtualKey); onClick() },
         modifier = styledModifier,
         enabled = enabled,
         shape = actualShape,
         colors = colors,
-        elevation = if (hasShadow && actualShape !is WavyShape) {
+        elevation = if (hasShadow) {
             ButtonDefaults.buttonElevation(
-                defaultElevation = 1.dp,
-                pressedElevation = 1.dp,
-                focusedElevation = 1.dp,
-                hoveredElevation = 1.dp,
+                defaultElevation = shadowElevation,
+                pressedElevation = shadowElevation,
+                focusedElevation = shadowElevation,
+                hoveredElevation = shadowElevation,
                 disabledElevation = 0.dp,
             )
         } else null,
@@ -354,19 +348,12 @@ fun ExpressiveIconButton(
     val shadowElevation by animateDpAsState(shadowElevationTarget, label = "iconButtonShadow")
     val styledModifier = modifier
         .then(
-            if (hasShadow) {
-                Modifier.alohaButtonShadow(actualShape, shadowElevation)
-            } else Modifier
-        )
-        .then(
-            Modifier
-        )
-        .then(
             if (framed && outlineWidth > 0f) {
                 Modifier.border(outlineWidth.dp, MaterialTheme.colorScheme.outlineVariant, actualShape)
             } else Modifier
         )
         .clip(actualShape)
+        .then(if (hasShadow) Modifier.alohaButtonShadow(actualShape, shadowElevation) else Modifier)
     IconButton(
         onClick = { haptic.performHapticFeedback(HapticFeedbackType.VirtualKey); onClick() },
         modifier = styledModifier,
@@ -498,8 +485,10 @@ fun ExpressiveSurface(
     } else {
         0.dp
     }
-    val surfaceModifier = modifier.alohaWavyShadow(actualShape, actualElevation)
-    val materialElevation = if (actualShape is WavyShape) 0.dp else actualElevation
+    // Match the color-choice reference: Material3 Surface owns the shadow
+    // for every shape, including WavyShape. Never mix two shadow renderers.
+    val surfaceModifier = modifier
+    val materialElevation = actualElevation
     if (onClick == null) {
         androidx.compose.material3.Surface(
             modifier = surfaceModifier, shape = actualShape, color = color, contentColor = contentColor,
