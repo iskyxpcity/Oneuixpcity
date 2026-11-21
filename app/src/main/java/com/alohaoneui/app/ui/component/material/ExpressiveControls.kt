@@ -533,6 +533,7 @@ fun ExpressiveButtonSurface(
     color: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.surface,
     contentColor: androidx.compose.ui.graphics.Color = androidx.compose.material3.contentColorFor(color),
     border: BorderStroke? = null,
+    shadowElevation: androidx.compose.ui.unit.Dp? = null,
     tonalElevation: androidx.compose.ui.unit.Dp = 0.dp,
     onClick: (() -> Unit)? = null,
     interactionSource: MutableInteractionSource? = null,
@@ -543,7 +544,10 @@ fun ExpressiveButtonSurface(
     val actualBorder = border ?: outlineWidth.takeIf { it > 0f }?.let {
         BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
     }
-    val actualElevation = alohaButtonShadowElevation()
+    // Preserve the optional API override but cap it at the shared 1dp button standard.
+    val actualElevation = if (alohaButtonShadowElevation() > 0.dp) {
+        (shadowElevation ?: 1.dp).coerceIn(0.dp, 1.dp)
+    } else 0.dp
     val surfaceModifier = modifier.alohaWavyShadow(actualShape, actualElevation)
     val materialElevation = if (actualShape is WavyShape) 0.dp else actualElevation
     if (onClick == null) {
