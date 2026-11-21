@@ -106,6 +106,20 @@ private val MaterialButtonGroupExpansionPerSide = 12.dp
 internal val LocalMaterialButtonGroupExpansionPerSide = compositionLocalOf { 0.dp }
 
 /**
+ * Single source of truth for every Material button-family shadow.
+ * Standalone buttons inside an already-elevated surface suppress their own
+ * shadow; connected group members preserve the group's established shadow.
+ */
+@Composable
+internal fun alohaButtonShadowElevation(
+    isGroupMember: Boolean = false,
+    enabled: Boolean = true,
+): androidx.compose.ui.unit.Dp =
+    if (enabled && LocalMaterialShadowButtons.current &&
+        (!LocalMaterialShadowHostActive.current || isGroupMember)
+    ) 1.dp else 0.dp
+
+/**
  * Project-wide Material 3 Expressive button-group container.
  * All group members read the same per-side expansion limit from this scope.
  */
@@ -176,14 +190,8 @@ fun ExpressiveButton(
     } else {
         shape ?: alohaSegmentedShape(index = shapeIndex, count = shapeCount, vertical = false, pressProgress = shapeProgress)
     }
-    // Buttons retain their own independent button-shadow setting.
-    val hasShadow = LocalMaterialShadowButtons.current && (!LocalMaterialShadowHostActive.current || isGroupMember)
-    val animatedShadowElevation by animateDpAsState(
-        targetValue = if (hasShadow) 1.dp else 0.dp,
-        label = "buttonShadow",
-    )
-    // Preserve the group's original elevation switching; animate only standalone buttons.
-    val shadowElevation = if (hasShadow) 1.dp else 0.dp
+    val shadowElevation = alohaButtonShadowElevation(isGroupMember = isGroupMember)
+    val hasShadow = shadowElevation > 0.dp
     val haptic = LocalHapticFeedback.current
     val outlineWidth = LocalMaterialOutlineWidth.current
     Button(
@@ -237,15 +245,16 @@ fun ExpressiveTextButton(
         shape ?: alohaSegmentedShape(index = shapeIndex, count = shapeCount, vertical = false, pressProgress = shapeProgress)
     }
     val outlineWidth = LocalMaterialOutlineWidth.current
-    // Text buttons retain their own independent button-shadow setting.
-    val hasShadow = LocalMaterialShadowButtons.current && !LocalMaterialShadowHostActive.current
+    // Use the same group-aware shadow policy as filled and toggle buttons.
+    val shadowElevation = alohaButtonShadowElevation(isGroupMember = isGroupMember)
+    val hasShadow = shadowElevation > 0.dp
     val haptic = LocalHapticFeedback.current
     // Ordinary text buttons use Material3's own Surface elevation path, like
     // SegmentedListItem. Only WavyShape uses Aloha's dedicated native path.
     val styledModifier = modifier
         .then(
             if (hasShadow && actualShape is WavyShape) {
-                Modifier.alohaWavyShadow(actualShape, 1.dp)
+                Modifier.alohaWavyShadow(actualShape, shadowElevation)
             } else Modifier
         )
         .then(
@@ -336,10 +345,13 @@ fun ExpressiveIconButton(
             ?: alohaSegmentedShape(index = -1, count = 1, vertical = false, pressProgress = shapeProgress)
     }
     val outlineWidth = LocalMaterialOutlineWidth.current
-    // Icon buttons retain their own independent button-shadow setting.
-    val hasShadow = shadowEnabled && LocalMaterialShadowButtons.current && (!LocalMaterialShadowHostActive.current || groupExpansionPerSide > 0.dp)
+    val shadowElevationTarget = alohaButtonShadowElevation(
+        isGroupMember = groupExpansionPerSide > 0.dp,
+        enabled = shadowEnabled,
+    )
+    val hasShadow = shadowElevationTarget > 0.dp
     val haptic = LocalHapticFeedback.current
-    val shadowElevation by animateDpAsState(if (hasShadow) 1.dp else 0.dp, label = "iconButtonShadow")
+    val shadowElevation by animateDpAsState(shadowElevationTarget, label = "iconButtonShadow")
     val styledModifier = modifier
         .then(
             if (hasShadow) {
@@ -522,7 +534,6 @@ fun ExpressiveButtonSurface(
     color: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.surface,
     contentColor: androidx.compose.ui.graphics.Color = androidx.compose.material3.contentColorFor(color),
     border: BorderStroke? = null,
-    shadowElevation: androidx.compose.ui.unit.Dp? = null,
     tonalElevation: androidx.compose.ui.unit.Dp = 0.dp,
     onClick: (() -> Unit)? = null,
     interactionSource: MutableInteractionSource? = null,
@@ -533,7 +544,7 @@ fun ExpressiveButtonSurface(
     val actualBorder = border ?: outlineWidth.takeIf { it > 0f }?.let {
         BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
     }
-    val actualElevation = if (LocalMaterialShadowButtons.current && !LocalMaterialShadowHostActive.current) shadowElevation ?: 1.dp else 0.dp
+    val actualElevation = alohaButtonShadowElevation()
     val surfaceModifier = modifier.alohaWavyShadow(actualShape, actualElevation)
     val materialElevation = if (actualShape is WavyShape) 0.dp else actualElevation
     if (onClick == null) {
