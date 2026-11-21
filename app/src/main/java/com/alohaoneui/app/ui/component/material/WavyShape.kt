@@ -22,6 +22,14 @@ import kotlin.math.sin
  * straight edges and all four corner arcs share the same accumulated distance
  * and phase. This is intentionally not a set of independent edge scallops.
  */
+internal data class WavyShapeGeometryKey(
+    val density: Float,
+    val topStart: CornerSize,
+    val topEnd: CornerSize,
+    val bottomEnd: CornerSize,
+    val bottomStart: CornerSize,
+)
+
 internal class WavyShape private constructor(
     private val density: Float,
     topStart: CornerSize,
@@ -51,6 +59,14 @@ internal class WavyShape private constructor(
         bottomStart: CornerSize,
     ): CornerBasedShape = WavyShape(
         density, topStart, topEnd, bottomEnd, bottomStart,
+    )
+
+    internal val shadowGeometryKey = WavyShapeGeometryKey(
+        density = density,
+        topStart = topStart,
+        topEnd = topEnd,
+        bottomEnd = bottomEnd,
+        bottomStart = bottomStart,
     )
 
     // Match Voyage's per-Shape single-entry Outline cache. The original
