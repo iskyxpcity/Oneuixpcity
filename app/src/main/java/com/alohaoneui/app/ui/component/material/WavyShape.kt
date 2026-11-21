@@ -16,11 +16,7 @@ import kotlin.math.min
 import kotlin.math.sin
 
 /**
- * Voyage-compatible perimeter wave shape.
- *
- * The wave is evaluated against one continuous rounded-rectangle perimeter:
- * straight edges and all four corner arcs share the same accumulated distance
- * and phase. This is intentionally not a set of independent edge scallops.
+ * Immutable geometry identity shared with the retained Voyage wave-shadow node.
  */
 internal data class WavyShapeGeometryKey(
     val density: Float,
@@ -30,6 +26,13 @@ internal data class WavyShapeGeometryKey(
     val bottomStart: CornerSize,
 )
 
+/**
+ * Voyage-compatible perimeter wave shape.
+ *
+ * The wave is evaluated against one continuous rounded-rectangle perimeter:
+ * straight edges and all four corner arcs share the same accumulated distance
+ * and phase. This is intentionally not a set of independent edge scallops.
+ */
 internal class WavyShape private constructor(
     private val density: Float,
     topStart: CornerSize,
