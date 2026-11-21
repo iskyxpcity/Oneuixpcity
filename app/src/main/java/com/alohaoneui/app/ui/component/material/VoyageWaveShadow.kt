@@ -74,6 +74,20 @@ internal fun Modifier.alohaWavyShadow(
     elevation: Dp,
 ): Modifier = voyageWavyShadow(shape, elevation)
 
+/** Container controls use the native Material RenderNode shadow without button z-ordering. */
+@Composable
+internal fun Modifier.alohaContainerShadow(
+    shape: Shape,
+    elevation: Dp,
+): Modifier {
+    if (elevation <= 0.dp) return this
+    return graphicsLayer {
+        shadowElevation = elevation.toPx()
+        this.shape = shape
+        clip = false
+    }
+}
+
 /** Ordinary shapes keep the existing Material graphics-layer shadow behavior. */
 @Composable
 internal fun Modifier.alohaButtonShadow(
