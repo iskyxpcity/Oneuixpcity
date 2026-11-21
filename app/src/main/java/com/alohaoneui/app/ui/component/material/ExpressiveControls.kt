@@ -337,7 +337,7 @@ fun ExpressiveIconButton(
     }
     val outlineWidth = LocalMaterialOutlineWidth.current
     // Icon buttons retain their own independent button-shadow setting.
-    val hasShadow = shadowEnabled && LocalMaterialShadowButtons.current
+    val hasShadow = shadowEnabled && LocalMaterialShadowButtons.current && !LocalMaterialShadowHostActive.current
     val haptic = LocalHapticFeedback.current
     val shadowElevation by animateDpAsState(if (hasShadow) 1.dp else 0.dp, label = "iconButtonShadow")
     val styledModifier = modifier
