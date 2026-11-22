@@ -188,6 +188,8 @@ val LocalMaterialSliderStyle = staticCompositionLocalOf { 0 }
 val LocalMaterialIconShapeStyle = staticCompositionLocalOf { -1 }
 val LocalMaterialOutlineWidth = staticCompositionLocalOf { 0.0f }
 val LocalMaterialShadowContainers = staticCompositionLocalOf { true }
+/** True while content is inside a Material container that already owns a visible shadow. */
+val LocalMaterialShadowHostActive = staticCompositionLocalOf { false }
 val LocalMaterialShadowTopBars = staticCompositionLocalOf { true }
 val LocalMaterialShadowButtons = staticCompositionLocalOf { true }
 val LocalMaterialShadowFloatingButtons = staticCompositionLocalOf { true }

@@ -1816,3 +1816,59 @@
 - `ExpressiveButtonGroup` 的已定位调用点包含首页设备信息分组、状态栏三合一分类页、颜色主题页，以及功能页的移动操作文本按钮组。后三类需要分别按其控件类型和现有动画策略验证；本次针对缺失 `shapeCount` 的 ToggleButton 组修复。尚未取得本提交对应 Actions 构建结果，不能提前宣称 APK 构建通过。
 
 - 构建核验补记：修复提交 `922f0f7a` 对应 Actions Build #2983（run `42939592485`）。源码校验、编译、加载签名密钥、owner-signed APK 构建、包名/稳定证书验证及 Artifact 保存步骤均成功。Artifact `AlohaOneUI-Signed-Test-APK`（ID `13819887600`，28,690,948 bytes）已生成。注意 GitHub run 顶层 conclusion 显示 cancelled，但 `build` job 本身为 success，签名 APK 构建与包名/证书验证步骤均成功；不将顶层状态描述为全流程 success。Artifact 页面：https://github.com/iskyxpcity/Oneuixpcity/actions/runs/42939592485 。
+
+
+---
+
+## 2026-11-19：修复独立 Material 按钮形变动效与波浪阴影
+
+- 用户反馈：最近版本的独立按钮缺少按压形变动效与阴影。本轮只在测试分支处理，未修改或合并 `main`。
+- 根因一：`ExpressiveButton`、`ExpressiveTextButton`、`ExpressiveIconButton` 在页面显式传入 `CornerBasedShape` 时，直接使用静态 Shape，未把共享 Spring 按压进度传入形状圆角，导致这类独立按钮按压时没有主题形变。已新增 `AlohaPressCornerSize` 插值适配，让自定义圆角形状也随同一按压进度形变。
+- 根因二：`ExpressiveToggleButton` 没有像其他控件一样接入 `alohaWavyShadow`；波浪形状依赖专用阴影绘制时会缺少对应阴影。现已接入专用绘制器，并在 WavyShape 情况下关闭重复的 Material elevation；非波浪形状继续使用 Material elevation。
+- 普通 `ExpressiveButton` 的专用波浪阴影改为由 `animateDpAsState` 平滑驱动，避免按压阴影只在阈值处瞬间跳变。
+- 独立按钮仍只做形状形变，不增加测量宽度；按钮组扩张仍由 `LocalMaterialButtonGroupExpansionPerSide` 控制。本轮未改按钮组宽度联动，也未改按压/回弹 Spring 参数（按压 300f / 0.35，回缩 100f / 0.35），未改 Miuix。
+- 测试分支：`test/single-button-motion-shadow-fix-20261119`。源码提交：`bacf822ece05b85094fee018113fbb80e5ce0244`（修复 CornerSize API 签名）。
+- GitHub Actions Build #3164（run `44513077703`）已成功：源码校验、Kotlin 编译、owner-signed APK 构建、包名/稳定证书验证及 Artifact 保存全部成功。
+- 签名 APK Artifact：`AlohaOneUI-Signed-Test-APK`，ID `14524665551`，大小 28,705,556 bytes，SHA-256 `32a71a1fb6edaa80da1be1a6d1f8cf3da863ceb4fc5512f6783d865662595679`。构建页面：https://github.com/iskyxpcity/Oneuixpcity/actions/runs/44513077703 。
+- 当前状态：源码和签名构建已通过；仍需在设备上验证独立普通按钮、文字按钮、图标按钮、ToggleButton 的按压形变和阴影是否恢复。未合并 `main`。
+
+
+### 2026-11-19 补正：单按钮修复与按钮组隔离
+
+- 用户指出上一轮改动影响了按钮组。确认原因：单按钮自定义形状插值和阴影驱动逻辑直接落在按钮组也会调用的共用控件路径中，未先判断是否处于 `ExpressiveButtonGroup`。
+- 已在测试分支修正：以 `LocalMaterialButtonGroupExpansionPerSide > 0.dp` 识别按钮组成员。
+- 按钮组路径恢复原有行为：不再应用单按钮自定义 Shape 插值；普通按钮组恢复原先的阴影阈值切换；ToggleButton 恢复原有 modifier 和 elevation 行为；按钮组宽度扩张常量仍为 12.dp，未改按钮组横向扩张和弹簧参数。
+- 单按钮路径才应用自定义 CornerBasedShape 按压插值，以及独立 ToggleButton 的波浪阴影绘制。
+- 修正提交：`a16884ef5eb0be7f685b6095fc084cae5f16b794`。仍只在 `test/single-button-motion-shadow-fix-20261119`，未修改 `main`。
+- 本次修正需要重新通过 CI 编译和签名验证后，再交付新的测试 APK；此前 Build #3164 APK 不应作为本次修正后的测试包。
+
+
+### 2026-11-19 补充：Material 详情选项卡独立按钮入口排查
+
+- 本轮严格限定 Material 主题，不将 Miuix 纳入修复目标。
+- 对详情选项卡组件调用进行追踪，确认普通详情操作按钮集中通过 `AlohaOneUIActionButton` 进入 Material `ExpressiveButton` 共用实现；不应在每个页面重复添加独立动画代码。
+- 发现主题中心「主题商店地区」选择网格的 Material 芯片是例外：直接使用 `ExpressiveSurface(onClick)`，只有容器点击与容器阴影，没有进入单按钮的 Spring 按压形状插值和按钮阴影动画路径。
+- 已将该 Material 芯片改为 `ExpressiveButton`，保留原有选中/未选中颜色、12dp 圆角、文字排版和网格宽度；由统一单按钮组件接管按压形变及按钮阴影。仅改 Material 分支，Miuix 分支原样保留且不作为本轮目标。
+- 代码提交：`4dbc732cfbb22ec3910b397fe355518d56aa40cf`，仅在 `test/single-button-motion-shadow-fix-20261119`，未修改 `main`。
+- 对应 Actions Build #3166（run `44520152231`）已启动，当前等待编译、签名及产物验证。尚不能宣称该修复构建通过或全项目排查完成。
+
+
+### 2026-11-19 补正：主题商店地区按钮统一接入主题按钮组件
+
+- 用户指出「主题商店地区」按钮样式仍不统一，并要求对照「状态栏时间」按钮。
+- 对照确认：「状态栏时间」的确认操作使用统一封装 `AlohaOneUIActionButton`；主题商店地区此前虽然改成了底层 `ExpressiveButton`，但仍绕过项目统一封装，并自行指定按钮形状和内边距，因此仍与状态栏时间按钮的组件默认样式不一致。
+- 已将 Material 地区选择按钮改为调用 `AlohaOneUIActionButton`，不再自行指定圆角和内边距；通过封装提供的可选容器/内容颜色参数保留选中态与未选中态颜色，按钮形状、按压动效和阴影由统一 Material 按钮实现管理。同步让封装支持可选填充宽度，供地区网格按钮使用；未改变既有调用点的默认外观。
+- 仅修改 Material 主题的统一按钮封装和主题中心地区按钮调用；Miuix 分支未改，按钮组识别、组内横向扩张及 Spring 参数均未改，`main` 未修改。
+- 代码提交：`5f1a9c003ff015dad12c1a5349b61aa53d1e7b70`（统一封装扩展）；`15018ab8ea9eec8de35c12e4ce703c0195628059`（主题商店地区调用切换）。
+- Build #3167（run `44522814499`）和 Build #3168（run `44522822151`）已触发；以最终 HEAD `15018ab8` 对应的 #3168 为准，等待编译、签名和产物验证。当前尚未取得设备视觉验收结果。
+
+
+### 2026-11-19：统一 Material 阴影宿主，避免容器内按钮重复投影
+
+- 用户要求统一阴影。本轮继续限定 Material 主题，不修改 Miuix，也不触碰 `main`。
+- 确认此前各控件内部的 WavyShape 与 Material 原生 elevation 已按形状分流，主要重复投影风险来自父级有阴影的 Material 容器与内部独立按钮同时承担阴影，而非简单地在每个按钮内部重复绘制。
+- 在 `Theme.kt` 新增 `LocalMaterialShadowHostActive`，作为统一的 Material 阴影宿主上下文。Material `SegmentedListItem`（普通/checked/selected 三种入口）、`ExpressiveSurface`、`TonalCard` 在自身实际承担容器阴影时向内容树提供宿主状态。
+- `ExpressiveButton`、`ExpressiveTextButton`、`ExpressiveIconButton`、`ExpressiveToggleButton` 在宿主内部抑制独立按钮自身的重复阴影；在无阴影宿主时仍遵循全局 `LocalMaterialShadowButtons` 开关。按钮组成员明确豁免宿主抑制，保留原组内阴影分支。
+- 本轮未调整按钮形状、按压/回弹 Spring、组内每侧 12dp 横向扩张、颜色、点击触觉，也未修改任何 Miuix 文件。当前修改是公共组件层的统一机制，不是页面临时补丁。
+- 源码提交：`aea70d02619182c3f2d608845c0bf15985e807c6`（宿主 Local）；`7ecfd337a64fe6853b8eafa9d4fb81618d3e5a91`（普通/文字/图标按钮及 Surface）；`a0618a3d2c579e6985734123b1d1fcc25fe87fe4`（ToggleButton）；`be0fd1532c98e050e980c86846d6d800018387b7`（SegmentedListItem）；`60c45152b741a0918a9b51e0aafe38e8e181e8eb`（TonalCard）；`c8ee3f579ddb01375c4cc82f63a9a48cc8121c51`（修正重复声明）。全部仅在 `test/single-button-motion-shadow-fix-20261119`。
+- 验证状态：源码已提交；连续提交期间自动构建互相取消，且发现并修正一处重复的组成员变量声明。最新 HEAD 为 `c8ee3f579ddb01375c4cc82f63a9a48cc8121c51`。仍需以该最终 HEAD 完成 GitHub Actions 编译、签名 APK 与包名/证书校验，再进行设备视觉验收；当前没有可交付的新 APK，也不能宣称修复已通过真机验证。

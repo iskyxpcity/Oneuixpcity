@@ -42,6 +42,7 @@ import com.alohaoneui.common.ModuleActions
 import com.alohaoneui.common.Package
 import com.alohaoneui.common.Preference
 import com.alohaoneui.mod.ui.component.SwitchItem
+import com.alohaoneui.mod.ui.component.AlohaOneUIActionButton
 import com.alohaoneui.mod.ui.component.AlohaOneUIDetailGroup
 import com.alohaoneui.app.ui.screen.status.StatusThemeGroup
 import com.alohaoneui.app.ui.screen.status.StatusThemeChildItem
@@ -50,8 +51,6 @@ import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.basic.Switch as MiuixSwitch
 import com.alohaoneui.app.ui.component.material.ExpressiveSwitch
-import com.alohaoneui.app.ui.component.material.ExpressiveSurface
-import com.alohaoneui.app.ui.component.material.alohaCornerShape
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 
 @Composable
@@ -227,27 +226,14 @@ private fun ThemeStoreRegionChip(label: String, selected: Boolean, modifier: Mod
     when (LocalUiMode.current) {
         UiMode.Material -> {
             val scheme = MaterialTheme.colorScheme
-            ExpressiveSurface(
-                modifier = modifier,
-                shape = alohaCornerShape(12.dp),
-                color = if (selected) scheme.primary else scheme.surfaceContainerHighest,
-                contentColor = if (selected) scheme.onPrimary else scheme.onSurface,
+            AlohaOneUIActionButton(
+                text = label,
                 onClick = onClick,
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 2.dp, vertical = 10.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = label,
-                        color = if (selected) scheme.onPrimary else scheme.onSurface,
-                        fontSize = 12.sp,
-                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
-                    )
-                }
-            }
+                modifier = modifier.fillMaxWidth(),
+                fillWidth = true,
+                containerColor = if (selected) scheme.primary else scheme.surfaceContainerHighest,
+                contentColor = if (selected) scheme.onPrimary else scheme.onSurface,
+            )
         }
         UiMode.Miuix -> {
             val shape = RoundedCornerShape(12.dp)

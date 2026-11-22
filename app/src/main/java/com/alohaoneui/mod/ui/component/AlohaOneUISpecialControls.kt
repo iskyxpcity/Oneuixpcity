@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text as MaterialText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -23,6 +24,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.material.ExpressiveSwitch
@@ -171,14 +173,29 @@ fun AlohaOneUIActionButton(
     enabled: Boolean = true,
     primary: Boolean = false,
     fillWidth: Boolean = false,
+    containerColor: Color? = null,
+    contentColor: Color? = null,
 ) {
     when (LocalUiMode.current) {
         UiMode.Material -> ExpressiveButton(
             onClick = onClick,
             modifier = modifier,
             enabled = enabled,
+            colors = if (containerColor != null || contentColor != null) {
+                ButtonDefaults.buttonColors(
+                    containerColor = containerColor ?: MaterialTheme.colorScheme.primary,
+                    contentColor = contentColor ?: MaterialTheme.colorScheme.onPrimary,
+                )
+            } else {
+                ButtonDefaults.buttonColors()
+            },
         ) {
-            MaterialText(text)
+            Box(
+                modifier = if (fillWidth) Modifier.fillMaxWidth() else Modifier,
+                contentAlignment = Alignment.Center,
+            ) {
+                MaterialText(text)
+            }
         }
 
         UiMode.Miuix -> MiuixButton(

@@ -1,5 +1,6 @@
 package com.alohaoneui.app.ui.component.material
 
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.RowScope
@@ -11,8 +12,8 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
-import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
 import com.alohaoneui.app.ui.component.material.alohaSegmentedShape
+import com.alohaoneui.app.ui.component.material.alohaButtonShadowElevation
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ToggleButton
 import androidx.compose.material3.ToggleButtonColors
@@ -69,6 +70,14 @@ fun ExpressiveToggleButton(
         pressedShape = animatedShape,
         checkedShape = animatedShape,
     )
+    val groupExpansionPerSide = LocalMaterialButtonGroupExpansionPerSide.current
+    val isGroupMember = groupExpansionPerSide > 0.dp
+    val shadowElevationTarget = alohaButtonShadowElevation(isGroupMember = isGroupMember)
+    val hasShadow = shadowElevationTarget > 0.dp
+    val shadowElevation by animateDpAsState(
+        targetValue = shadowElevationTarget,
+        label = "toggleButtonShadow",
+    )
     ToggleButton(
         checked = checked,
         onCheckedChange = { value -> haptic.performHapticFeedback(HapticFeedbackType.VirtualKey); onCheckedChange(value) },
@@ -79,21 +88,18 @@ fun ExpressiveToggleButton(
         border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
             BorderStroke(it.dp, MaterialTheme.colorScheme.outlineVariant)
         },
-        elevation = if (LocalMaterialShadowButtons.current) {
-            ToggleButtonDefaults.elevation(
-                defaultElevation = 2.dp,
-                pressedElevation = 3.dp,
-                focusedElevation = 2.dp,
-                hoveredElevation = 2.dp,
-                disabledElevation = 0.dp,
-            )
-        } else null,
+        elevation = if (hasShadow) ToggleButtonDefaults.elevation(
+            defaultElevation = shadowElevation,
+            pressedElevation = shadowElevation,
+            focusedElevation = shadowElevation,
+            hoveredElevation = shadowElevation,
+            disabledElevation = 0.dp,
+        ) else null,
         interactionSource = actualInteractionSource,
         content = {
             // The group container supplies the one shared expansion limit.
             // Outside ExpressiveButtonGroup the CompositionLocal is 0.dp,
             // so standalone toggles only morph their themed shape.
-            val groupExpansionPerSide = LocalMaterialButtonGroupExpansionPerSide.current
             // Group membership comes from ExpressiveButtonGroup's scope, not
             // shapeCount: some pages rely on Material's supplied button shapes
             // and intentionally leave shapeIndex/shapeCount at their defaults.

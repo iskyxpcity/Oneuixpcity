@@ -14,7 +14,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -104,6 +103,7 @@ import com.materialkolor.dynamiccolor.ColorSpec
 import com.materialkolor.rememberDynamicColorScheme
 import com.alohaoneui.app.ui.component.material.ExpressiveLargeTopAppBar
 import com.alohaoneui.app.ui.component.material.ExpressiveSurface
+import com.alohaoneui.app.ui.component.material.ExpressiveButtonSurface
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.component.bottombar.useNavigationRail
 import com.alohaoneui.app.ui.component.material.ExpressiveToggleButton
@@ -127,7 +127,6 @@ import com.alohaoneui.app.ui.component.material.alohaCornerShape
 import com.alohaoneui.app.ui.component.material.iconShapeForStyle
 import com.alohaoneui.app.ui.theme.ColorMode
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
-import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowSliders
 import com.alohaoneui.app.ui.theme.rememberAlohaOneUIColorScheme
 import com.alohaoneui.app.ui.theme.keyColorOptions
@@ -456,7 +455,7 @@ fun ColorPaletteScreenMaterial(
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         )
                                     }
-                                    ExpressiveSurface(
+                                    ExpressiveButtonSurface(
                                         onClick = {
                                             pageScaleInput = ((sliderValue * 100).toInt()).toString()
                                             showPageScaleValueDialog = true
@@ -465,7 +464,6 @@ fun ColorPaletteScreenMaterial(
                                         shape = alohaCornerShape(12.dp),
                                         color = MaterialTheme.colorScheme.primaryContainer,
                                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        shadowElevation = if (LocalMaterialShadowButtons.current) 2.dp else 0.dp,
                                         border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
                                             BorderStroke(it.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f))
                                         },
@@ -635,7 +633,7 @@ fun ColorPaletteScreenMaterial(
                                 steps = 39,
                                 onValueChangeFinished = { actions.onSetMaterialCornerScale(cornerScale) },
                                 titleTrailingContent = {
-                                    ExpressiveSurface(
+                                    ExpressiveButtonSurface(
                                         onClick = {
                                             cornerScaleInput = String.format(java.util.Locale.ROOT, "%.2f", cornerScale)
                                             showCornerValueDialog = true
@@ -644,7 +642,6 @@ fun ColorPaletteScreenMaterial(
                                         shape = alohaCornerShape(12.dp),
                                         color = MaterialTheme.colorScheme.primaryContainer,
                                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        shadowElevation = if (LocalMaterialShadowButtons.current) 2.dp else 0.dp,
                                         border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
                                             BorderStroke(it.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f))
                                         },
@@ -846,7 +843,7 @@ fun ColorPaletteScreenMaterial(
                                 steps = 14,
                                 onValueChangeFinished = { actions.onSetMaterialOutlineWidth(outlineWidth) },
                                 titleTrailingContent = {
-                                    ExpressiveSurface(
+                                    ExpressiveButtonSurface(
                                         onClick = {
                                             outlineWidthInput = String.format(java.util.Locale.ROOT, "%.1f", outlineWidth)
                                             showOutlineValueDialog = true
@@ -855,7 +852,6 @@ fun ColorPaletteScreenMaterial(
                                         shape = alohaCornerShape(12.dp),
                                         color = MaterialTheme.colorScheme.primaryContainer,
                                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        shadowElevation = if (LocalMaterialShadowButtons.current) 2.dp else 0.dp,
                                         border = LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
                                             BorderStroke(it.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f))
                                         },
@@ -1224,7 +1220,7 @@ private fun ColorButtonMaterial(
         colorSpec = colorSpec,
     )
 
-    ExpressiveSurface(
+    ExpressiveButtonSurface(
         onClick = {
             haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
             onClick()
@@ -1234,11 +1230,6 @@ private fun ColorButtonMaterial(
         color = colorScheme.surfaceContainer,
         modifier = Modifier
             .size(72.dp)
-            .then(
-                if (LocalMaterialShadowButtons.current) {
-                    Modifier.shadow(if (isSelected) 2.dp else 1.dp, alohaCornerShape(20.dp))
-                } else Modifier
-            )
             .then(
                 LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
                     Modifier.border(it.dp, colorScheme.outlineVariant, alohaCornerShape(20.dp))

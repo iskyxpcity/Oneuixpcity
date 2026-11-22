@@ -26,6 +26,7 @@ fun TopBarBackButton(
         framed = true,
         onClick = onClick,
         interactionSource = interactionSource,
+        shadowEnabled = false,
         colors = IconButtonDefaults.iconButtonColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
             contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
