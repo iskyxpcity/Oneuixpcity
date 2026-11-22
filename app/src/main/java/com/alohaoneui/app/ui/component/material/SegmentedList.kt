@@ -760,7 +760,7 @@ fun SegmentedListItem(
             } ?: Modifier
         )
         .then(if (!enabled) Modifier.alpha(0.5f) else Modifier)
-    CompositionLocalProvider(LocalMaterialShadowHostActive provides (LocalMaterialShadowHostActive.current || itemShadowElevation > 0.dp)) {
+    CompositionLocalProvider(LocalMaterialShadowHostActive provides (LocalMaterialShadowHostActive.current || (!suppressContainerElevation && itemShadowElevation > 0.dp))) {
     SegmentedListItem(
         onClick = onClick ?: {},
         onLongClick = onLongClick,
