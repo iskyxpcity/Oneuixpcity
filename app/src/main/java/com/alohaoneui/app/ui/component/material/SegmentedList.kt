@@ -760,23 +760,44 @@ fun SegmentedListItem(
             } ?: Modifier
         )
         .then(if (!enabled) Modifier.alpha(0.5f) else Modifier)
-    CompositionLocalProvider(LocalMaterialShadowHostActive provides (LocalMaterialShadowHostActive.current || (!suppressContainerElevation && itemShadowElevation > 0.dp))) {
-    SegmentedListItem(
-        onClick = onClick ?: {},
-        onLongClick = onLongClick,
-        enabled = enabled,
-        colors = colors,
-        interactionSource = resolvedInteractionSource,
-        shapes = animatedShapes,
-        elevation = itemElevation,
-        modifier = styledModifier,
-        leadingContent = leadingContent,
-        trailingContent = trailingContent,
-        overlineContent = overlineContent,
-        supportingContent = supportingContent,
-        verticalAlignment = Alignment.CenterVertically,
-        content = headlineContent
-    )
+    if (suppressContainerElevation) {
+        // Match the original working switch-row call path exactly: leave Material3's
+        // ListItemElevation at its library default instead of forcing (0dp, 0dp).
+        // The default keeps its dragged-state layer present while idle elevation stays 0dp.
+        SegmentedListItem(
+            onClick = onClick ?: {},
+            onLongClick = onLongClick,
+            enabled = enabled,
+            colors = colors,
+            interactionSource = resolvedInteractionSource,
+            shapes = animatedShapes,
+            modifier = styledModifier,
+            leadingContent = leadingContent,
+            trailingContent = trailingContent,
+            overlineContent = overlineContent,
+            supportingContent = supportingContent,
+            verticalAlignment = Alignment.CenterVertically,
+            content = headlineContent
+        )
+    } else {
+        CompositionLocalProvider(LocalMaterialShadowHostActive provides (LocalMaterialShadowHostActive.current || itemShadowElevation > 0.dp)) {
+            SegmentedListItem(
+                onClick = onClick ?: {},
+                onLongClick = onLongClick,
+                enabled = enabled,
+                colors = colors,
+                interactionSource = resolvedInteractionSource,
+                shapes = animatedShapes,
+                elevation = itemElevation,
+                modifier = styledModifier,
+                leadingContent = leadingContent,
+                trailingContent = trailingContent,
+                overlineContent = overlineContent,
+                supportingContent = supportingContent,
+                verticalAlignment = Alignment.CenterVertically,
+                content = headlineContent
+            )
+        }
     }
 }
 
