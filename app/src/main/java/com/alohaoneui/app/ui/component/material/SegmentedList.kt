@@ -718,6 +718,7 @@ fun SegmentedListItem(
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     enabled: Boolean = true,
+    suppressContainerElevation: Boolean = false,
     colors: ListItemColors = alohaOneUISegmentedColors(),
     interactionSource: MutableInteractionSource? = null,
     headlineContent: @Composable () -> Unit,
@@ -736,8 +737,10 @@ fun SegmentedListItem(
     val itemElevation = ListItemDefaults.elevation(
         // WavyShape draws its shadow through Aloha's dedicated native Paint path.
         // Keep Material3 from drawing a second graphics-layer shadow.
-        elevation = if (usesAlohaWaveShadow) 0.dp else itemShadowElevation,
-        draggedElevation = if (usesAlohaWaveShadow) 0.dp else itemShadowElevation,
+        // A/B test: remove only the Material3 parent elevation for switch rows
+        // to verify whether that graphics layer interferes with Liquid Glass backdrop sampling.
+        elevation = if (usesAlohaWaveShadow || suppressContainerElevation) 0.dp else itemShadowElevation,
+        draggedElevation = if (usesAlohaWaveShadow || suppressContainerElevation) 0.dp else itemShadowElevation,
     )
     // Keep the optional outer shadow and outline on the exact same state shape used
     // by the Material 3 row for press/selection feedback.
@@ -908,6 +911,7 @@ fun SegmentedSwitchItem(
     val switchInteractionSource = remember { MutableInteractionSource() }
 
     SegmentedListItem(
+        suppressContainerElevation = true,
         onClick = {
             haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
             if (onRowClick != null) {
