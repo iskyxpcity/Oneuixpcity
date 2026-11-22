@@ -632,9 +632,7 @@ fun ExpressiveSwitch(
             val scaledTrackBackdrop = rememberScaledBackdrop(
                 trackBackdrop,
                 scaleX = { lerp(2f / 3f, 0.75f, glassDragAnimation.pressProgress) },
-                // Keep a non-degenerate vertical sample while idle; a zero-height backdrop collapses
-                // the sampled rail to one scanline and can flash black as the glass wash fades.
-                scaleY = { lerp(0.55f, 0.75f, glassDragAnimation.pressProgress) },
+                scaleY = { lerp(0f, 0.75f, glassDragAnimation.pressProgress) },
             )
             val glassBackdrop = if (backdrop != null) {
                 rememberCombinedBackdrop(backdrop, scaledTrackBackdrop)
