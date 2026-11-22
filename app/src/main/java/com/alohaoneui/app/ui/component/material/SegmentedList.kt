@@ -102,6 +102,7 @@ import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowHostActive
 import androidx.compose.foundation.border
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.shadow
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowButtons
 import kotlinx.coroutines.launch
 
@@ -745,7 +746,14 @@ fun SegmentedListItem(
     // Keep the optional outer shadow and outline on the exact same state shape used
     // by the Material 3 row for press/selection feedback.
     val styledModifier = modifier
-        .alohaWavyShadow(outlineShape, itemShadowElevation)
+        .then(
+            if (suppressContainerElevation && LocalMaterialShadowContainers.current) {
+                // A/B: restore the original list-row shadow path for Liquid Glass switch rows.
+                Modifier.shadow(1.dp, outlineShape)
+            } else {
+                Modifier.alohaWavyShadow(outlineShape, itemShadowElevation)
+            }
+        )
         .then(
             LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
                 Modifier.border(it.dp, colorScheme.outlineVariant, outlineShape)
