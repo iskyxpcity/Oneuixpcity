@@ -450,14 +450,16 @@ fun ExpressiveSwitch(
     } else {
         alohaCornerShape(trackCornerRadius)
     }
-    // Handle silhouette is style-specific, rather than a shared capsule.
+    // Handle silhouette is style-specific. Liquid Glass must use the same
+    // Aloha shape factory as the rest of the Material controls so all seven
+    // global shape presets and the live corner scale apply to the glass lens.
     val thumbShape = when (style) {
         0 -> RoundedCornerShape(50)
         1 -> RoundedCornerShape(36)
         2 -> RoundedCornerShape(50)
         3 -> RoundedCornerShape(7.dp)
         4 -> RoundedCornerShape(50)
-        5 -> RoundedCornerShape(50)
+        5 -> alohaCornerShape(thumbHeight / 2f)
         6 -> RoundedCornerShape(38)
         else -> RoundedCornerShape(50)
     }
