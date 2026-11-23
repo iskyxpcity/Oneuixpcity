@@ -483,7 +483,7 @@ fun ExpressiveSwitch(
         } else {
             (if (checked) checkedTrack else uncheckedTrack).copy(alpha = 0.38f)
         },
-        animationSpec = tween(durationMillis = 280, easing = EaseOut),
+        animationSpec = tween(durationMillis = 280, delayMillis = 300, easing = EaseOut),
         label = "cupertinoTrackColor",
     )
     Box(
