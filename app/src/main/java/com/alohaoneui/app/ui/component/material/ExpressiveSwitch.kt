@@ -450,17 +450,22 @@ fun ExpressiveSwitch(
     } else {
         alohaCornerShape(trackCornerRadius)
     }
-    // Handle silhouette is style-specific, rather than a shared capsule.
+    // Handle silhouette is style-specific. Liquid Glass must use the same
+    // Aloha shape factory as the rest of the Material controls so all seven
+    // global shape presets and the live corner scale apply to the glass lens.
     val thumbShape = when (style) {
         0 -> RoundedCornerShape(50)
         1 -> RoundedCornerShape(36)
         2 -> RoundedCornerShape(50)
         3 -> RoundedCornerShape(7.dp)
         4 -> RoundedCornerShape(50)
-        5 -> RoundedCornerShape(50)
+        5 -> alohaCornerShape(thumbHeight / 2f)
         6 -> RoundedCornerShape(38)
         else -> RoundedCornerShape(50)
     }
+    // Keep the backdrop draw node pointed at the latest theme shape even when
+    // its modifier node is retained across recompositions.
+    val latestThumbShape by rememberUpdatedState(thumbShape)
     val haloShape = RoundedCornerShape(50)
     val globalTrackOutlineWidth = LocalMaterialOutlineWidth.current
     // Shared by the Canvas thumb and the Liquid Glass fallback layer.
@@ -653,7 +658,7 @@ fun ExpressiveSwitch(
                     .then(if (enabled && onCheckedChange != null) glassDragAnimation.modifier else Modifier)
                     .drawBackdrop(
                         backdrop = glassBackdrop,
-                        shape = { thumbShape },
+                        shape = { latestThumbShape },
                         effects = {
                             val progress = glassDragAnimation.pressProgress
                             blur(8.dp.toPx() * (1f - progress))
@@ -683,7 +688,7 @@ fun ExpressiveSwitch(
                             scaleY *= 1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f)
                         },
                     )
-                    .innerShadow(shape = thumbShape) {
+                    .innerShadow(shape = latestThumbShape) {
                         InnerShadow(
                             radius = 4.dp * glassInteraction,
                             color = Color.Black.copy(alpha = 0.15f),
