@@ -197,10 +197,30 @@ fun ExpressiveSwitch(
         return
     }
 
-    // Compose style uses Aloha's shared switch renderer rather than bypassing
-    // the project theme with the stock Material 2 widget. Its Compose-specific
-    // dimensions, palette and motion remain selected below, while track and
-    // thumb geometry are rendered through Aloha's theme-aware shape pipeline.
+    // Compose is a separate implementation with its own interaction/drag
+    // state. It follows the Material You switch's visual specification while
+    // adding the Compose-only checked thumb mark.
+    if (style == 1) {
+        val composeTrackShape = MaterialTheme.shapes.large
+        val composeThumbShape = MaterialTheme.shapes.medium
+        AlohaComposeSwitch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            modifier = modifier.then(
+                if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, composeTrackShape)
+                else Modifier,
+            ),
+            thumbContent = thumbContent,
+            enabled = enabled,
+            colors = colors,
+            thumbShape = composeThumbShape,
+            trackShape = composeTrackShape,
+            interactionSource = interactionSource,
+            showThumbIcon = showThumbIcon,
+        )
+        return
+    }
+
     val pressed by interactionSource.collectIsPressedAsState()
     val hovered by interactionSource.collectIsHoveredAsState()
     val focused by interactionSource.collectIsFocusedAsState()
@@ -576,27 +596,7 @@ fun ExpressiveSwitch(
                     drawAlohaOutline(thumbOutline, thumbColor.copy(alpha = 1f - glassInteraction))
                 }
             }
-            // Compose keeps its own checkmark treatment. Material You (style 0)
-            // is rendered by AlohaMaterialYouSwitch above and is never affected.
-            if (style == 1 && checked && showThumbIcon && thumbContent == null) {
-                val iconColor = if (enabled) colors.checkedIconColor else colors.disabledCheckedIconColor
-                val iconSize = minOf(thumbWidthPx, thumbHeightPx) * 0.56f
-                val strokeWidth = 1.8.dp.toPx()
-                val start = Offset(
-                    x = cx - iconSize * 0.42f,
-                    y = cy + iconSize * 0.02f,
-                )
-                val joint = Offset(
-                    x = cx - iconSize * 0.08f,
-                    y = cy + iconSize * 0.34f,
-                )
-                val end = Offset(
-                    x = cx + iconSize * 0.44f,
-                    y = cy - iconSize * 0.34f,
-                )
-                drawLine(iconColor, start, joint, strokeWidth, cap = StrokeCap.Round)
-                drawLine(iconColor, joint, end, strokeWidth, cap = StrokeCap.Round)
-            }
+
         }
         if (style == 5) {
             val backdrop = LocalMaterialSwitchBackdrop.current
