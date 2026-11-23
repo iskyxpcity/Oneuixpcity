@@ -2,8 +2,6 @@ package com.alohaoneui.app.ui.component.material
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseOut
-import androidx.compose.animation.core.animateColorAsState
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -373,8 +371,7 @@ fun ExpressiveSwitch(
         0, 1 -> spring<Float>(dampingRatio = 0.78f, stiffness = 620f)
         2 -> androidx.compose.animation.core.tween<Float>(durationMillis = 500)
         3 -> androidx.compose.animation.core.tween<Float>(durationMillis = 600)
-        // Cupertino uses an interruptible spring for a fluid, continuous thumb glide.
-        4 -> spring<Float>(dampingRatio = 0.82f, stiffness = 700f)
+        4 -> androidx.compose.animation.core.tween<Float>(durationMillis = 300)
         5 -> spring<Float>(dampingRatio = 0.62f, stiffness = 560f)
         6 -> spring<Float>(dampingRatio = 0.75f, stiffness = 1500f)
         else -> androidx.compose.animation.core.tween<Float>(durationMillis = 250)
@@ -478,15 +475,15 @@ fun ExpressiveSwitch(
         if (checked) androidx.compose.ui.graphics.lerp(checkedThumb, scheme.primaryContainer, 0.12f)
         else androidx.compose.ui.graphics.lerp(uncheckedThumb, scheme.onSurfaceVariant, 0.10f)
     } else if (checked) checkedThumb else uncheckedThumb
-    val cupertinoThumbColor by animateColorAsState(
-        targetValue = thumbColor,
-        animationSpec = spring(dampingRatio = 1f, stiffness = 900f),
-        label = "cupertinoThumbColor",
-    )
-    val cupertinoThumbElevation by animateDpAsState(
-        targetValue = if (checked) 0.dp else 2.dp,
-        animationSpec = spring(dampingRatio = 0.9f, stiffness = 800f),
-        label = "cupertinoThumbElevation",
+    // Cupertino animates the rail color only; thumb travel keeps its original timing.
+    val cupertinoTrackColor by animateColorAsState(
+        targetValue = if (enabled) {
+            if (checked) checkedTrack else uncheckedTrack
+        } else {
+            (if (checked) checkedTrack else uncheckedTrack).copy(alpha = 0.38f)
+        },
+        animationSpec = tween(durationMillis = 280, easing = EaseOut),
+        label = "cupertinoTrackColor",
     )
     Box(
         modifier = modifier
@@ -539,7 +536,9 @@ fun ExpressiveSwitch(
             if (style == 5) return@Canvas
             val w = size.width
             val h = size.height
-            val trackColor = if (enabled) {
+            val trackColor = if (style == 4) {
+                cupertinoTrackColor
+            } else if (enabled) {
                 if (checked) checkedTrack else uncheckedTrack
             } else if (style == 0) {
                 if (checked) colors.disabledCheckedTrackColor else colors.disabledUncheckedTrackColor
@@ -625,7 +624,7 @@ fun ExpressiveSwitch(
                 if (enabled && interactionProgress > 0.001f && style != 5) {
                     drawAlohaOutline(thumbOutline, (if (checked) scheme.onPrimary else scheme.onSurfaceVariant).copy(alpha = interactionProgress * 0.10f))
                 }
-                if (style != 5 && style != 4) {
+                if (style != 5 && !(style == 4 && !checked)) {
                     drawAlohaOutline(thumbOutline, thumbColor)
                 } else if (style == 5 && glassInteraction < 0.999f) {
                     drawAlohaOutline(thumbOutline, thumbColor.copy(alpha = 1f - glassInteraction))
@@ -633,18 +632,17 @@ fun ExpressiveSwitch(
             }
 
         }
-        // Cupertino keeps one persistent thumb surface through the entire
-        // ON/OFF transition. Position, tint and OFF-state elevation animate
-        // together, avoiding a layer swap at the start of the movement.
-        if (style == 4) {
+        // Cupertino OFF thumb is rendered as its own elevated surface so its
+        // shadow follows the moving handle instead of being applied to the rail.
+        if (style == 4 && !checked) {
             val thumbTravel = trackSize.width - thumbWidth - thumbEdgeInset * 2
             Box(
                 modifier = Modifier
                     .align(Alignment.Center)
                     .offset(x = thumbTravel * displayedTravel - thumbTravel / 2f)
                     .size(width = thumbWidth, height = thumbHeight)
-                    .shadow(cupertinoThumbElevation, thumbShape)
-                    .background(cupertinoThumbColor, thumbShape),
+                    .shadow(2.dp, thumbShape)
+                    .background(thumbColor, thumbShape),
             )
         }
         if (style == 5) {
