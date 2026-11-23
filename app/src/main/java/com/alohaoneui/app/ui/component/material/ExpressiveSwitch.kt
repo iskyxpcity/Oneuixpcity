@@ -179,7 +179,12 @@ fun ExpressiveSwitch(
     // track and handle silhouettes are supplied by Aloha's active theme.
     if (style == 0) {
         val materialYouTrackShape = MaterialTheme.shapes.large
-        val materialYouThumbShape = MaterialTheme.shapes.medium
+        val materialYouThumbShape = (MaterialTheme.shapes.medium as? androidx.compose.foundation.shape.CornerBasedShape)?.copy(
+            topStart = androidx.compose.foundation.shape.CornerSize(50),
+            topEnd = androidx.compose.foundation.shape.CornerSize(50),
+            bottomEnd = androidx.compose.foundation.shape.CornerSize(50),
+            bottomStart = androidx.compose.foundation.shape.CornerSize(50),
+        ) ?: MaterialTheme.shapes.medium
         AlohaMaterialYouSwitch(
             checked = checked,
             onCheckedChange = onCheckedChange,
@@ -202,7 +207,12 @@ fun ExpressiveSwitch(
     // adding the Compose-only checked thumb mark.
     if (style == 1) {
         val composeTrackShape = MaterialTheme.shapes.large
-        val composeThumbShape = MaterialTheme.shapes.medium
+        val composeThumbShape = (MaterialTheme.shapes.medium as? androidx.compose.foundation.shape.CornerBasedShape)?.copy(
+            topStart = androidx.compose.foundation.shape.CornerSize(50),
+            topEnd = androidx.compose.foundation.shape.CornerSize(50),
+            bottomEnd = androidx.compose.foundation.shape.CornerSize(50),
+            bottomStart = androidx.compose.foundation.shape.CornerSize(50),
+        ) ?: MaterialTheme.shapes.medium
         AlohaComposeSwitch(
             checked = checked,
             onCheckedChange = onCheckedChange,
