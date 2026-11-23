@@ -479,7 +479,7 @@ fun ExpressiveSwitch(
             .then(
                 if (style == 5) {
                     Modifier.requiredSize(
-                        width = trackSize.width + 36.dp,
+                        width = trackSize.width,
                         height = maxOf(trackSize.height, 28.dp * 1.5f),
                     )
                 } else {
