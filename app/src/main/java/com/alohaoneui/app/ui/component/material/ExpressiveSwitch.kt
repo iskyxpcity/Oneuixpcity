@@ -303,7 +303,7 @@ fun ExpressiveSwitch(
         1 -> DpSize(52.dp, 32.dp)       // Compose
         2 -> DpSize(56.dp, 28.dp)       // Pixel
         3 -> DpSize(48.dp, 24.dp)       // Fluent
-        4 -> DpSize(64.dp, 28.dp)       // Cupertino
+        4 -> DpSize(52.dp, 32.dp)       // Cupertino
         5 -> DpSize(64.dp, 28.dp)       // Liquid Glass
         6 -> DpSize(50.dp, 28.5.dp)    // HyperOS
         else -> DpSize(39.dp, 22.dp)   // One UI outer touch target
@@ -608,13 +608,26 @@ fun ExpressiveSwitch(
                 if (enabled && interactionProgress > 0.001f && style != 5) {
                     drawAlohaOutline(thumbOutline, (if (checked) scheme.onPrimary else scheme.onSurfaceVariant).copy(alpha = interactionProgress * 0.10f))
                 }
-                if (style != 5) {
+                if (style != 5 && !(style == 4 && !checked)) {
                     drawAlohaOutline(thumbOutline, thumbColor)
-                } else if (glassInteraction < 0.999f) {
+                } else if (style == 5 && glassInteraction < 0.999f) {
                     drawAlohaOutline(thumbOutline, thumbColor.copy(alpha = 1f - glassInteraction))
                 }
             }
 
+        }
+        // Cupertino OFF thumb is rendered as its own elevated surface so its
+        // shadow follows the moving handle instead of being applied to the rail.
+        if (style == 4 && !checked) {
+            val thumbTravel = trackSize.width - thumbWidth - thumbEdgeInset * 2
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .offset(x = thumbTravel * displayedTravel - thumbTravel / 2f)
+                    .size(width = thumbWidth, height = thumbHeight)
+                    .shadow(2.dp, thumbShape)
+                    .background(thumbColor, thumbShape),
+            )
         }
         if (style == 5) {
             val backdrop = LocalMaterialSwitchBackdrop.current
