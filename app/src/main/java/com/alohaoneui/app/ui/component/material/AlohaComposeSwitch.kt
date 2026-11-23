@@ -151,7 +151,7 @@ fun AlohaComposeSwitch(
 
 @Composable
 @Suppress("ComposableLambdaParameterNaming", "ComposableLambdaParameterPosition")
-private fun SwitchImpl(
+private fun ComposeSwitchImpl(
     modifier: Modifier,
     onCheckedChange: ((Boolean) -> Unit)?,
     checked: Boolean,
