@@ -300,7 +300,7 @@ private fun SwitchImpl(
             .then(toggleableModifier)
             .then(dragModifier)
             .wrapContentSize(Alignment.Center)
-            .requiredSize(SwitchWidth, SwitchHeight)
+            .requiredSize(ComposeSwitchWidth, ComposeSwitchHeight)
             .border(2.dp, borderColor, trackShape)
             .background(trackColor, trackShape)
             .then(focusRingModifier)
@@ -342,16 +342,16 @@ private fun SwitchImpl(
     }
 }
 
-private data class ThumbElement(
+private data class ComposeThumbElement(
     val interactionSource: InteractionSource,
     val checked: Boolean,
     val anchoredDraggableState: AnchoredDraggableState<Boolean>,
     val animationSpec: FiniteAnimationSpec<Float>,
 ) : ModifierNodeElement<ComposeThumbNode>() {
     override fun create() =
-        ThumbNode(interactionSource, checked, anchoredDraggableState, animationSpec)
+        ComposeThumbNode(interactionSource, checked, anchoredDraggableState, animationSpec)
 
-    override fun update(node: ThumbNode) {
+    override fun update(node: ComposeThumbNode) {
         val interactionSourceChanged = node.interactionSource != interactionSource
         node.interactionSource = interactionSource
         if (interactionSourceChanged) {
@@ -374,7 +374,7 @@ private data class ThumbElement(
     }
 }
 
-private class ThumbNode(
+private class ComposeThumbNode(
     var interactionSource: InteractionSource,
     var checked: Boolean,
     var anchoredDraggableState: AnchoredDraggableState<Boolean>,
@@ -464,8 +464,8 @@ private class ThumbNode(
             initialSize = size
         }
 
-        val minCenterX = (SwitchHeight / 2f).toPx()
-        val fallbackTravel = (SwitchWidth - SwitchHeight).toPx()
+        val minCenterX = (ComposeSwitchHeight / 2f).toPx()
+        val fallbackTravel = (ComposeSwitchWidth - ComposeSwitchHeight).toPx()
 
         return layout(actualSize, actualSize) {
             val dragOffset =
@@ -487,10 +487,10 @@ private class ThumbNode(
     }
 }
 
-private val ThumbDiameter = 24.dp
-private val UncheckedThumbDiameter = 16.dp
-private val SwitchWidth = 52.dp
-private val SwitchHeight = 32.dp
+private val ComposeThumbDiameter = 24.dp
+private val ComposeUncheckedThumbDiameter = 16.dp
+private val ComposeSwitchWidth = 52.dp
+private val ComposeSwitchHeight = 32.dp
 
 
 /** Compose-style checked mark, drawn independently inside its own thumb. */
