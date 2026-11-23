@@ -241,7 +241,7 @@ fun ExpressiveSwitch(
         0 -> scheme.primary
         1 -> scheme.primaryContainer
         2 -> scheme.primary
-        3 -> scheme.secondaryContainer
+        3 -> scheme.primary
         4 -> scheme.tertiary
         5 -> scheme.primary
         6 -> scheme.secondary
@@ -251,7 +251,7 @@ fun ExpressiveSwitch(
         0 -> scheme.surfaceContainerHighest
         1 -> scheme.surfaceContainerLow
         2 -> scheme.surfaceContainer
-        3 -> scheme.surfaceContainerHigh
+        3 -> scheme.surfaceContainerHighest
         4 -> scheme.surfaceContainerHighest
         5 -> scheme.surfaceContainerHigh
         6 -> scheme.surfaceContainer
@@ -261,7 +261,7 @@ fun ExpressiveSwitch(
         0 -> scheme.onPrimary
         1 -> scheme.onPrimaryContainer
         2 -> scheme.onPrimary
-        3 -> scheme.onSecondaryContainer
+        3 -> scheme.onPrimary
         4 -> scheme.onTertiary
         5 -> scheme.onPrimary
         6 -> scheme.onSecondary
@@ -271,7 +271,7 @@ fun ExpressiveSwitch(
         0 -> scheme.outline
         1 -> scheme.onSurfaceVariant
         2 -> scheme.outline
-        3 -> scheme.onSurface
+        3 -> scheme.outline
         4 -> scheme.surface
         5 -> Color.White
         6 -> scheme.onSurfaceVariant
@@ -356,7 +356,7 @@ fun ExpressiveSwitch(
     val trackCornerRadius = when (style) {
         0, 1 -> 16.dp
         2 -> 14.dp
-        3 -> 4.dp
+        3 -> 12.dp
         4 -> 14.dp
         5 -> 14.dp
         6 -> 14.25.dp
@@ -446,11 +446,7 @@ fun ExpressiveSwitch(
     val glassInteraction = if (style == 5) glassDragAnimation.pressProgress else 0f
     val liquidGlassSwitchPillHighlight = rememberLiquidGlassSwitchHighlight(liquidGlassSwitchSpecular, extraDegrees = 90f)
     // Keep switch outlines robust for every global Aloha shape preset.
-    val trackShape = if (com.alohaoneui.app.ui.theme.LocalMaterialShapeStyle.current == 3) {
-        remember(trackCornerRadius) { RoundedCornerShape(trackCornerRadius) }
-    } else {
-        alohaCornerShape(trackCornerRadius)
-    }
+    val trackShape = alohaCornerShape(trackCornerRadius)
     // Handle silhouette is style-specific. Liquid Glass must use the same
     // Aloha shape factory as the rest of the Material controls so all seven
     // global shape presets and the live corner scale apply to the glass lens.
@@ -551,6 +547,16 @@ fun ExpressiveSwitch(
             // track treatment used by the independent Compose switch. Its ON
             // state remains borderless and all other switch families are untouched.
             if (style == 2 && !checked) {
+                drawAlohaOutline(
+                    trackOutline,
+                    uncheckedBorder.copy(alpha = if (enabled) 1f else 0.38f),
+                    style = Stroke(width = 2.dp.toPx()),
+                )
+            }
+
+            // Fluent uses the active Aloha theme outline for its OFF rail,
+            // while retaining its own compact geometry and thumb proportions.
+            if (style == 3 && !checked) {
                 drawAlohaOutline(
                     trackOutline,
                     uncheckedBorder.copy(alpha = if (enabled) 1f else 0.38f),
