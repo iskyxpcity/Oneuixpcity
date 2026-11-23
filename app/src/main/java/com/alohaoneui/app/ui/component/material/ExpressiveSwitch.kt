@@ -173,25 +173,10 @@ fun ExpressiveSwitch(
 ) {
     val style = LocalMaterialSwitchStyle.current.coerceIn(0, 7)
 
-    // Material You is rendered by the official Material 3 Switch component.
-    // This keeps its measured geometry, thumb motion, semantics and state
-    // treatment aligned with the AndroidX implementation instead of a
-    // hand-drawn approximation.
-    if (style == 0) {
-        androidx.compose.material3.Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            modifier = modifier.then(
-                if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, RoundedCornerShape(50))
-                else Modifier,
-            ),
-            thumbContent = thumbContent,
-            enabled = enabled,
-            colors = colors,
-            interactionSource = interactionSource,
-        )
-        return
-    }
+    // Material You uses the shared Aloha renderer below so its track and
+    // thumb receive the active global theme shape and corner-scale settings.
+    // Its dimensions, thumb sizing, OFF outline and interaction profile remain
+    // the Material 3 family values defined in this component.
 
     // Compose style uses the official Compose Material (Material 2) Switch.
     // It deliberately retains Material 2 proportions and color behavior;
@@ -454,7 +439,7 @@ fun ExpressiveSwitch(
     // Aloha shape factory as the rest of the Material controls so all seven
     // global shape presets and the live corner scale apply to the glass lens.
     val thumbShape = when (style) {
-        0 -> RoundedCornerShape(50)
+        0 -> alohaCornerShape(thumbHeight / 2f)
         1 -> RoundedCornerShape(36)
         2 -> RoundedCornerShape(50)
         3 -> RoundedCornerShape(7.dp)
