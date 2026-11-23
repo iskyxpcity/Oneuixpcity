@@ -196,33 +196,10 @@ fun ExpressiveSwitch(
         return
     }
 
-    // Compose style uses the official Compose Material (Material 2) Switch.
-    // It deliberately retains Material 2 proportions and color behavior;
-    // it is not a recolored Material 3 control.
-    if (style == 1) {
-        val scheme = MaterialTheme.colorScheme
-        androidx.compose.material.Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            modifier = modifier.then(
-                if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, RoundedCornerShape(50))
-                else Modifier,
-            ),
-            enabled = enabled,
-            interactionSource = interactionSource,
-            colors = androidx.compose.material.SwitchDefaults.colors(
-                checkedThumbColor = scheme.secondary,
-                checkedTrackColor = scheme.secondary.copy(alpha = 0.54f),
-                uncheckedThumbColor = scheme.outline,
-                uncheckedTrackColor = scheme.surfaceVariant,
-                disabledCheckedThumbColor = scheme.onSurface.copy(alpha = 0.38f),
-                disabledCheckedTrackColor = scheme.onSurface.copy(alpha = 0.12f),
-                disabledUncheckedThumbColor = scheme.onSurface.copy(alpha = 0.38f),
-                disabledUncheckedTrackColor = scheme.onSurface.copy(alpha = 0.12f),
-            ),
-        )
-        return
-    }
+    // Compose style uses Aloha's shared switch renderer rather than bypassing
+    // the project theme with the stock Material 2 widget. Its Compose-specific
+    // dimensions, palette and motion remain selected below, while track and
+    // thumb geometry are rendered through Aloha's theme-aware shape pipeline.
     val pressed by interactionSource.collectIsPressedAsState()
     val hovered by interactionSource.collectIsHoveredAsState()
     val focused by interactionSource.collectIsFocusedAsState()
@@ -457,14 +434,11 @@ fun ExpressiveSwitch(
     // Aloha shape factory as the rest of the Material controls so all seven
     // global shape presets and the live corner scale apply to the glass lens.
     val thumbShape = when (style) {
-        0 -> RoundedCornerShape(50)
-        1 -> RoundedCornerShape(36)
-        2 -> RoundedCornerShape(50)
-        3 -> RoundedCornerShape(7.dp)
-        4 -> RoundedCornerShape(50)
-        5 -> alohaCornerShape(thumbHeight / 2f)
-        6 -> RoundedCornerShape(38)
-        else -> RoundedCornerShape(50)
+        0, 2, 4, 7 -> RoundedCornerShape(50)
+        1, 5 -> alohaCornerShape(thumbHeight / 2f)
+        3 -> alohaCornerShape(7.dp)
+        6 -> alohaCornerShape(thumbHeight * 0.38f)
+        else -> alohaCornerShape(thumbHeight / 2f)
     }
     // Keep the backdrop draw node pointed at the latest theme shape even when
     // its modifier node is retained across recompositions.
