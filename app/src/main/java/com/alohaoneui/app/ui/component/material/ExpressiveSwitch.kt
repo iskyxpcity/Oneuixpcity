@@ -547,6 +547,16 @@ fun ExpressiveSwitch(
             if (focused && enabled) {
                 drawAlohaOutline(trackOutline, scheme.primary.copy(alpha = 0.72f), style = Stroke(width = 1.25.dp.toPx()))
             }
+            // Pixel keeps a visible perimeter while OFF, matching the outlined
+            // track treatment used by the independent Compose switch. Its ON
+            // state remains borderless and all other switch families are untouched.
+            if (style == 2 && !checked) {
+                drawAlohaOutline(
+                    trackOutline,
+                    uncheckedBorder.copy(alpha = if (enabled) 1f else 0.38f),
+                    style = Stroke(width = 2.dp.toPx()),
+                )
+            }
             // Material You (Material 3) alone uses the documented track
             // decoration: outline when OFF, transparent when ON. Other switch
             // families must not inherit this perimeter.
