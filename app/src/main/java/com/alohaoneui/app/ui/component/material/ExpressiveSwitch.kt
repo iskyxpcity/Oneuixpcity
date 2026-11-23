@@ -66,7 +66,6 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowSwitches
-import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
 import com.alohaoneui.app.ui.theme.LocalMaterialSwitchStyle
 import com.alohaoneui.app.ui.component.liquid.InnerShadow
 import com.alohaoneui.app.ui.component.liquid.innerShadow
@@ -181,10 +180,7 @@ fun ExpressiveSwitch(
         androidx.compose.material3.Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
-            modifier = modifier.then(
-                if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, RoundedCornerShape(50))
-                else Modifier,
-            ),
+            modifier = modifier,
             thumbContent = thumbContent,
             enabled = enabled,
             colors = colors,
@@ -201,10 +197,7 @@ fun ExpressiveSwitch(
         androidx.compose.material.Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
-            modifier = modifier.then(
-                if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, RoundedCornerShape(50))
-                else Modifier,
-            ),
+            modifier = modifier,
             enabled = enabled,
             interactionSource = interactionSource,
             colors = androidx.compose.material.SwitchDefaults.colors(
@@ -462,7 +455,6 @@ fun ExpressiveSwitch(
         else -> RoundedCornerShape(50)
     }
     val haloShape = RoundedCornerShape(50)
-    val globalTrackOutlineWidth = LocalMaterialOutlineWidth.current
     // Shared by the Canvas thumb and the Liquid Glass fallback layer.
     val thumbColor = if (!enabled) {
         if (checked) colors.disabledCheckedThumbColor else colors.disabledUncheckedThumbColor
@@ -545,11 +537,11 @@ fun ExpressiveSwitch(
             // Material You (Material 3) alone uses the documented track
             // decoration: outline when OFF, transparent when ON. Other switch
             // families must not inherit this perimeter.
-            if (style == 0 && !checked && globalTrackOutlineWidth > 0f) {
+            if (style == 0 && !checked) {
                 drawAlohaOutline(
                     trackOutline,
                     scheme.outline.copy(alpha = if (enabled) 1f else 0.38f),
-                    style = Stroke(width = globalTrackOutlineWidth.dp.toPx()),
+                    style = Stroke(width = 1.dp.toPx()),
                 )
             }
 
