@@ -180,6 +180,7 @@ private fun createAlohaPhQuinticCubicSpans(): FloatArray {
 private class AlohaPathShape private constructor(
     private val style: Int,
     private val densityScale: Float,
+    private val preserveSmoothSquareProfile: Boolean,
     topStart: CornerSize,
     topEnd: CornerSize,
     bottomEnd: CornerSize,
@@ -192,9 +193,11 @@ private class AlohaPathShape private constructor(
         topEnd: Dp,
         bottomEnd: Dp,
         bottomStart: Dp,
+        preserveSmoothSquareProfile: Boolean = false,
     ) : this(
         style,
         densityScale,
+        preserveSmoothSquareProfile,
         CornerSize(topStart),
         CornerSize(topEnd),
         CornerSize(bottomEnd),
@@ -206,11 +209,15 @@ private class AlohaPathShape private constructor(
         topEnd: CornerSize,
         bottomEnd: CornerSize,
         bottomStart: CornerSize,
-    ): CornerBasedShape = AlohaPathShape(style, densityScale, topStart, topEnd, bottomEnd, bottomStart)
+    ): CornerBasedShape = AlohaPathShape(
+        style, densityScale, preserveSmoothSquareProfile,
+        topStart, topEnd, bottomEnd, bottomStart,
+    )
 
     private data class OutlineKey(
         val style: Int,
         val densityScale: Float,
+        val preserveSmoothSquareProfile: Boolean,
         val width: Float,
         val height: Float,
         val direction: LayoutDirection,
@@ -234,7 +241,8 @@ private class AlohaPathShape private constructor(
         // CornerBasedShape resolves each CornerSize to pixels before calling this
         // method, so the exact pixel radii are also the complete cache identity.
         val key = OutlineKey(
-            style, densityScale, size.width, size.height, layoutDirection,
+            style, densityScale, preserveSmoothSquareProfile,
+            size.width, size.height, layoutDirection,
             topStart, topEnd, bottomEnd, bottomStart,
         )
 
@@ -245,6 +253,7 @@ private class AlohaPathShape private constructor(
         // other shape lookups while the radius slider is being dragged.
         val generated = createAlohaOutline(
             size, layoutDirection, topStart, topEnd, bottomEnd, bottomStart, densityScale,
+            preserveSmoothSquareProfile,
         )
         synchronized(outlineCache) {
             outlineCache[key]?.let { return it }
@@ -314,6 +323,7 @@ private class AlohaPathShape private constructor(
         bottomEnd: Float,
         bottomStart: Float,
         densityScale: Float,
+        preserveSmoothSquareProfile: Boolean,
     ): Outline {
         val ts = topStart.coerceIn(0f, minOf(size.width, size.height) / 2f)
         val te = topEnd.coerceIn(0f, minOf(size.width, size.height) / 2f)
@@ -334,7 +344,7 @@ private class AlohaPathShape private constructor(
         // half-extent to m5208l(). Its square branch is a true circular outline,
         // not the generic four-cubic approximation used for ordinary G² corners.
         // Preserve that degenerate case before constructing the general path.
-        if (style == 3 && w > 0f && w == h &&
+        if (!preserveSmoothSquareProfile && style == 3 && w > 0f && w == h &&
             tl == tr && tr == br && br == bl && tl * 2f == w
         ) {
             return Outline.Rounded(
@@ -422,14 +432,20 @@ private class AlohaPathShape private constructor(
 }
 
 @Composable
-fun alohaCornerShape(radius: androidx.compose.ui.unit.Dp): CornerBasedShape {
+fun alohaCornerShape(
+    radius: androidx.compose.ui.unit.Dp,
+    preserveSmoothSquareProfile: Boolean = false,
+): CornerBasedShape {
     val scaledRadius = radius * LocalMaterialCornerScale.current.coerceIn(0f, 2f)
     val style = LocalMaterialShapeStyle.current
     val densityScale = LocalDensity.current.density
     return when (style) {
         1 -> remember(style, scaledRadius) { CutCornerShape(scaledRadius) }
-        2, 3, 5, 6 -> remember(style, scaledRadius, densityScale) {
-            AlohaPathShape(style, densityScale, scaledRadius, scaledRadius, scaledRadius, scaledRadius)
+        2, 3, 5, 6 -> remember(style, scaledRadius, densityScale, preserveSmoothSquareProfile) {
+            AlohaPathShape(
+                style, densityScale, scaledRadius, scaledRadius, scaledRadius, scaledRadius,
+                preserveSmoothSquareProfile,
+            )
         }
         4 -> remember(style, scaledRadius, densityScale) {
             WavyShape(densityScale, scaledRadius, scaledRadius, scaledRadius, scaledRadius)
