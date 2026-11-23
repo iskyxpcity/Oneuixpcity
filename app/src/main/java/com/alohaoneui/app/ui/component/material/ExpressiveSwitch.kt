@@ -455,8 +455,10 @@ fun ExpressiveSwitch(
     // Aloha shape factory as the rest of the Material controls so all seven
     // global shape presets and the live corner scale apply to the glass lens.
     val thumbShape = when (style) {
-        0, 2, 4, 7 -> RoundedCornerShape(50)
-        1, 5 -> alohaCornerShape(thumbHeight / 2f)
+        // Every switch family follows the selected global Aloha shape preset.
+        // Keep each family's corner proportion, but never force a circular
+        // RoundedCornerShape that bypasses the active "Smooth" shape style.
+        0, 1, 2, 4, 5, 7 -> alohaCornerShape(thumbHeight / 2f)
         3 -> alohaCornerShape(7.dp)
         6 -> alohaCornerShape(thumbHeight * 0.38f)
         else -> alohaCornerShape(thumbHeight / 2f)
