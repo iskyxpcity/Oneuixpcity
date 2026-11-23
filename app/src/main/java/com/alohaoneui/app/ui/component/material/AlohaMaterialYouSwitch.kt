@@ -295,7 +295,7 @@ private fun SwitchImpl(
             .then(dragModifier)
             .wrapContentSize(Alignment.Center)
             .requiredSize(SwitchWidth, SwitchHeight)
-            .border(TrackOutlineWidth, borderColor, trackShape)
+            .border(2.dp, borderColor, trackShape)
             .background(trackColor, trackShape)
             .then(focusRingModifier)
     ) {
