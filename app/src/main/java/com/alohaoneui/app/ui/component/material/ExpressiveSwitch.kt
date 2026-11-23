@@ -358,7 +358,9 @@ fun ExpressiveSwitch(
         0, 1 -> 16.dp
         2 -> 14.dp
         3 -> 12.dp
-        4 -> 14.dp
+        // Cupertino's 32dp-high rail needs a true half-height radius so
+        // the "Rounded" global shape preset produces a full capsule.
+        4 -> trackSize.height / 2f
         5 -> 14.dp
         6 -> 14.25.dp
         else -> 9.25.dp
