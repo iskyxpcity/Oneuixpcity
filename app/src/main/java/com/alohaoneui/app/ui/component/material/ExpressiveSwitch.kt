@@ -173,21 +173,24 @@ fun ExpressiveSwitch(
 ) {
     val style = LocalMaterialSwitchStyle.current.coerceIn(0, 7)
 
-    // Material You is rendered by the official Material 3 Switch component.
-    // This keeps its measured geometry, thumb motion, semantics and state
-    // treatment aligned with the AndroidX implementation instead of a
-    // hand-drawn approximation.
+    // Material You keeps the AndroidX implementation and all of its original
+    // sizing, motion, colors, drag/toggle behavior and semantics. Only the
+    // track and handle silhouettes are supplied by Aloha's active theme.
     if (style == 0) {
-        androidx.compose.material3.Switch(
+        val materialYouTrackShape = MaterialTheme.shapes.large
+        val materialYouThumbShape = MaterialTheme.shapes.medium
+        AlohaMaterialYouSwitch(
             checked = checked,
             onCheckedChange = onCheckedChange,
             modifier = modifier.then(
-                if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, RoundedCornerShape(50))
+                if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, materialYouTrackShape)
                 else Modifier,
             ),
             thumbContent = thumbContent,
             enabled = enabled,
             colors = colors,
+            thumbShape = materialYouThumbShape,
+            trackShape = materialYouTrackShape,
             interactionSource = interactionSource,
         )
         return
