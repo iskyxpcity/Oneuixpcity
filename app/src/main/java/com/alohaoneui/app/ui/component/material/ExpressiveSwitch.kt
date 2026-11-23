@@ -252,7 +252,8 @@ fun ExpressiveSwitch(
         1 -> scheme.surfaceContainerLow
         2 -> scheme.surfaceContainer
         3 -> scheme.surfaceContainerHighest
-        4 -> scheme.surfaceContainerHighest
+        // Cupertino OFF rail: one tonal step darker for clearer separation.
+        4 -> scheme.surfaceContainerHigh
         5 -> scheme.surfaceContainerHigh
         6 -> scheme.surfaceContainer
         else -> scheme.surfaceContainerHigh
