@@ -575,8 +575,27 @@ fun ExpressiveSwitch(
                     drawAlohaOutline(thumbOutline, thumbColor.copy(alpha = 1f - glassInteraction))
                 }
             }
-            // Switch thumb icons/checkmarks are intentionally omitted; the
-            // thumb itself communicates the on/off state by position and color.
+            // Compose keeps its own checkmark treatment. Material You (style 0)
+            // is rendered by AlohaMaterialYouSwitch above and is never affected.
+            if (style == 1 && checked && showThumbIcon && thumbContent == null) {
+                val iconColor = if (enabled) colors.checkedIconColor else colors.disabledCheckedIconColor
+                val iconSize = minOf(thumbWidthPx, thumbHeightPx) * 0.56f
+                val strokeWidth = 1.8.dp.toPx()
+                val start = Offset(
+                    x = cx - iconSize * 0.42f,
+                    y = cy + iconSize * 0.02f,
+                )
+                val joint = Offset(
+                    x = cx - iconSize * 0.08f,
+                    y = cy + iconSize * 0.34f,
+                )
+                val end = Offset(
+                    x = cx + iconSize * 0.44f,
+                    y = cy - iconSize * 0.34f,
+                )
+                drawLine(iconColor, start, joint, strokeWidth, cap = StrokeCap.Round)
+                drawLine(iconColor, joint, end, strokeWidth, cap = StrokeCap.Round)
+            }
         }
         if (style == 5) {
             val backdrop = LocalMaterialSwitchBackdrop.current
