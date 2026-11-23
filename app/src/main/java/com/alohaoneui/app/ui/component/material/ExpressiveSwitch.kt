@@ -463,6 +463,9 @@ fun ExpressiveSwitch(
         6 -> RoundedCornerShape(38)
         else -> RoundedCornerShape(50)
     }
+    // Keep the backdrop draw node pointed at the latest theme shape even when
+    // its modifier node is retained across recompositions.
+    val latestThumbShape by rememberUpdatedState(thumbShape)
     val haloShape = RoundedCornerShape(50)
     val globalTrackOutlineWidth = LocalMaterialOutlineWidth.current
     // Shared by the Canvas thumb and the Liquid Glass fallback layer.
@@ -655,7 +658,7 @@ fun ExpressiveSwitch(
                     .then(if (enabled && onCheckedChange != null) glassDragAnimation.modifier else Modifier)
                     .drawBackdrop(
                         backdrop = glassBackdrop,
-                        shape = { thumbShape },
+                        shape = { latestThumbShape },
                         effects = {
                             val progress = glassDragAnimation.pressProgress
                             blur(8.dp.toPx() * (1f - progress))
@@ -685,7 +688,7 @@ fun ExpressiveSwitch(
                             scaleY *= 1f - (velocity * 0.25f).fastCoerceIn(-0.2f, 0.2f)
                         },
                     )
-                    .innerShadow(shape = thumbShape) {
+                    .innerShadow(shape = latestThumbShape) {
                         InnerShadow(
                             radius = 4.dp * glassInteraction,
                             color = Color.Black.copy(alpha = 0.15f),
