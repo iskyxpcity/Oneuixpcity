@@ -322,7 +322,7 @@ fun ExpressiveSwitch(
         }
         2 -> 20.dp
         3 -> if (enabled && pressedOrHovered) 17.dp else 12.dp
-        4 -> 24.dp
+        4 -> 28.dp
         5 -> 20.dp
         6 -> if (enabled && interactive) 23.dp else 20.dp
         7 -> 22.dp
@@ -332,7 +332,7 @@ fun ExpressiveSwitch(
         0, 1 -> sourceThumbDiameter
         2 -> 20.dp
         3 -> if (enabled && pressedOrHovered) 17.dp else 12.dp
-        4 -> 24.dp
+        4 -> 28.dp
         5 -> 40.dp
         6 -> if (enabled && interactive) 23.dp else 20.dp
         else -> 22.dp
@@ -341,7 +341,7 @@ fun ExpressiveSwitch(
         0, 1 -> sourceThumbDiameter
         2 -> 20.dp
         3 -> if (enabled && pressedOrHovered) 17.dp else 12.dp
-        4 -> 24.dp
+        4 -> 28.dp
         5 -> 24.dp
         6 -> if (enabled && interactive) 23.dp else 20.dp
         else -> 22.dp
