@@ -1,5 +1,6 @@
 package com.alohaoneui.app.ui.component.material
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.animateFloatAsState
@@ -252,7 +253,8 @@ fun ExpressiveSwitch(
         1 -> scheme.surfaceContainerLow
         2 -> scheme.surfaceContainer
         3 -> scheme.surfaceContainerHighest
-        4 -> scheme.surfaceContainerHighest
+        // Cupertino OFF rail: one tonal step darker for clearer separation.
+        4 -> scheme.surfaceContainerHigh
         5 -> scheme.surfaceContainerHigh
         6 -> scheme.surfaceContainer
         else -> scheme.surfaceContainerHigh
@@ -303,7 +305,7 @@ fun ExpressiveSwitch(
         1 -> DpSize(52.dp, 32.dp)       // Compose
         2 -> DpSize(56.dp, 28.dp)       // Pixel
         3 -> DpSize(48.dp, 24.dp)       // Fluent
-        4 -> DpSize(64.dp, 28.dp)       // Cupertino
+        4 -> DpSize(52.dp, 32.dp)       // Cupertino
         5 -> DpSize(64.dp, 28.dp)       // Liquid Glass
         6 -> DpSize(50.dp, 28.5.dp)    // HyperOS
         else -> DpSize(39.dp, 22.dp)   // One UI outer touch target
@@ -322,7 +324,8 @@ fun ExpressiveSwitch(
         }
         2 -> 20.dp
         3 -> if (enabled && pressedOrHovered) 17.dp else 12.dp
-        4, 5 -> 20.dp
+        4 -> 28.dp
+        5 -> 20.dp
         6 -> if (enabled && interactive) 23.dp else 20.dp
         7 -> 22.dp
         else -> 20.dp
@@ -331,7 +334,7 @@ fun ExpressiveSwitch(
         0, 1 -> sourceThumbDiameter
         2 -> 20.dp
         3 -> if (enabled && pressedOrHovered) 17.dp else 12.dp
-        4 -> 20.dp
+        4 -> 28.dp
         5 -> 40.dp
         6 -> if (enabled && interactive) 23.dp else 20.dp
         else -> 22.dp
@@ -340,7 +343,7 @@ fun ExpressiveSwitch(
         0, 1 -> sourceThumbDiameter
         2 -> 20.dp
         3 -> if (enabled && pressedOrHovered) 17.dp else 12.dp
-        4 -> 20.dp
+        4 -> 28.dp
         5 -> 24.dp
         6 -> if (enabled && interactive) 23.dp else 20.dp
         else -> 22.dp
@@ -357,7 +360,9 @@ fun ExpressiveSwitch(
         0, 1 -> 16.dp
         2 -> 14.dp
         3 -> 12.dp
-        4 -> 14.dp
+        // Cupertino's 32dp-high rail needs a true half-height radius so
+        // the "Rounded" global shape preset produces a full capsule.
+        4 -> trackSize.height / 2f
         5 -> 14.dp
         6 -> 14.25.dp
         else -> 9.25.dp
@@ -471,6 +476,16 @@ fun ExpressiveSwitch(
         if (checked) androidx.compose.ui.graphics.lerp(checkedThumb, scheme.primaryContainer, 0.12f)
         else androidx.compose.ui.graphics.lerp(uncheckedThumb, scheme.onSurfaceVariant, 0.10f)
     } else if (checked) checkedThumb else uncheckedThumb
+    // Cupertino animates the rail color only; thumb travel keeps its original timing.
+    val cupertinoTrackColor by animateColorAsState(
+        targetValue = if (enabled) {
+            if (checked) checkedTrack else uncheckedTrack
+        } else {
+            (if (checked) checkedTrack else uncheckedTrack).copy(alpha = 0.38f)
+        },
+        animationSpec = tween(durationMillis = 280, delayMillis = 300, easing = EaseOut),
+        label = "cupertinoTrackColor",
+    )
     Box(
         modifier = modifier
             // Liquid Glass uses a real foreground overlay footprint: the host
@@ -522,7 +537,9 @@ fun ExpressiveSwitch(
             if (style == 5) return@Canvas
             val w = size.width
             val h = size.height
-            val trackColor = if (enabled) {
+            val trackColor = if (style == 4) {
+                cupertinoTrackColor
+            } else if (enabled) {
                 if (checked) checkedTrack else uncheckedTrack
             } else if (style == 0) {
                 if (checked) colors.disabledCheckedTrackColor else colors.disabledUncheckedTrackColor
@@ -537,7 +554,7 @@ fun ExpressiveSwitch(
                 density = this,
             )
             drawAlohaOutline(trackOutline, trackColor)
-            if (interactionProgress > 0.001f && style != 5) {
+            if (interactionProgress > 0.001f && style != 5 && style != 4) {
                 drawAlohaOutline(trackOutline, (if (checked) scheme.onPrimary else scheme.onSurfaceVariant).copy(alpha = interactionProgress * if (pressed) 0.12f else 0.08f))
             }
             if (focused && enabled) {
@@ -608,13 +625,26 @@ fun ExpressiveSwitch(
                 if (enabled && interactionProgress > 0.001f && style != 5) {
                     drawAlohaOutline(thumbOutline, (if (checked) scheme.onPrimary else scheme.onSurfaceVariant).copy(alpha = interactionProgress * 0.10f))
                 }
-                if (style != 5) {
+                if (style != 5 && !(style == 4 && !checked)) {
                     drawAlohaOutline(thumbOutline, thumbColor)
-                } else if (glassInteraction < 0.999f) {
+                } else if (style == 5 && glassInteraction < 0.999f) {
                     drawAlohaOutline(thumbOutline, thumbColor.copy(alpha = 1f - glassInteraction))
                 }
             }
 
+        }
+        // Cupertino OFF thumb is rendered as its own elevated surface so its
+        // shadow follows the moving handle instead of being applied to the rail.
+        if (style == 4 && !checked) {
+            val thumbTravel = trackSize.width - thumbWidth - thumbEdgeInset * 2
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .offset(x = thumbTravel * displayedTravel - thumbTravel / 2f)
+                    .size(width = thumbWidth, height = thumbHeight)
+                    .shadow(2.dp, thumbShape)
+                    .background(thumbColor, thumbShape),
+            )
         }
         if (style == 5) {
             val backdrop = LocalMaterialSwitchBackdrop.current
