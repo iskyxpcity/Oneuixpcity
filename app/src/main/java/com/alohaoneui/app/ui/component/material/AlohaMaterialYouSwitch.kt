@@ -23,6 +23,8 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.LocalRippleThemeConfiguration
 import androidx.compose.material3.RippleThemeConfiguration
 import androidx.compose.material3.ripple
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.foundation.MutatePriority
