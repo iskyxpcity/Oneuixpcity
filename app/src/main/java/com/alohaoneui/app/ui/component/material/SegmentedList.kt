@@ -719,6 +719,7 @@ fun SegmentedListItem(
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     enabled: Boolean = true,
+    suppressContainerElevation: Boolean = false,
     colors: ListItemColors = alohaOneUISegmentedColors(),
     interactionSource: MutableInteractionSource? = null,
     headlineContent: @Composable () -> Unit,
@@ -731,12 +732,27 @@ fun SegmentedListItem(
     val resolvedInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
     val isPressed = resolvedInteractionSource.collectIsPressedWithMinimumDuration()
     val (animatedShapes, outlineShape) = itemShapes.animatedAlohaShapes(LocalSegmentedShapeConfig.current, isPressed)
+    // Reuse Material 3's existing item graphics layer for the container shadow.
+    val itemShadowElevation = if (LocalMaterialShadowContainers.current) 1.dp else 0.dp
+    val usesAlohaWaveShadow = outlineShape is WavyShape
+    val itemElevation = ListItemDefaults.elevation(
+        // WavyShape draws its shadow through Aloha's dedicated native Paint path.
+        // Keep Material3 from drawing a second graphics-layer shadow.
+        // A/B test: remove only the Material3 parent elevation for switch rows
+        // to verify whether that graphics layer interferes with Liquid Glass backdrop sampling.
+        elevation = if (usesAlohaWaveShadow || suppressContainerElevation) 0.dp else itemShadowElevation,
+        draggedElevation = if (usesAlohaWaveShadow || suppressContainerElevation) 0.dp else itemShadowElevation,
+    )
     // Keep the optional outer shadow and outline on the exact same state shape used
     // by the Material 3 row for press/selection feedback.
     val styledModifier = modifier
         .then(
-            if (LocalMaterialShadowContainers.current) Modifier.shadow(1.dp, outlineShape)
-            else Modifier
+            if (suppressContainerElevation && LocalMaterialShadowContainers.current) {
+                // A/B: restore the original list-row shadow path for Liquid Glass switch rows.
+                Modifier.shadow(1.dp, outlineShape)
+            } else {
+                Modifier.alohaWavyShadow(outlineShape, itemShadowElevation)
+            }
         )
         .then(
             LocalMaterialOutlineWidth.current.takeIf { it > 0f }?.let {
@@ -744,21 +760,45 @@ fun SegmentedListItem(
             } ?: Modifier
         )
         .then(if (!enabled) Modifier.alpha(0.5f) else Modifier)
-    SegmentedListItem(
-        onClick = onClick ?: {},
-        onLongClick = onLongClick,
-        enabled = enabled,
-        colors = colors,
-        interactionSource = resolvedInteractionSource,
-        shapes = animatedShapes,
-        modifier = styledModifier,
-        leadingContent = leadingContent,
-        trailingContent = trailingContent,
-        overlineContent = overlineContent,
-        supportingContent = supportingContent,
-        verticalAlignment = Alignment.CenterVertically,
-        content = headlineContent
-    )
+    if (suppressContainerElevation) {
+        // Match the original working switch-row call path exactly: leave Material3's
+        // ListItemElevation at its library default instead of forcing (0dp, 0dp).
+        // The default keeps its dragged-state layer present while idle elevation stays 0dp.
+        SegmentedListItem(
+            onClick = onClick ?: {},
+            onLongClick = onLongClick,
+            enabled = enabled,
+            colors = colors,
+            interactionSource = resolvedInteractionSource,
+            shapes = animatedShapes,
+            modifier = styledModifier,
+            leadingContent = leadingContent,
+            trailingContent = trailingContent,
+            overlineContent = overlineContent,
+            supportingContent = supportingContent,
+            verticalAlignment = Alignment.CenterVertically,
+            content = headlineContent
+        )
+    } else {
+        CompositionLocalProvider(LocalMaterialShadowHostActive provides (LocalMaterialShadowHostActive.current || itemShadowElevation > 0.dp)) {
+            SegmentedListItem(
+                onClick = onClick ?: {},
+                onLongClick = onLongClick,
+                enabled = enabled,
+                colors = colors,
+                interactionSource = resolvedInteractionSource,
+                shapes = animatedShapes,
+                elevation = itemElevation,
+                modifier = styledModifier,
+                leadingContent = leadingContent,
+                trailingContent = trailingContent,
+                overlineContent = overlineContent,
+                supportingContent = supportingContent,
+                verticalAlignment = Alignment.CenterVertically,
+                content = headlineContent
+            )
+        }
+    }
 }
 
 @Composable
@@ -900,6 +940,7 @@ fun SegmentedSwitchItem(
     val switchInteractionSource = remember { MutableInteractionSource() }
 
     SegmentedListItem(
+        suppressContainerElevation = true,
         onClick = {
             haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
             if (onRowClick != null) {
