@@ -554,7 +554,7 @@ fun ExpressiveSwitch(
                 density = this,
             )
             drawAlohaOutline(trackOutline, trackColor)
-            if (interactionProgress > 0.001f && style != 5) {
+            if (interactionProgress > 0.001f && style != 5 && style != 4) {
                 drawAlohaOutline(trackOutline, (if (checked) scheme.onPrimary else scheme.onSurfaceVariant).copy(alpha = interactionProgress * if (pressed) 0.12f else 0.08f))
             }
             if (focused && enabled) {
