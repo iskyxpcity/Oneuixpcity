@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.Color
@@ -196,33 +197,30 @@ fun ExpressiveSwitch(
         return
     }
 
-    // Compose style uses the official Compose Material (Material 2) Switch.
-    // It deliberately retains Material 2 proportions and color behavior;
-    // it is not a recolored Material 3 control.
+    // Compose is a separate implementation with its own interaction/drag
+    // state. It follows the Material You switch's visual specification while
+    // adding the Compose-only checked thumb mark.
     if (style == 1) {
-        val scheme = MaterialTheme.colorScheme
-        androidx.compose.material.Switch(
+        val composeTrackShape = MaterialTheme.shapes.large
+        val composeThumbShape = MaterialTheme.shapes.medium
+        AlohaComposeSwitch(
             checked = checked,
             onCheckedChange = onCheckedChange,
             modifier = modifier.then(
-                if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, RoundedCornerShape(50))
+                if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, composeTrackShape)
                 else Modifier,
             ),
+            thumbContent = thumbContent,
             enabled = enabled,
+            colors = colors,
+            thumbShape = composeThumbShape,
+            trackShape = composeTrackShape,
             interactionSource = interactionSource,
-            colors = androidx.compose.material.SwitchDefaults.colors(
-                checkedThumbColor = scheme.secondary,
-                checkedTrackColor = scheme.secondary.copy(alpha = 0.54f),
-                uncheckedThumbColor = scheme.outline,
-                uncheckedTrackColor = scheme.surfaceVariant,
-                disabledCheckedThumbColor = scheme.onSurface.copy(alpha = 0.38f),
-                disabledCheckedTrackColor = scheme.onSurface.copy(alpha = 0.12f),
-                disabledUncheckedThumbColor = scheme.onSurface.copy(alpha = 0.38f),
-                disabledUncheckedTrackColor = scheme.onSurface.copy(alpha = 0.12f),
-            ),
+            showThumbIcon = showThumbIcon,
         )
         return
     }
+
     val pressed by interactionSource.collectIsPressedAsState()
     val hovered by interactionSource.collectIsHoveredAsState()
     val focused by interactionSource.collectIsFocusedAsState()
@@ -457,14 +455,11 @@ fun ExpressiveSwitch(
     // Aloha shape factory as the rest of the Material controls so all seven
     // global shape presets and the live corner scale apply to the glass lens.
     val thumbShape = when (style) {
-        0 -> RoundedCornerShape(50)
-        1 -> RoundedCornerShape(36)
-        2 -> RoundedCornerShape(50)
-        3 -> RoundedCornerShape(7.dp)
-        4 -> RoundedCornerShape(50)
-        5 -> alohaCornerShape(thumbHeight / 2f)
-        6 -> RoundedCornerShape(38)
-        else -> RoundedCornerShape(50)
+        0, 2, 4, 7 -> RoundedCornerShape(50)
+        1, 5 -> alohaCornerShape(thumbHeight / 2f)
+        3 -> alohaCornerShape(7.dp)
+        6 -> alohaCornerShape(thumbHeight * 0.38f)
+        else -> alohaCornerShape(thumbHeight / 2f)
     }
     // Keep the backdrop draw node pointed at the latest theme shape even when
     // its modifier node is retained across recompositions.
@@ -601,8 +596,7 @@ fun ExpressiveSwitch(
                     drawAlohaOutline(thumbOutline, thumbColor.copy(alpha = 1f - glassInteraction))
                 }
             }
-            // Switch thumb icons/checkmarks are intentionally omitted; the
-            // thumb itself communicates the on/off state by position and color.
+
         }
         if (style == 5) {
             val backdrop = LocalMaterialSwitchBackdrop.current
