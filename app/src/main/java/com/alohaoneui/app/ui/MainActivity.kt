@@ -257,7 +257,7 @@ class MainActivity : ComponentActivity() {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                
+                                .layerBackdrop(switchBackdrop),
                         ) {
                             Box(
                                 modifier = Modifier
