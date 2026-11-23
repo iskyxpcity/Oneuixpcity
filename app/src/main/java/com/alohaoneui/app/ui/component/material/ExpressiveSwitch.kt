@@ -356,7 +356,7 @@ fun ExpressiveSwitch(
     val trackCornerRadius = when (style) {
         0, 1 -> 16.dp
         2 -> 14.dp
-        3 -> 4.dp
+        3 -> 12.dp
         4 -> 14.dp
         5 -> 14.dp
         6 -> 14.25.dp
