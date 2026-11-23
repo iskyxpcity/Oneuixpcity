@@ -65,6 +65,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.Shape
@@ -317,12 +318,17 @@ private fun ComposeSwitchImpl(
                             animationSpec = animationSpec,
                         )
                     )
+                    // Clip the transient press/drag indication to the active
+                    // thumb silhouette. An unbounded circular ripple visually
+                    // replaces the selected Aloha shape with a circle while toggling.
+                    .clip(thumbShape)
                     .indication(
                         interactionSource = interactionSource,
                         indication =
                             ripple(
-                                bounded = false,
+                                bounded = true,
                                 radius = 40.dp / 2,
+                                focusRingShape = thumbShape,
                                 enableFocusIndication = !useInsetRing,
                             ),
                     )
