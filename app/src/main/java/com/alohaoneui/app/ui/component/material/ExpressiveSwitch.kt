@@ -179,7 +179,7 @@ fun ExpressiveSwitch(
     // track and handle silhouettes are supplied by Aloha's active theme.
     if (style == 0) {
         val materialYouTrackShape = MaterialTheme.shapes.large
-        val materialYouThumbShape = MaterialTheme.shapes.medium
+        val materialYouThumbShape = alohaCornerShape(12.dp, preserveSmoothSquareProfile = true)
         AlohaMaterialYouSwitch(
             checked = checked,
             onCheckedChange = onCheckedChange,
@@ -202,7 +202,7 @@ fun ExpressiveSwitch(
     // adding the Compose-only checked thumb mark.
     if (style == 1) {
         val composeTrackShape = MaterialTheme.shapes.large
-        val composeThumbShape = MaterialTheme.shapes.medium
+        val composeThumbShape = alohaCornerShape(12.dp, preserveSmoothSquareProfile = true)
         AlohaComposeSwitch(
             checked = checked,
             onCheckedChange = onCheckedChange,
@@ -455,11 +455,13 @@ fun ExpressiveSwitch(
     // Aloha shape factory as the rest of the Material controls so all seven
     // global shape presets and the live corner scale apply to the glass lens.
     val thumbShape = when (style) {
-        0, 2, 4, 7 -> RoundedCornerShape(50)
-        1, 5 -> alohaCornerShape(thumbHeight / 2f)
-        3 -> alohaCornerShape(7.dp)
-        6 -> alohaCornerShape(thumbHeight * 0.38f)
-        else -> alohaCornerShape(thumbHeight / 2f)
+        // Every switch family follows the selected global Aloha shape preset.
+        // Keep each family's corner proportion, but never force a circular
+        // RoundedCornerShape that bypasses the active "Smooth" shape style.
+        0, 1, 2, 4, 5, 7 -> alohaCornerShape(thumbHeight / 2f, preserveSmoothSquareProfile = true)
+        3 -> alohaCornerShape(7.dp, preserveSmoothSquareProfile = true)
+        6 -> alohaCornerShape(thumbHeight * 0.38f, preserveSmoothSquareProfile = true)
+        else -> alohaCornerShape(thumbHeight / 2f, preserveSmoothSquareProfile = true)
     }
     // Keep the backdrop draw node pointed at the latest theme shape even when
     // its modifier node is retained across recompositions.
