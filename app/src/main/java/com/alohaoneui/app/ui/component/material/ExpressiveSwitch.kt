@@ -660,7 +660,7 @@ fun ExpressiveSwitch(
                     color = scheme.tertiary.copy(
                         alpha = 0.24f * oneUiHaloProgress.value
                     ),
-                    radius = 14.dp.toPx(),
+                    radius = 18.dp.toPx(),
                     center = Offset(cx, cy),
                 )
             }
