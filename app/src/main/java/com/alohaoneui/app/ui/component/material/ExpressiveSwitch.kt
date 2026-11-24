@@ -66,6 +66,7 @@ import androidx.compose.ui.util.lerp
 import androidx.compose.ui.util.fastCoerceIn
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowSwitches
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
@@ -257,6 +258,7 @@ fun ExpressiveSwitch(
         4 -> scheme.surfaceContainerHigh
         5 -> scheme.surfaceContainerHigh
         6 -> lerp(scheme.surfaceContainer, scheme.outlineVariant, 0.28f)
+        7 -> lerp(scheme.surfaceContainerHigh, scheme.outlineVariant, 0.42f)
         else -> scheme.surfaceContainerHigh
     }
     val checkedThumb = when (style) {
@@ -368,7 +370,7 @@ fun ExpressiveSwitch(
         4 -> trackSize.height / 2f
         5 -> 14.dp
         6 -> 14.25.dp
-        7 -> 7.dp
+        7 -> 8.dp
         else -> 9.25.dp
     }
     // Motion profiles follow each control family's interaction character.
@@ -387,6 +389,18 @@ fun ExpressiveSwitch(
         animationSpec = travelSpec,
         label = "materialSwitchThumb",
     )
+    val oneUiHaloProgress = remember { Animatable(0f) }
+    var oneUiHasObservedState by remember { mutableStateOf(false) }
+    LaunchedEffect(checked, style) {
+        if (style == 7 && oneUiHasObservedState) {
+            oneUiHaloProgress.snapTo(0f)
+            // The thumb completes its 250ms travel before the endpoint halo blooms.
+            delay(250)
+            oneUiHaloProgress.animateTo(1f, animationSpec = tween(durationMillis = 130))
+            oneUiHaloProgress.animateTo(0f, animationSpec = tween(durationMillis = 360))
+        }
+        oneUiHasObservedState = true
+    }
     val glassDragTravelPx = with(LocalDensity.current) {
         (trackSize.width - thumbWidth - thumbEdgeInset * 2).toPx().coerceAtLeast(1f)
     }
@@ -508,7 +522,7 @@ fun ExpressiveSwitch(
                     Modifier.size(width = trackSize.width, height = trackSize.height)
                 }
             )
-            .then(if (LocalMaterialShadowSwitches.current && style != 5) Modifier.shadow(2.dp, trackShape) else Modifier)
+            .then(if (LocalMaterialShadowSwitches.current && style != 5 && style != 7) Modifier.shadow(2.dp, trackShape) else Modifier)
             .then(
                 if (style == 5) {
                     // Match AndroidLiquidGlass: touch gestures belong to the
@@ -554,7 +568,7 @@ fun ExpressiveSwitch(
             }
             // The actual outline, not a hard-coded rounded rectangle, keeps the
             // global Aloha shape family and corner scale linked to each style.
-            val oneUiRailHeight = if (style == 7) 14.dp.toPx() else h
+            val oneUiRailHeight = if (style == 7) 16.dp.toPx() else h
             val trackTop = (h - oneUiRailHeight) / 2f
             val trackOutline = trackShape.createOutline(
                 size = Size(w, oneUiRailHeight),
@@ -648,8 +662,24 @@ fun ExpressiveSwitch(
                         thumbOutline,
                         (if (checked) checkedBorder else uncheckedBorder)
                             .copy(alpha = if (enabled) 1f else 0.38f),
-                        style = Stroke(width = 1.25.dp.toPx()),
+                        style = Stroke(width = 2.dp.toPx()),
                     )
+                    if (oneUiHaloProgress.value > 0.001f) {
+                        val haloExpansion = 8.dp.toPx() * oneUiHaloProgress.value
+                        val haloOutline = thumbShape.createOutline(
+                            size = Size(thumbWidthPx + haloExpansion, thumbHeightPx + haloExpansion),
+                            layoutDirection = layoutDirection,
+                            density = this,
+                        )
+                        val haloColor = if (checked) checkedTrack else scheme.outline
+                        withTransform({ translate(cx - (thumbWidthPx + haloExpansion) / 2f, cy - (thumbHeightPx + haloExpansion) / 2f) }) {
+                            drawAlohaOutline(
+                                haloOutline,
+                                haloColor.copy(alpha = oneUiHaloProgress.value * 0.48f),
+                                style = Stroke(width = 2.dp.toPx()),
+                            )
+                        }
+                    }
                 }
             }
 
