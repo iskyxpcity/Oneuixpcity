@@ -264,7 +264,7 @@ fun ExpressiveSwitch(
         4 -> scheme.surfaceContainerHigh
         5 -> scheme.surfaceContainerHigh
         6 -> lerp(scheme.surfaceContainer, scheme.outlineVariant, 0.28f)
-        7 -> lerp(scheme.surfaceContainerHigh, scheme.outlineVariant, 0.90f)
+        7 -> lerp(scheme.surfaceContainerHigh, scheme.outline, 0.45f)
         else -> scheme.surfaceContainerHigh
     }
     val checkedThumb = when (style) {
@@ -397,18 +397,6 @@ fun ExpressiveSwitch(
         animationSpec = travelSpec,
         label = "materialSwitchThumb",
     )
-    val oneUiHaloProgress = remember { Animatable(0f) }
-    var oneUiHasObservedState by remember { mutableStateOf(false) }
-    LaunchedEffect(checked, style) {
-        if (style == 7 && oneUiHasObservedState) {
-            oneUiHaloProgress.snapTo(0f)
-            // The thumb completes its 250ms travel before the endpoint halo blooms.
-            delay(250)
-            oneUiHaloProgress.animateTo(1f, animationSpec = tween(durationMillis = 130))
-            oneUiHaloProgress.animateTo(0f, animationSpec = tween(durationMillis = 360))
-        }
-        oneUiHasObservedState = true
-    }
     val glassDragTravelPx = with(LocalDensity.current) {
         (trackSize.width - thumbWidth - thumbEdgeInset * 2).toPx().coerceAtLeast(1f)
     }
@@ -656,16 +644,14 @@ fun ExpressiveSwitch(
                 density = this,
             )
             withTransform({ translate(cx - thumbWidthPx / 2f, cy - thumbHeightPx / 2f) }) {
-                    // A restrained neutral drop shadow sits just outside the
-                    // thumb; it is not a colored glow or an outline ring.
-                    if (oneUiHaloProgress.value > 0.001f) {
+                    // A steady, semi-transparent neutral shadow sits outside
+                    // the thumb; it has no endpoint pulse or opacity animation.
+                    run {
                         val shadowBlur = 4.5.dp.toPx()
                         val shadowOutset = 3.dp.toPx()
                         drawIntoCanvas { canvas ->
                             val shadowPaint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
-                                color = Color.Black.copy(
-                                    alpha = oneUiHaloProgress.value * 0.16f
-                                ).toArgb()
+                                color = Color.Black.copy(alpha = 0.16f).toArgb()
                                 maskFilter = BlurMaskFilter(shadowBlur, BlurMaskFilter.Blur.NORMAL)
                             }
                             val shadowRect = RectF(
