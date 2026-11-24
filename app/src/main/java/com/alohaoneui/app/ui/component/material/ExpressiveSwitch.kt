@@ -1,5 +1,7 @@
 package com.alohaoneui.app.ui.component.material
 
+import android.graphics.Paint as AndroidPaint
+
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseOut
@@ -48,6 +50,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
@@ -66,6 +70,7 @@ import androidx.compose.ui.util.lerp
 import androidx.compose.ui.util.fastCoerceIn
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowSwitches
 import com.alohaoneui.app.ui.theme.LocalMaterialOutlineWidth
@@ -257,6 +262,7 @@ fun ExpressiveSwitch(
         4 -> scheme.surfaceContainerHigh
         5 -> scheme.surfaceContainerHigh
         6 -> lerp(scheme.surfaceContainer, scheme.outlineVariant, 0.28f)
+        7 -> lerp(scheme.surfaceContainerHigh, scheme.outline, 0.45f)
         else -> scheme.surfaceContainerHigh
     }
     val checkedThumb = when (style) {
@@ -308,7 +314,7 @@ fun ExpressiveSwitch(
         4 -> DpSize(52.dp, 32.dp)       // Cupertino
         5 -> DpSize(64.dp, 28.dp)       // Liquid Glass
         6 -> DpSize(50.dp, 28.5.dp)    // HyperOS
-        else -> DpSize(39.dp, 22.dp)   // One UI outer touch target
+        else -> DpSize(39.dp, 24.dp)   // One UI touch target with room for its raised thumb
     }
     // Each family owns its handle proportions and pressed-state response.
     val sourceThumbDiameter = when (style) {
@@ -327,7 +333,7 @@ fun ExpressiveSwitch(
         4 -> 28.dp
         5 -> 20.dp
         6 -> if (enabled && interactive) 23.dp else 20.dp
-        7 -> 22.dp
+        7 -> 24.dp
         else -> 20.dp
     }
     val thumbWidth = when (style) {
@@ -337,6 +343,7 @@ fun ExpressiveSwitch(
         4 -> 28.dp
         5 -> 40.dp
         6 -> if (enabled && interactive) 23.dp else 20.dp
+        7 -> 24.dp
         else -> 22.dp
     }
     val thumbHeight = when (style) {
@@ -346,6 +353,7 @@ fun ExpressiveSwitch(
         4 -> 28.dp
         5 -> 24.dp
         6 -> if (enabled && interactive) 23.dp else 20.dp
+        7 -> 24.dp
         else -> 22.dp
     }
     val thumbEdgeInset = when (style) {
@@ -354,6 +362,7 @@ fun ExpressiveSwitch(
         4 -> 2.dp
         5 -> 2.dp
         6 -> 2.5.dp
+        7 -> 1.dp
         else -> 0.dp
     }
     val trackCornerRadius = when (style) {
@@ -365,6 +374,9 @@ fun ExpressiveSwitch(
         4 -> trackSize.height / 2f
         5 -> 14.dp
         6 -> 14.25.dp
+        // One UI rail is 18dp tall, so its theme-driven base radius must be
+        // exactly half the rail height to form semicircular ends by default.
+        7 -> 9.dp
         else -> 9.25.dp
     }
     // Motion profiles follow each control family's interaction character.
@@ -377,6 +389,18 @@ fun ExpressiveSwitch(
         // HyperOS keeps a spring response, but uses a calmer travel speed.
         6 -> spring<Float>(dampingRatio = 0.78f, stiffness = 550f)
         else -> androidx.compose.animation.core.tween<Float>(durationMillis = 250)
+    }
+    val oneUiHaloProgress = remember { Animatable(0f) }
+    var oneUiHasObservedState by remember { mutableStateOf(false) }
+    LaunchedEffect(checked, style) {
+        if (style == 7 && oneUiHasObservedState) {
+            oneUiHaloProgress.snapTo(0f)
+            // The thumb completes its 250ms travel before the endpoint halo blooms.
+            delay(250)
+            oneUiHaloProgress.animateTo(1f, animationSpec = tween(durationMillis = 130))
+            oneUiHaloProgress.animateTo(0f, animationSpec = tween(durationMillis = 360))
+        }
+        oneUiHasObservedState = true
     }
     val travel by animateFloatAsState(
         targetValue = if (checked) 1f else 0f,
@@ -504,7 +528,7 @@ fun ExpressiveSwitch(
                     Modifier.size(width = trackSize.width, height = trackSize.height)
                 }
             )
-            .then(if (LocalMaterialShadowSwitches.current && style != 5) Modifier.shadow(2.dp, trackShape) else Modifier)
+            .then(if (LocalMaterialShadowSwitches.current && style != 5 && style != 7) Modifier.shadow(2.dp, trackShape) else Modifier)
             .then(
                 if (style == 5) {
                     // Match AndroidLiquidGlass: touch gestures belong to the
@@ -533,12 +557,21 @@ fun ExpressiveSwitch(
 ,
         contentAlignment = Alignment.Center,
     ) {
-        Canvas(Modifier.size(trackSize)) {
+        Canvas(
+            Modifier.size(
+                width = if (style == 7) 52.dp else trackSize.width,
+                height = if (style == 7) 52.dp else trackSize.height,
+            )
+        ) {
             // Style 5's rail and resting handle are separate foreground layers.
             // Drawing the handle here would place it underneath the rail.
             if (style == 5) return@Canvas
-            val w = size.width
-            val h = size.height
+            val w = trackSize.width.toPx()
+            val h = trackSize.height.toPx()
+            // One UI reserves a 52dp drawing surface for its endpoint halo;
+            // center the original 39x24dp rail and thumb inside that surface.
+            val canvasOriginX = (size.width - w) / 2f
+            val canvasOriginY = (size.height - h) / 2f
             val trackColor = if (style == 4) {
                 cupertinoTrackColor
             } else if (enabled) {
@@ -550,47 +583,53 @@ fun ExpressiveSwitch(
             }
             // The actual outline, not a hard-coded rounded rectangle, keeps the
             // global Aloha shape family and corner scale linked to each style.
+            val oneUiRailHeight = if (style == 7) 18.dp.toPx() else h
+            val trackTop = (h - oneUiRailHeight) / 2f
             val trackOutline = trackShape.createOutline(
-                size = Size(w, h),
+                size = Size(w, oneUiRailHeight),
                 layoutDirection = layoutDirection,
                 density = this,
             )
-            drawAlohaOutline(trackOutline, trackColor)
-            if (interactionProgress > 0.001f && style != 5 && style != 4) {
-                drawAlohaOutline(trackOutline, (if (checked) scheme.onPrimary else scheme.onSurfaceVariant).copy(alpha = interactionProgress * if (pressed) 0.12f else 0.08f))
-            }
-            if (focused && enabled) {
-                drawAlohaOutline(trackOutline, scheme.primary.copy(alpha = 0.72f), style = Stroke(width = 1.25.dp.toPx()))
-            }
-            // Pixel keeps a visible perimeter while OFF, matching the outlined
-            // track treatment used by the independent Compose switch. Its ON
-            // state remains borderless and all other switch families are untouched.
-            if (style == 2 && !checked) {
-                drawAlohaOutline(
-                    trackOutline,
-                    uncheckedBorder.copy(alpha = if (enabled) 1f else 0.38f),
-                    style = Stroke(width = 2.dp.toPx()),
-                )
-            }
+            // One UI uses a slim rail centered behind a larger, raised thumb.
+            // Other switch families retain their original full-height track.
+            withTransform({ translate(canvasOriginX, canvasOriginY + trackTop) }) {
+                drawAlohaOutline(trackOutline, trackColor)
+                if (interactionProgress > 0.001f && style != 5 && style != 4) {
+                    drawAlohaOutline(trackOutline, (if (checked) scheme.onPrimary else scheme.onSurfaceVariant).copy(alpha = interactionProgress * if (pressed) 0.12f else 0.08f))
+                }
+                if (focused && enabled) {
+                    drawAlohaOutline(trackOutline, scheme.primary.copy(alpha = 0.72f), style = Stroke(width = 1.25.dp.toPx()))
+                }
+                // Pixel keeps a visible perimeter while OFF, matching the outlined
+                // track treatment used by the independent Compose switch. Its ON
+                // state remains borderless and all other switch families are untouched.
+                if (style == 2 && !checked) {
+                    drawAlohaOutline(
+                        trackOutline,
+                        uncheckedBorder.copy(alpha = if (enabled) 1f else 0.38f),
+                        style = Stroke(width = 2.dp.toPx()),
+                    )
+                }
 
-            // Fluent uses the active Aloha theme outline for its OFF rail,
-            // while retaining its own compact geometry and thumb proportions.
-            if (style == 3 && !checked) {
-                drawAlohaOutline(
-                    trackOutline,
-                    uncheckedBorder.copy(alpha = if (enabled) 1f else 0.38f),
-                    style = Stroke(width = 2.dp.toPx()),
-                )
-            }
-            // Material You (Material 3) alone uses the documented track
-            // decoration: outline when OFF, transparent when ON. Other switch
-            // families must not inherit this perimeter.
-            if (style == 0 && !checked && globalTrackOutlineWidth > 0f) {
-                drawAlohaOutline(
-                    trackOutline,
-                    scheme.outline.copy(alpha = if (enabled) 1f else 0.38f),
-                    style = Stroke(width = globalTrackOutlineWidth.dp.toPx()),
-                )
+                // Fluent uses the active Aloha theme outline for its OFF rail,
+                // while retaining its own compact geometry and thumb proportions.
+                if (style == 3 && !checked) {
+                    drawAlohaOutline(
+                        trackOutline,
+                        uncheckedBorder.copy(alpha = if (enabled) 1f else 0.38f),
+                        style = Stroke(width = 2.dp.toPx()),
+                    )
+                }
+                // Material You (Material 3) alone uses the documented track
+                // decoration: outline when OFF, transparent when ON. Other switch
+                // families must not inherit this perimeter.
+                if (style == 0 && !checked && globalTrackOutlineWidth > 0f) {
+                    drawAlohaOutline(
+                        trackOutline,
+                        scheme.outline.copy(alpha = if (enabled) 1f else 0.38f),
+                        style = Stroke(width = globalTrackOutlineWidth.dp.toPx()),
+                    )
+                }
             }
 
             val thumbWidthPx = thumbWidth.toPx()
@@ -598,8 +637,8 @@ fun ExpressiveSwitch(
             val edgeInsetPx = thumbEdgeInset.toPx()
             val left = thumbWidthPx / 2f + edgeInsetPx
             val right = w - thumbWidthPx / 2f - edgeInsetPx
-            val cx = left + (right - left) * travel
-            val cy = h / 2f
+            val cx = canvasOriginX + left + (right - left) * travel
+            val cy = canvasOriginY + h / 2f
             if (style == 5 && glassInteraction > 0.001f) {
                 val haloWidth = thumbWidthPx + 4.dp.toPx()
                 val haloHeight = thumbHeightPx + 4.dp.toPx()
@@ -614,6 +653,16 @@ fun ExpressiveSwitch(
                         Color.White.copy(alpha = glassInteraction * if (checked) 0.42f else 0.30f),
                     )
                 }
+            }
+            // One UI endpoint halo: a soft 28dp tertiary circle.
+            if (style == 7 && oneUiHaloProgress.value > 0.001f) {
+                drawCircle(
+                    color = scheme.tertiary.copy(
+                        alpha = 0.24f * oneUiHaloProgress.value
+                    ),
+                    radius = 18.dp.toPx(),
+                    center = Offset(cx, cy),
+                )
             }
             // The resting thumb is a separate Material-colored layer. For
             // Liquid Glass it fades out only while the transient glass lens
@@ -631,6 +680,15 @@ fun ExpressiveSwitch(
                     drawAlohaOutline(thumbOutline, thumbColor)
                 } else if (style == 5 && glassInteraction < 0.999f) {
                     drawAlohaOutline(thumbOutline, thumbColor.copy(alpha = 1f - glassInteraction))
+                }
+                // One UI's handle keeps a visible perimeter in both states.
+                if (style == 7) {
+                    drawAlohaOutline(
+                        thumbOutline,
+                        (if (checked) checkedBorder else uncheckedBorder)
+                            .copy(alpha = if (enabled) 1f else 0.38f),
+                        style = Stroke(width = 2.dp.toPx()),
+                    )
                 }
             }
 
