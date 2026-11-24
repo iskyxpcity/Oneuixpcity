@@ -1,5 +1,9 @@
 package com.alohaoneui.app.ui.component.material
 
+import android.graphics.BlurMaskFilter
+import android.graphics.Paint as AndroidPaint
+import android.graphics.RectF
+
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseOut
@@ -48,6 +52,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
@@ -666,18 +672,29 @@ fun ExpressiveSwitch(
                     )
                     if (oneUiHaloProgress.value > 0.001f) {
                         val haloExpansion = 12.dp.toPx() * oneUiHaloProgress.value
-                        val haloOutline = thumbShape.createOutline(
-                            size = Size(thumbWidthPx + haloExpansion, thumbHeightPx + haloExpansion),
-                            layoutDirection = layoutDirection,
-                            density = this,
-                        )
                         val haloColor = if (checked) checkedTrack else scheme.outline
                         withTransform({ translate(-haloExpansion / 2f, -haloExpansion / 2f) }) {
-                            // A soft filled bloom follows the thumb silhouette; it is not a stroked ring.
-                            drawAlohaOutline(
-                                haloOutline,
-                                haloColor.copy(alpha = oneUiHaloProgress.value * 0.34f),
-                            )
+                            // Blur a filled thumb-shaped light source to create a diffuse bloom,
+                            // not a circular or capsule-shaped outline.
+                            drawIntoCanvas { canvas ->
+                                val glowPaint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
+                                    color = haloColor.copy(alpha = oneUiHaloProgress.value * 0.58f).toArgb()
+                                    maskFilter = BlurMaskFilter(haloExpansion * 0.72f, BlurMaskFilter.Blur.NORMAL)
+                                }
+                                val glowRect = RectF(
+                                    0f,
+                                    0f,
+                                    thumbWidthPx + haloExpansion,
+                                    thumbHeightPx + haloExpansion,
+                                )
+                                canvas.nativeCanvas.drawRoundRect(
+                                    glowRect,
+                                    (thumbHeightPx + haloExpansion) / 2f,
+                                    (thumbHeightPx + haloExpansion) / 2f,
+                                    glowPaint,
+                                )
+                                glowPaint.maskFilter = null
+                            }
                         }
                     }
                 }
