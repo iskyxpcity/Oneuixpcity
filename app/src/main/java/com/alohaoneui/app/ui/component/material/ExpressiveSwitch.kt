@@ -524,10 +524,6 @@ fun ExpressiveSwitch(
                         width = trackSize.width,
                         height = maxOf(trackSize.height, 28.dp * 1.5f),
                     )
-                } else if (style == 7) {
-                    // Reserve the expanded drawing bounds so the endpoint halo
-                    // is not constrained and clipped by the 39x24dp rail slot.
-                    Modifier.requiredSize(width = 52.dp, height = 26.dp)
                 } else {
                     Modifier.size(width = trackSize.width, height = trackSize.height)
                 }
@@ -564,7 +560,7 @@ fun ExpressiveSwitch(
         Canvas(
             Modifier.size(
                 width = if (style == 7) 52.dp else trackSize.width,
-                height = if (style == 7) 26.dp else trackSize.height,
+                height = if (style == 7) 52.dp else trackSize.height,
             )
         ) {
             // Style 5's rail and resting handle are separate foreground layers.
@@ -572,8 +568,8 @@ fun ExpressiveSwitch(
             if (style == 5) return@Canvas
             val w = trackSize.width.toPx()
             val h = trackSize.height.toPx()
-            // One UI reserves a 26dp-tall drawing surface for its endpoint halo;
-            // keep the original 39x24dp rail centered inside that surface.
+            // One UI reserves a 52dp drawing surface for its endpoint halo;
+            // center the original 39x24dp rail and thumb inside that surface.
             val canvasOriginX = (size.width - w) / 2f
             val canvasOriginY = (size.height - h) / 2f
             val trackColor = if (style == 4) {
@@ -658,14 +654,13 @@ fun ExpressiveSwitch(
                     )
                 }
             }
-            // Fancy slider-inspired endpoint halo: a soft 26dp tertiary circle.
-            // The expanded One UI canvas keeps the full halo visible outside the rail.
+            // One UI endpoint halo: a soft 28dp tertiary circle.
             if (style == 7 && oneUiHaloProgress.value > 0.001f) {
                 drawCircle(
                     color = scheme.tertiary.copy(
                         alpha = 0.24f * oneUiHaloProgress.value
                     ),
-                    radius = 13.dp.toPx(),
+                    radius = 14.dp.toPx(),
                     center = Offset(cx, cy),
                 )
             }
