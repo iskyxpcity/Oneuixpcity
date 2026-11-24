@@ -557,12 +557,16 @@ fun ExpressiveSwitch(
 ,
         contentAlignment = Alignment.Center,
     ) {
-        Canvas(Modifier.size(trackSize)) {
+        Canvas(Modifier.size(if (style == 7) 52.dp else trackSize)) {
             // Style 5's rail and resting handle are separate foreground layers.
             // Drawing the handle here would place it underneath the rail.
             if (style == 5) return@Canvas
-            val w = size.width
-            val h = size.height
+            val w = trackSize.width.toPx()
+            val h = trackSize.height.toPx()
+            // One UI reserves a 52dp drawing surface for its endpoint halo;
+            // center the original 39x24dp rail and thumb inside that surface.
+            val canvasOriginX = (size.width - w) / 2f
+            val canvasOriginY = (size.height - h) / 2f
             val trackColor = if (style == 4) {
                 cupertinoTrackColor
             } else if (enabled) {
@@ -583,7 +587,7 @@ fun ExpressiveSwitch(
             )
             // One UI uses a slim rail centered behind a larger, raised thumb.
             // Other switch families retain their original full-height track.
-            withTransform({ translate(0f, trackTop) }) {
+            withTransform({ translate(canvasOriginX, canvasOriginY + trackTop) }) {
                 drawAlohaOutline(trackOutline, trackColor)
                 if (interactionProgress > 0.001f && style != 5 && style != 4) {
                     drawAlohaOutline(trackOutline, (if (checked) scheme.onPrimary else scheme.onSurfaceVariant).copy(alpha = interactionProgress * if (pressed) 0.12f else 0.08f))
@@ -628,8 +632,8 @@ fun ExpressiveSwitch(
             val edgeInsetPx = thumbEdgeInset.toPx()
             val left = thumbWidthPx / 2f + edgeInsetPx
             val right = w - thumbWidthPx / 2f - edgeInsetPx
-            val cx = left + (right - left) * travel
-            val cy = h / 2f
+            val cx = canvasOriginX + left + (right - left) * travel
+            val cy = canvasOriginY + h / 2f
             if (style == 5 && glassInteraction > 0.001f) {
                 val haloWidth = thumbWidthPx + 4.dp.toPx()
                 val haloHeight = thumbHeightPx + 4.dp.toPx()
@@ -641,29 +645,30 @@ fun ExpressiveSwitch(
                 withTransform({ translate(cx - haloWidth / 2f, cy - haloHeight / 2f) }) {
                     drawAlohaOutline(
                         haloOutline,
-                        Color.White.copy(alpha = glassInteraction * if (checked) 0.42f                    // Fancy slider-inspired endpoint halo: a simple, soft,
-                    // translucent 52dp circle that blooms after the thumb arrives.
-                    if (oneUiHaloProgress.value > 0.001f) {
-                        drawCircle(
-                            color = scheme.tertiary.copy(
-                                alpha = 0.24f * oneUiHaloProgress.value
-                            ),
-                            radius = 26.dp.toPx(),
-                            center = Offset(thumbWidthPx / 2f, thumbHeightPx / 2f),
-                        )
-                    }
-                     thumbWidthPx + shadowOutset,
-                                thumbHeightPx + 1.dp.toPx() + shadowOutset,
-                            )
-                            canvas.nativeCanvas.drawRoundRect(
-                                shadowRect,
-                                (thumbHeightPx + shadowOutset * 2f) / 2f,
-                                (thumbHeightPx + shadowOutset * 2f) / 2f,
-                                shadowPaint,
-                            )
-                            shadowPaint.maskFilter = null
-                        }
-                    }
+                        Color.White.copy(alpha = glassInteraction * if (checked) 0.42f else 0.30f),
+                    )
+                }
+            }
+            // Fancy slider-inspired endpoint halo: a soft 52dp tertiary circle.
+            // The expanded One UI canvas keeps the full halo visible outside the rail.
+            if (style == 7 && oneUiHaloProgress.value > 0.001f) {
+                drawCircle(
+                    color = scheme.tertiary.copy(
+                        alpha = 0.24f * oneUiHaloProgress.value
+                    ),
+                    radius = 26.dp.toPx(),
+                    center = Offset(cx, cy),
+                )
+            }
+            // The resting thumb is a separate Material-colored layer. For
+            // Liquid Glass it fades out only while the transient glass lens
+            // is active; it must never supply the lens tint/color.
+            val thumbOutline = thumbShape.createOutline(
+                size = Size(thumbWidthPx, thumbHeightPx),
+                layoutDirection = layoutDirection,
+                density = this,
+            )
+            withTransform({ translate(cx - thumbWidthPx / 2f, cy - thumbHeightPx / 2f) }) {
                 if (enabled && interactionProgress > 0.001f && style != 5) {
                     drawAlohaOutline(thumbOutline, (if (checked) scheme.onPrimary else scheme.onSurfaceVariant).copy(alpha = interactionProgress * 0.10f))
                 }
