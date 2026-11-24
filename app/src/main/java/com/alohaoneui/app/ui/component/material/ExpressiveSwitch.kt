@@ -560,7 +560,7 @@ fun ExpressiveSwitch(
         Canvas(
             Modifier.size(
                 width = if (style == 7) 52.dp else trackSize.width,
-                height = if (style == 7) 52.dp else trackSize.height,
+                height = if (style == 7) 26.dp else trackSize.height,
             )
         ) {
             // Style 5's rail and resting handle are separate foreground layers.
@@ -568,8 +568,8 @@ fun ExpressiveSwitch(
             if (style == 5) return@Canvas
             val w = trackSize.width.toPx()
             val h = trackSize.height.toPx()
-            // One UI reserves a 52dp drawing surface for its endpoint halo;
-            // center the original 39x24dp rail and thumb inside that surface.
+            // One UI reserves a 26dp-tall drawing surface for its endpoint halo;
+            // keep the original 39x24dp rail centered inside that surface.
             val canvasOriginX = (size.width - w) / 2f
             val canvasOriginY = (size.height - h) / 2f
             val trackColor = if (style == 4) {
@@ -654,14 +654,14 @@ fun ExpressiveSwitch(
                     )
                 }
             }
-            // Fancy slider-inspired endpoint halo: a soft 52dp tertiary circle.
+            // Fancy slider-inspired endpoint halo: a soft 26dp tertiary circle.
             // The expanded One UI canvas keeps the full halo visible outside the rail.
             if (style == 7 && oneUiHaloProgress.value > 0.001f) {
                 drawCircle(
                     color = scheme.tertiary.copy(
                         alpha = 0.24f * oneUiHaloProgress.value
                     ),
-                    radius = 26.dp.toPx(),
+                    radius = 13.dp.toPx(),
                     center = Offset(cx, cy),
                 )
             }
