@@ -659,8 +659,8 @@ fun ExpressiveSwitch(
                     // A restrained neutral drop shadow sits just outside the
                     // thumb; it is not a colored glow or an outline ring.
                     if (oneUiHaloProgress.value > 0.001f) {
-                        val shadowBlur = 2.5.dp.toPx()
-                        val shadowOutset = 1.5.dp.toPx()
+                        val shadowBlur = 4.5.dp.toPx()
+                        val shadowOutset = 3.dp.toPx()
                         drawIntoCanvas { canvas ->
                             val shadowPaint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
                                 color = Color.Black.copy(
