@@ -245,7 +245,7 @@ fun ExpressiveSwitch(
         3 -> scheme.primary
         4 -> scheme.tertiary
         5 -> scheme.primary
-        6 -> scheme.secondary
+        6 -> lerp(scheme.secondary, scheme.onSecondary, 0.18f)
         else -> scheme.primary
     }
     val uncheckedTrack = when (style) {
@@ -256,7 +256,7 @@ fun ExpressiveSwitch(
         // Cupertino OFF rail: one tonal step darker for clearer separation.
         4 -> scheme.surfaceContainerHigh
         5 -> scheme.surfaceContainerHigh
-        6 -> scheme.surfaceContainer
+        6 -> lerp(scheme.surfaceContainer, scheme.outlineVariant, 0.28f)
         else -> scheme.surfaceContainerHigh
     }
     val checkedThumb = when (style) {
@@ -374,7 +374,8 @@ fun ExpressiveSwitch(
         3 -> androidx.compose.animation.core.tween<Float>(durationMillis = 600)
         4 -> androidx.compose.animation.core.tween<Float>(durationMillis = 300)
         5 -> spring<Float>(dampingRatio = 0.62f, stiffness = 560f)
-        6 -> spring<Float>(dampingRatio = 0.75f, stiffness = 1500f)
+        // HyperOS keeps a spring response, but uses a calmer travel speed.
+        6 -> spring<Float>(dampingRatio = 0.78f, stiffness = 550f)
         else -> androidx.compose.animation.core.tween<Float>(durationMillis = 250)
     }
     val travel by animateFloatAsState(
@@ -461,7 +462,8 @@ fun ExpressiveSwitch(
         // RoundedCornerShape that bypasses the active "Smooth" shape style.
         0, 1, 2, 4, 5, 7 -> alohaCornerShape(thumbHeight / 2f, preserveSmoothSquareProfile = true)
         3 -> alohaCornerShape(7.dp, preserveSmoothSquareProfile = true)
-        6 -> alohaCornerShape(thumbHeight * 0.38f, preserveSmoothSquareProfile = true)
+        // HyperOS uses a fully rounded thumb when the global shape preset is Rounded.
+        6 -> alohaCornerShape(thumbHeight / 2f, preserveSmoothSquareProfile = true)
         else -> alohaCornerShape(thumbHeight / 2f, preserveSmoothSquareProfile = true)
     }
     // Keep the backdrop draw node pointed at the latest theme shape even when
