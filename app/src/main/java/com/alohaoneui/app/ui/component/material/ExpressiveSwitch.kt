@@ -672,7 +672,7 @@ fun ExpressiveSwitch(
                             density = this,
                         )
                         val haloColor = if (checked) checkedTrack else scheme.outline
-                        withTransform({ translate(cx - (thumbWidthPx + haloExpansion) / 2f, cy - (thumbHeightPx + haloExpansion) / 2f) }) {
+                        withTransform({ translate(-haloExpansion / 2f, -haloExpansion / 2f) }) {
                             drawAlohaOutline(
                                 haloOutline,
                                 haloColor.copy(alpha = oneUiHaloProgress.value * 0.48f),
