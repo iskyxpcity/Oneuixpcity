@@ -476,7 +476,7 @@ fun ExpressiveSwitch(
     val glassInteraction = if (style == 5) glassDragAnimation.pressProgress else 0f
     val liquidGlassSwitchPillHighlight = rememberLiquidGlassSwitchHighlight(liquidGlassSwitchSpecular, extraDegrees = 90f)
     // Keep switch outlines robust for every global Aloha shape preset.
-    val trackShape = if (style == 7) RoundedCornerShape(50) else alohaCornerShape(trackCornerRadius)
+    val trackShape = alohaCornerShape(trackCornerRadius)
     // Handle silhouette is style-specific. Liquid Glass must use the same
     // Aloha shape factory as the rest of the Material controls so all seven
     // global shape presets and the live corner scale apply to the glass lens.
