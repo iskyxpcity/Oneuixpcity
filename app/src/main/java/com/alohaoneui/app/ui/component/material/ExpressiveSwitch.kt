@@ -376,7 +376,9 @@ fun ExpressiveSwitch(
         4 -> trackSize.height / 2f
         5 -> 14.dp
         6 -> 14.25.dp
-        7 -> 8.dp
+        // One UI rail is 18dp tall, so its theme-driven base radius must be
+        // exactly half the rail height to form semicircular ends by default.
+        7 -> 9.dp
         else -> 9.25.dp
     }
     // Motion profiles follow each control family's interaction character.
