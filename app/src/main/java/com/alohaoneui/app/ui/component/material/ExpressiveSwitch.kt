@@ -392,6 +392,18 @@ fun ExpressiveSwitch(
         6 -> spring<Float>(dampingRatio = 0.78f, stiffness = 550f)
         else -> androidx.compose.animation.core.tween<Float>(durationMillis = 250)
     }
+    val oneUiHaloProgress = remember { Animatable(0f) }
+    var oneUiHasObservedState by remember { mutableStateOf(false) }
+    LaunchedEffect(checked, style) {
+        if (style == 7 && oneUiHasObservedState) {
+            oneUiHaloProgress.snapTo(0f)
+            // The thumb completes its 250ms travel before the endpoint halo blooms.
+            delay(250)
+            oneUiHaloProgress.animateTo(1f, animationSpec = tween(durationMillis = 130))
+            oneUiHaloProgress.animateTo(0f, animationSpec = tween(durationMillis = 360))
+        }
+        oneUiHasObservedState = true
+    }
     val travel by animateFloatAsState(
         targetValue = if (checked) 1f else 0f,
         animationSpec = travelSpec,
@@ -631,33 +643,18 @@ fun ExpressiveSwitch(
                 withTransform({ translate(cx - haloWidth / 2f, cy - haloHeight / 2f) }) {
                     drawAlohaOutline(
                         haloOutline,
-                        Color.White.copy(alpha = glassInteraction * if (checked) 0.42f else 0.30f),
-                    )
-                }
-            }
-            // The resting thumb is a separate Material-colored layer. For
-            // Liquid Glass it fades out only while the transient glass lens
-            // is active; it must never supply the lens tint/color.
-            val thumbOutline = thumbShape.createOutline(
-                size = Size(thumbWidthPx, thumbHeightPx),
-                layoutDirection = layoutDirection,
-                density = this,
-            )
-            withTransform({ translate(cx - thumbWidthPx / 2f, cy - thumbHeightPx / 2f) }) {
-                    // A steady, semi-transparent neutral shadow sits outside
-                    // the thumb; it has no endpoint pulse or opacity animation.
-                    run {
-                        val shadowBlur = 4.5.dp.toPx()
-                        val shadowOutset = 3.dp.toPx()
-                        drawIntoCanvas { canvas ->
-                            val shadowPaint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
-                                color = Color.Black.copy(alpha = 0.16f).toArgb()
-                                maskFilter = BlurMaskFilter(shadowBlur, BlurMaskFilter.Blur.NORMAL)
-                            }
-                            val shadowRect = RectF(
-                                -shadowOutset,
-                                1.dp.toPx() - shadowOutset,
-                                thumbWidthPx + shadowOutset,
+                        Color.White.copy(alpha = glassInteraction * if (checked) 0.42f                    // Fancy slider-inspired endpoint halo: a simple, soft,
+                    // translucent 52dp circle that blooms after the thumb arrives.
+                    if (oneUiHaloProgress.value > 0.001f) {
+                        drawCircle(
+                            color = scheme.tertiary.copy(
+                                alpha = 0.24f * oneUiHaloProgress.value
+                            ),
+                            radius = 26.dp.toPx(),
+                            center = Offset(thumbWidthPx / 2f, thumbHeightPx / 2f),
+                        )
+                    }
+                     thumbWidthPx + shadowOutset,
                                 thumbHeightPx + 1.dp.toPx() + shadowOutset,
                             )
                             canvas.nativeCanvas.drawRoundRect(
