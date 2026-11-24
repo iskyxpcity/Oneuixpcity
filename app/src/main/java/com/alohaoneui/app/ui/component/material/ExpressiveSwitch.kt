@@ -264,7 +264,7 @@ fun ExpressiveSwitch(
         4 -> scheme.surfaceContainerHigh
         5 -> scheme.surfaceContainerHigh
         6 -> lerp(scheme.surfaceContainer, scheme.outlineVariant, 0.28f)
-        7 -> lerp(scheme.surfaceContainerHigh, scheme.outlineVariant, 0.78f)
+        7 -> lerp(scheme.surfaceContainerHigh, scheme.outlineVariant, 0.90f)
         else -> scheme.surfaceContainerHigh
     }
     val checkedThumb = when (style) {
@@ -656,6 +656,33 @@ fun ExpressiveSwitch(
                 density = this,
             )
             withTransform({ translate(cx - thumbWidthPx / 2f, cy - thumbHeightPx / 2f) }) {
+                    // A restrained neutral drop shadow sits just outside the
+                    // thumb; it is not a colored glow or an outline ring.
+                    if (oneUiHaloProgress.value > 0.001f) {
+                        val shadowBlur = 2.5.dp.toPx()
+                        val shadowOutset = 1.5.dp.toPx()
+                        drawIntoCanvas { canvas ->
+                            val shadowPaint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
+                                color = Color.Black.copy(
+                                    alpha = oneUiHaloProgress.value * 0.16f
+                                ).toArgb()
+                                maskFilter = BlurMaskFilter(shadowBlur, BlurMaskFilter.Blur.NORMAL)
+                            }
+                            val shadowRect = RectF(
+                                -shadowOutset,
+                                1.dp.toPx() - shadowOutset,
+                                thumbWidthPx + shadowOutset,
+                                thumbHeightPx + 1.dp.toPx() + shadowOutset,
+                            )
+                            canvas.nativeCanvas.drawRoundRect(
+                                shadowRect,
+                                (thumbHeightPx + shadowOutset * 2f) / 2f,
+                                (thumbHeightPx + shadowOutset * 2f) / 2f,
+                                shadowPaint,
+                            )
+                            shadowPaint.maskFilter = null
+                        }
+                    }
                 if (enabled && interactionProgress > 0.001f && style != 5) {
                     drawAlohaOutline(thumbOutline, (if (checked) scheme.onPrimary else scheme.onSurfaceVariant).copy(alpha = interactionProgress * 0.10f))
                 }
@@ -672,33 +699,6 @@ fun ExpressiveSwitch(
                             .copy(alpha = if (enabled) 1f else 0.38f),
                         style = Stroke(width = 2.dp.toPx()),
                     )
-                    if (oneUiHaloProgress.value > 0.001f) {
-                        val haloExpansion = 12.dp.toPx() * oneUiHaloProgress.value
-                        val haloColor = if (checked) checkedTrack else scheme.outline
-                        withTransform({ translate(-haloExpansion / 2f, -haloExpansion / 2f) }) {
-                            // Blur a filled thumb-shaped light source to create a diffuse bloom,
-                            // not a circular or capsule-shaped outline.
-                            drawIntoCanvas { canvas ->
-                                val glowPaint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
-                                    color = haloColor.copy(alpha = oneUiHaloProgress.value * 0.58f).toArgb()
-                                    maskFilter = BlurMaskFilter(haloExpansion * 0.72f, BlurMaskFilter.Blur.NORMAL)
-                                }
-                                val glowRect = RectF(
-                                    0f,
-                                    0f,
-                                    thumbWidthPx + haloExpansion,
-                                    thumbHeightPx + haloExpansion,
-                                )
-                                canvas.nativeCanvas.drawRoundRect(
-                                    glowRect,
-                                    (thumbHeightPx + haloExpansion) / 2f,
-                                    (thumbHeightPx + haloExpansion) / 2f,
-                                    glowPaint,
-                                )
-                                glowPaint.maskFilter = null
-                            }
-                        }
-                    }
                 }
             }
 
