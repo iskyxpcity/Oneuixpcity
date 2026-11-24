@@ -258,7 +258,7 @@ fun ExpressiveSwitch(
         4 -> scheme.surfaceContainerHigh
         5 -> scheme.surfaceContainerHigh
         6 -> lerp(scheme.surfaceContainer, scheme.outlineVariant, 0.28f)
-        7 -> lerp(scheme.surfaceContainerHigh, scheme.outlineVariant, 0.58f)
+        7 -> lerp(scheme.surfaceContainerHigh, scheme.outlineVariant, 0.78f)
         else -> scheme.surfaceContainerHigh
     }
     val checkedThumb = when (style) {
@@ -470,7 +470,7 @@ fun ExpressiveSwitch(
     val glassInteraction = if (style == 5) glassDragAnimation.pressProgress else 0f
     val liquidGlassSwitchPillHighlight = rememberLiquidGlassSwitchHighlight(liquidGlassSwitchSpecular, extraDegrees = 90f)
     // Keep switch outlines robust for every global Aloha shape preset.
-    val trackShape = alohaCornerShape(trackCornerRadius)
+    val trackShape = if (style == 7) RoundedCornerShape(50) else alohaCornerShape(trackCornerRadius)
     // Handle silhouette is style-specific. Liquid Glass must use the same
     // Aloha shape factory as the rest of the Material controls so all seven
     // global shape presets and the live corner scale apply to the glass lens.
@@ -665,7 +665,7 @@ fun ExpressiveSwitch(
                         style = Stroke(width = 2.dp.toPx()),
                     )
                     if (oneUiHaloProgress.value > 0.001f) {
-                        val haloExpansion = 10.dp.toPx() * oneUiHaloProgress.value
+                        val haloExpansion = 12.dp.toPx() * oneUiHaloProgress.value
                         val haloOutline = thumbShape.createOutline(
                             size = Size(thumbWidthPx + haloExpansion, thumbHeightPx + haloExpansion),
                             layoutDirection = layoutDirection,
@@ -673,22 +673,10 @@ fun ExpressiveSwitch(
                         )
                         val haloColor = if (checked) checkedTrack else scheme.outline
                         withTransform({ translate(-haloExpansion / 2f, -haloExpansion / 2f) }) {
-                            // Layer several soft, wide strokes to create a diffuse bloom,
-                            // rather than a crisp outlined ring around the thumb.
+                            // A soft filled bloom follows the thumb silhouette; it is not a stroked ring.
                             drawAlohaOutline(
                                 haloOutline,
-                                haloColor.copy(alpha = oneUiHaloProgress.value * 0.07f),
-                                style = Stroke(width = 12.dp.toPx()),
-                            )
-                            drawAlohaOutline(
-                                haloOutline,
-                                haloColor.copy(alpha = oneUiHaloProgress.value * 0.12f),
-                                style = Stroke(width = 7.dp.toPx()),
-                            )
-                            drawAlohaOutline(
-                                haloOutline,
-                                haloColor.copy(alpha = oneUiHaloProgress.value * 0.18f),
-                                style = Stroke(width = 3.dp.toPx()),
+                                haloColor.copy(alpha = oneUiHaloProgress.value * 0.34f),
                             )
                         }
                     }
