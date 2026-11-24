@@ -524,6 +524,10 @@ fun ExpressiveSwitch(
                         width = trackSize.width,
                         height = maxOf(trackSize.height, 28.dp * 1.5f),
                     )
+                } else if (style == 7) {
+                    // Reserve the expanded drawing bounds so the endpoint halo
+                    // is not constrained and clipped by the 39x24dp rail slot.
+                    Modifier.requiredSize(width = 52.dp, height = 26.dp)
                 } else {
                     Modifier.size(width = trackSize.width, height = trackSize.height)
                 }
