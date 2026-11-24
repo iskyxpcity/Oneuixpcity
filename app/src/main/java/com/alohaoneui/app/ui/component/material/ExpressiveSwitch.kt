@@ -1,8 +1,6 @@
 package com.alohaoneui.app.ui.component.material
 
-import android.graphics.BlurMaskFilter
 import android.graphics.Paint as AndroidPaint
-import android.graphics.RectF
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
