@@ -557,7 +557,12 @@ fun ExpressiveSwitch(
 ,
         contentAlignment = Alignment.Center,
     ) {
-        Canvas(Modifier.size(if (style == 7) 52.dp else trackSize)) {
+        Canvas(
+            Modifier.size(
+                width = if (style == 7) 52.dp else trackSize.width,
+                height = if (style == 7) 52.dp else trackSize.height,
+            )
+        ) {
             // Style 5's rail and resting handle are separate foreground layers.
             // Drawing the handle here would place it underneath the rail.
             if (style == 5) return@Canvas
