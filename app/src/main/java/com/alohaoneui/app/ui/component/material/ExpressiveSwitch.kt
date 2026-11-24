@@ -258,7 +258,7 @@ fun ExpressiveSwitch(
         4 -> scheme.surfaceContainerHigh
         5 -> scheme.surfaceContainerHigh
         6 -> lerp(scheme.surfaceContainer, scheme.outlineVariant, 0.28f)
-        7 -> lerp(scheme.surfaceContainerHigh, scheme.outlineVariant, 0.42f)
+        7 -> lerp(scheme.surfaceContainerHigh, scheme.outlineVariant, 0.58f)
         else -> scheme.surfaceContainerHigh
     }
     val checkedThumb = when (style) {
@@ -568,7 +568,7 @@ fun ExpressiveSwitch(
             }
             // The actual outline, not a hard-coded rounded rectangle, keeps the
             // global Aloha shape family and corner scale linked to each style.
-            val oneUiRailHeight = if (style == 7) 16.dp.toPx() else h
+            val oneUiRailHeight = if (style == 7) 18.dp.toPx() else h
             val trackTop = (h - oneUiRailHeight) / 2f
             val trackOutline = trackShape.createOutline(
                 size = Size(w, oneUiRailHeight),
@@ -665,7 +665,7 @@ fun ExpressiveSwitch(
                         style = Stroke(width = 2.dp.toPx()),
                     )
                     if (oneUiHaloProgress.value > 0.001f) {
-                        val haloExpansion = 8.dp.toPx() * oneUiHaloProgress.value
+                        val haloExpansion = 10.dp.toPx() * oneUiHaloProgress.value
                         val haloOutline = thumbShape.createOutline(
                             size = Size(thumbWidthPx + haloExpansion, thumbHeightPx + haloExpansion),
                             layoutDirection = layoutDirection,
@@ -673,10 +673,22 @@ fun ExpressiveSwitch(
                         )
                         val haloColor = if (checked) checkedTrack else scheme.outline
                         withTransform({ translate(-haloExpansion / 2f, -haloExpansion / 2f) }) {
+                            // Layer several soft, wide strokes to create a diffuse bloom,
+                            // rather than a crisp outlined ring around the thumb.
                             drawAlohaOutline(
                                 haloOutline,
-                                haloColor.copy(alpha = oneUiHaloProgress.value * 0.48f),
-                                style = Stroke(width = 2.dp.toPx()),
+                                haloColor.copy(alpha = oneUiHaloProgress.value * 0.07f),
+                                style = Stroke(width = 12.dp.toPx()),
+                            )
+                            drawAlohaOutline(
+                                haloOutline,
+                                haloColor.copy(alpha = oneUiHaloProgress.value * 0.12f),
+                                style = Stroke(width = 7.dp.toPx()),
+                            )
+                            drawAlohaOutline(
+                                haloOutline,
+                                haloColor.copy(alpha = oneUiHaloProgress.value * 0.18f),
+                                style = Stroke(width = 3.dp.toPx()),
                             )
                         }
                     }
