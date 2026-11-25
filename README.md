@@ -18,8 +18,6 @@
 
 **Aloha OneUI** 是一个面向 Samsung One UI 设备的独立 Android / LSPosed 模块。项目专注于系统界面定制、功能增强和一致的主题体验，让用户能够按自己的习惯调整状态栏、系统界面、交互方式以及界面组件。
 
-Aloha OneUI 使用独立的应用身份、源码命名空间和发布流程，不是 OneUI XP 的改名版本，也不依赖旧应用包名进行原地升级。
-
 ### ✨ 功能与特色
 
 #### 系统界面与状态栏
@@ -63,8 +61,6 @@ Aloha OneUI 使用独立的应用身份、源码命名空间和发布流程，�
 ### 📥 下载与更新
 
 - **正式版下载：** [Aloha OneUI Releases](https://github.com/iSkyJIE/AlohaOneUI/releases)
-- **源码仓库：** [Oneuixpcity](https://github.com/iskyxpcity/Oneuixpcity)
-- **构建状态：** [GitHub Actions](https://github.com/iskyxpcity/Oneuixpcity/actions)
 
 请优先使用项目发布页提供的正式版 APK。测试构建和 CI 预发布产物不等同于正式发行版本。
 
@@ -87,7 +83,6 @@ Aloha OneUI 使用独立的应用身份、源码命名空间和发布流程，�
 
 **Aloha OneUI** is an independent Android / LSPosed module designed for Samsung One UI devices. It focuses on system interface customization, feature enhancements, and a consistent theming experience, allowing users to personalize the status bar, system UI, interactions, and interface components.
 
-Aloha OneUI has its own application identity, source namespaces, and release workflow. It is an independent project, not a renamed OneUI XP app, and it does not use the legacy application ID for in-place upgrades.
 
 ### ✨ Features
 
@@ -132,8 +127,7 @@ Aloha OneUI has its own application identity, source namespaces, and release wor
 ### 📥 Downloads & Updates
 
 - **Stable releases:** [Aloha OneUI Releases](https://github.com/iSkyJIE/AlohaOneUI/releases)
-- **Source repository:** [Oneuixpcity](https://github.com/iskyxpcity/Oneuixpcity)
-- **Build status:** [GitHub Actions](https://github.com/iskyxpcity/Oneuixpcity/actions)
+
 
 Please use the stable APK provided on the official release page. Test builds and CI artifacts are not equivalent to official releases.
 
