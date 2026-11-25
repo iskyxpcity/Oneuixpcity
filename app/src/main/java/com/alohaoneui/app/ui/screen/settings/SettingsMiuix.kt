@@ -1,6 +1,9 @@
 package com.alohaoneui.app.ui.screen.settings
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -54,6 +57,7 @@ import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.dialog.rememberLoadingDialog
 import com.alohaoneui.app.ui.component.miuix.SendLogDialog
 import com.alohaoneui.app.ui.theme.LocalEnableBlur
+import com.alohaoneui.app.ui.util.shouldShowSplitPane
 import com.alohaoneui.app.ui.util.BlurredBar
 import com.alohaoneui.app.ui.util.rememberBlurBackdrop
 import top.yukonga.miuix.kmp.basic.Card
@@ -76,6 +80,7 @@ import top.yukonga.miuix.kmp.utils.scrollEndHaptic
  * @author weishu
  * @date 2023/1/1.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SettingPagerMiuix(
     uiState: SettingsUiState,
@@ -116,10 +121,16 @@ fun SettingPagerMiuix(
                 overscrollEffect = null,
             ) {
                 item {
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        maxItemsInEachRow = 2,
+                    ) {
                     Card(
                         modifier = Modifier
                             .padding(top = 12.dp)
-                            .fillMaxWidth(),
+                            .fillMaxWidth(if (shouldShowSplitPane()) 0.48f else 1f),
                     ) {
                         SwitchPreference(
                             title = stringResource(id = R.string.settings_check_update),
@@ -227,7 +238,7 @@ fun SettingPagerMiuix(
                     Card(
                         modifier = Modifier
                             .padding(vertical = 12.dp)
-                            .fillMaxWidth(),
+                            .fillMaxWidth(if (shouldShowSplitPane()) 0.48f else 1f),
                     ) {
                         ArrowPreference(
                             title = stringResource(id = R.string.send_log),
@@ -260,7 +271,8 @@ fun SettingPagerMiuix(
                             onClick = actions.onOpenAbout,
                         )
                     }
-                    Spacer(Modifier.height(bottomInnerPadding))
+                    Spacer(Modifier.fillMaxWidth().height(bottomInnerPadding))
+                    }
                 }
             }
         }
