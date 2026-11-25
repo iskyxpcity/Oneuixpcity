@@ -289,7 +289,7 @@ fun ColorPaletteScreenMiuix(
                     Card(
                         modifier = Modifier
                             .padding(top = 12.dp)
-                            .fillMaxWidth(if (shouldShowSplitPane()) 0.48f else 1f),
+                            .fillMaxWidth(),
                     ) {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                             SwitchPreference(
@@ -348,7 +348,7 @@ fun ColorPaletteScreenMiuix(
                     Card(
                         modifier = Modifier
                             .padding(top = 12.dp)
-                            .fillMaxWidth(if (shouldShowSplitPane()) 0.48f else 1f),
+                            .fillMaxWidth(),
                     ) {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                             SwitchPreference(
