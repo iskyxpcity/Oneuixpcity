@@ -339,7 +339,7 @@ fun ColorPaletteScreenMaterial(
                 )
 
                 SegmentedColumn(
-                    modifier = Modifier.fillMaxWidth(if (shouldShowSplitPane()) 0.48f else 1f).padding(vertical = 4.dp),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                     content = buildList {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                             add {
@@ -382,7 +382,7 @@ fun ColorPaletteScreenMaterial(
                 )
 
                 SegmentedColumn(
-                    modifier = Modifier.fillMaxWidth(if (shouldShowSplitPane()) 0.48f else 1f).padding(vertical = 4.dp),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                     content = buildList {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                             add {
@@ -597,7 +597,7 @@ fun ColorPaletteScreenMaterial(
 
                 // Shape group: the slider remains a row in the source-style group.
                 SegmentedColumn(
-                    modifier = Modifier.fillMaxWidth(if (shouldShowSplitPane()) 0.48f else 1f).padding(vertical = 4.dp),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                     title = stringResource(R.string.theme_group_shape),
                     content = listOf(
                         {
@@ -788,7 +788,7 @@ fun ColorPaletteScreenMaterial(
 
                 // Components group: outline width is another source-style slider row.
                 SegmentedColumn(
-                    modifier = Modifier.fillMaxWidth(if (shouldShowSplitPane()) 0.48f else 1f).padding(vertical = 4.dp),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                     title = stringResource(R.string.theme_group_components),
                     content = listOf(
                         {
@@ -982,7 +982,7 @@ fun ColorPaletteScreenMaterial(
 
                 // Shadows group exposes six independent component switches.
                 SegmentedColumn(
-                    modifier = Modifier.fillMaxWidth(if (shouldShowSplitPane()) 0.48f else 1f).padding(vertical = 4.dp),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                     title = stringResource(R.string.theme_group_shadows),
                     content = remember(
                         uiState.materialShadowContainers,
