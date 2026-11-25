@@ -1,6 +1,9 @@
 package com.alohaoneui.app.ui.screen.settings
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -58,6 +61,7 @@ import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.material.ExpressiveLargeTopAppBar
+import com.alohaoneui.app.ui.util.shouldShowSplitPane
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
 import com.alohaoneui.app.ui.component.material.alohaOneUISegmentedColors
@@ -72,6 +76,7 @@ import com.alohaoneui.app.ui.component.material.SnackBarHost
  * @author weishu
  * @date 2023/1/1.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SettingPagerMaterial(
     uiState: SettingsUiState,
@@ -90,17 +95,20 @@ fun SettingPagerMaterial(
         snackbarHost = { SnackBarHost(hostState = snackBarHost, modifier = Modifier.padding(bottom = bottomInnerPadding)) },
         contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
     ) { paddingValues ->
-        Column(
+        FlowRow(
             modifier = Modifier
                 // Match AboutMaterial's full-height scroll container so blank space participates.
                 .fillMaxSize()
                 .padding(paddingValues)
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            maxItemsInEachRow = 2,
         ) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.fillMaxWidth().height(8.dp))
             SegmentedColumn(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    modifier = Modifier.fillMaxWidth(if (shouldShowSplitPane()) 0.48f else 1f).padding(horizontal = 16.dp, vertical = 8.dp),
                     content = listOf(
                         {
                             SegmentedSwitchItem(
@@ -115,7 +123,7 @@ fun SettingPagerMaterial(
                 )
 
             SegmentedColumn(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier = Modifier.fillMaxWidth(if (shouldShowSplitPane()) 0.48f else 1f).padding(horizontal = 16.dp, vertical = 8.dp),
                 content = buildList {
                     add {
                         SegmentedDropdownItem(
@@ -241,7 +249,7 @@ fun SettingPagerMaterial(
                     snackbarHostState = snackBarHost,
                 )
             }
-            Spacer(modifier = Modifier.height(bottomInnerPadding))
+            Spacer(modifier = Modifier.fillMaxWidth().height(bottomInnerPadding))
         }
     }
 }
