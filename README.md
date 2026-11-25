@@ -1,55 +1,159 @@
+<div align="center">
+
 # Aloha OneUI
 
-Aloha OneUI 是面向 Samsung One UI 的独立 Android / LSPosed 模块，提供系统界面定制与双主题设置界面（Miuix / Material）。它不是 Root 管理工具。
+## 释放 Samsung One UI 的更多可能 | Customize and enhance Samsung One UI
 
-## 应用身份与版本
+[![Android](https://img.shields.io/badge/Android-12%2B-brightgreen?style=flat-square&logo=android)](https://developer.android.com/about/versions)
+[![LSPosed](https://img.shields.io/badge/LSPosed-Module-blue?style=flat-square)](https://github.com/LSPosed/LSPosed)
+[![Package](https://img.shields.io/badge/Package-com.alohaoneui.app-informational?style=flat-square)](https://github.com/iskyxpcity/Oneuixpcity)
 
-- 用户可见名称：`Aloha OneUI`
-- Android application ID / app namespace：`com.alohaoneui.app`
-- Hook 入口：`com.alohaoneui.hook.Main`
-- Xposed API：`101`
-- 当前正式发行版本：`1.0.261023`（versionCode：`12`）。
-- Xposed self-scope：`app/src/main/resources/META-INF/xposed/scope.list`
+[简体中文](#简体中文) | [English](#english)
 
-变更后的 application ID 使 Aloha OneUI 成为独立安装的 Android 应用，而不是 OneUI XP 的原地升级。Android 不会因安装 Aloha 自动迁移旧 XP 的应用数据或 DataStore 设置；安装前请保留旧应用及需要的配置备份。
+</div>
 
-## 项目结构
+---
 
-- `app/src/main/java/com/alohaoneui/app/`：应用入口、设置界面、状态诊断与更新器。
-- `app/src/main/java/com/alohaoneui/mod/ui/`：功能设置界面。
-- `common/`：共享配置模型与通用逻辑，命名空间为 `com.alohaoneui.common`。
-- `hook/`：LSPosed 功能入口与 Hook 实现，命名空间为 `com.alohaoneui.hook`。
-- `stub/`：编译期 Android API 存根，命名空间为 `com.alohaoneui.stub`。
-- `.github/workflows/build.yml`：源码检查、编译、签名与 APK 验证。
-- `verify_migration.py`、`verify_no_jni.py`、`verify_alohaoneui_identity.py`：源码迁移、JNI 禁用与 Aloha 身份/版本/入口/资源校验。
+## 简体中文
 
-## 更新源职责
+**Aloha OneUI** 是一个面向 Samsung One UI 设备的独立 Android / LSPosed 模块。项目专注于系统界面定制、功能增强和一致的主题体验，让用户能够按自己的习惯调整状态栏、系统界面、交互方式以及界面组件。
 
-- Aloha OneUI 自身更新及旧应用迁移目标：[`iSkyJIE/AlohaOneUI`](https://github.com/iSkyJIE/AlohaOneUI/releases)
-- 已安装 OneUI XP 的旧版本常规更新与无 Aloha 可用迁移资产时的回退源：[`iSkyJIE/OneuiXP-Releases`](https://github.com/iSkyJIE/OneuiXP-Releases/releases)
+Aloha OneUI 使用独立的应用身份、源码命名空间和发布流程，不是 OneUI XP 的改名版本，也不依赖旧应用包名进行原地升级。
 
-旧 XP feed 与旧包名只应出现在明确的迁移/兼容逻辑中，不是 Aloha 当前应用身份的一部分。迁移检查必须继续限制为 Aloha 官方 HTTPS Release 资产，且不得将不同 application ID 的 Aloha APK 当作旧 XP 包的原地覆盖升级。
+### ✨ 功能与特色
 
-## 构建、签名与发布
+#### 系统界面与状态栏
 
-构建使用 GitHub Actions Secrets 提供既有 Owner 签名凭据：
+- 状态栏图标、布局和显示效果定制
+- 状态栏时钟、日期及相关信息显示增强
+- 系统界面布局与显示细节调整
+- 面向 Samsung SystemUI 及相关系统应用的功能扩展
 
-- `KEYSTORE_BASE64`
-- `KEYSTORE_PASSWORD`
-- `KEY_ALIAS`
-- `KEY_PASSWORD`
+#### 导航与交互
 
-正式签名版 Release 仅在本源码仓库 `iskyxpcity/Oneuixpcity` 的 `main` 分支收到明确的 `release:*` 提交时创建，使用当前仓库的 `GITHUB_TOKEN`，并附带 APK、兼容文件名、`SHA256SUMS`、Owner 签名信息与 APK 包信息。CI 不会向公开更新/发行仓库 `iSkyJIE/AlohaOneUI` 创建 Release 或上传资产；正式 APK 校验通过并从本仓库交付后，由仓库所有者自行上传到该公开仓库。测试预发布包不会作为正式版交付。
+- 第二导航栏及其功能扩展
+- 手势与导航交互选项
+- 页面切换、返回及相关交互体验优化
+- 按钮、卡片和控件的动画与触感表现调整
 
-固定 Owner 证书 SHA-256 基线为 `93bf61a6493c6b336383832eb41301bd8fe061f43566e7e384e3fdd9fc1c26a1`。请勿更换密钥、生成替代签名或将 keystore / 密码写入仓库。Secret 名称保持既有设置；本项目 Gradle 中使用的环境变量以 `ALOHAONEUI_*` 命名。
+#### 主题与界面组件
 
-- 私有源码仓库：[`iskyxpcity/Oneuixpcity`](https://github.com/iskyxpcity/Oneuixpcity)
-- 私有源码仓库 Actions：[`Oneuixpcity/actions`](https://github.com/iskyxpcity/Oneuixpcity/actions)
-- Aloha 公开 Release 与 Aloha 更新源：[`AlohaOneUI`](https://github.com/iSkyJIE/AlohaOneUI/releases)
-- 旧 XP 更新源：[`OneuiXP-Releases`](https://github.com/iSkyJIE/OneuiXP-Releases/releases)
+- **Material** 与 **Miuix** 双主题界面
+- 主题关联的颜色、形状、圆角、描边及组件样式
+- 多种开关外观与滑块样式
+- 弹窗、输入框、选项卡、卡片及详情页面的统一适配
+- 界面缩放、模糊及其他显示效果选项
 
-源码预检、CI 成功、APK 已签名与三星真机验收是不同的验证阶段。正式交付前须核对最终 HEAD 对应的 Actions run、实际 APK 直链及资产、包名/应用标签/versionName/versionCode、APK SHA-256、Owner 证书指纹、APK V2 签名与 ZIP 完整性。CI 通过本身不代表已在三星真机完成验收。
+#### 持续优化
 
-## 独立性与许可证
+- 持续完善不同 One UI 系统版本下的兼容性
+- 优化界面性能、动画连贯性和触控响应
+- 根据实际设备体验持续修复问题与改进细节
 
-Aloha OneUI 使用独立的 application ID、源码命名空间、构建配置与发布流程。项目保留的第三方组件仍遵守原有许可证与必要署名；相关许可证正文保存在 `LICENSE` 和 `third_party/THIRD_PARTY_MOD_LICENSE.txt`，不得为追求品牌清理而删除或篡改许可证内容。
+> 功能是否可用可能因设备型号、One UI 版本及系统应用版本而异。具体功能以应用内实际提供的选项为准。
+
+### 📦 安装要求
+
+- Samsung Galaxy 设备及 Samsung One UI 系统。
+- Android 12（API 31）或更高版本。
+- 设备已获取 Root 权限。
+- 已安装并正常运行 LSPosed 框架。
+- 安装 Aloha OneUI 后，在 LSPosed 中启用模块，并按需启用对应作用域；完成后按照提示重启相关进程或设备。
+
+### 📥 下载与更新
+
+- **正式版下载：** [Aloha OneUI Releases](https://github.com/iSkyJIE/AlohaOneUI/releases)
+- **源码仓库：** [Oneuixpcity](https://github.com/iskyxpcity/Oneuixpcity)
+- **构建状态：** [GitHub Actions](https://github.com/iskyxpcity/Oneuixpcity/actions)
+
+请优先使用项目发布页提供的正式版 APK。测试构建和 CI 预发布产物不等同于正式发行版本。
+
+### ⚠️ 使用说明
+
+- 本项目通过 LSPosed 对目标系统进程及应用进行功能扩展；请确认设备已正确安装并启用 LSPosed。
+- 系统 OTA、One UI 更新或目标应用更新可能改变系统实现，导致部分功能需要适配。
+- 修改系统界面前建议备份重要数据，并保留可恢复的系统环境。
+- 请勿将不同应用包名的旧版本 APK 当作 Aloha OneUI 的原地升级包。
+
+### 🤝 参与贡献
+
+欢迎通过 GitHub Issues 反馈问题、提交功能建议，或通过 Pull Request 参与改进。
+
+提交问题时，建议附上设备型号、Android / One UI 版本、问题涉及的功能以及应用内生成的诊断日志，以便定位和复现。
+
+---
+
+## English
+
+**Aloha OneUI** is an independent Android / LSPosed module designed for Samsung One UI devices. It focuses on system interface customization, feature enhancements, and a consistent theming experience, allowing users to personalize the status bar, system UI, interactions, and interface components.
+
+Aloha OneUI has its own application identity, source namespaces, and release workflow. It is an independent project, not a renamed OneUI XP app, and it does not use the legacy application ID for in-place upgrades.
+
+### ✨ Features
+
+#### System UI & Status Bar
+
+- Customization of status bar icons, layout, and appearance
+- Enhanced clock, date, and related status bar information
+- System interface layout and visual adjustments
+- Extensions for Samsung SystemUI and supported system apps
+
+#### Navigation & Interaction
+
+- Extended second navigation bar and related features
+- Gesture and navigation interaction options
+- Improvements to page transitions, back navigation, and interaction behavior
+- Customizable animations and touch feedback for buttons, cards, and controls
+
+#### Themes & UI Components
+
+- **Material** and **Miuix** theme interfaces
+- Theme-aware colors, shapes, corner radii, outlines, and component styles
+- Multiple switch appearances and slider styles
+- Consistent styling for dialogs, text fields, option cards, and detail pages
+- Interface scaling, blur, and other display options
+
+#### Ongoing Improvements
+
+- Compatibility improvements across Samsung One UI versions
+- Performance, animation smoothness, and touch-response optimizations
+- Continuous bug fixes and refinements based on real-device testing
+
+> Feature availability may vary depending on the device model, One UI version, and system app version. The options available in the app represent the supported features for your device.
+
+### 📦 Requirements
+
+- A Samsung Galaxy device running Samsung One UI.
+- Android 12 (API 31) or later.
+- Root access.
+- A properly installed and running LSPosed framework.
+- After installing Aloha OneUI, enable the module in LSPosed and select the required scopes. Restart the relevant processes or device as prompted.
+
+### 📥 Downloads & Updates
+
+- **Stable releases:** [Aloha OneUI Releases](https://github.com/iSkyJIE/AlohaOneUI/releases)
+- **Source repository:** [Oneuixpcity](https://github.com/iskyxpcity/Oneuixpcity)
+- **Build status:** [GitHub Actions](https://github.com/iskyxpcity/Oneuixpcity/actions)
+
+Please use the stable APK provided on the official release page. Test builds and CI artifacts are not equivalent to official releases.
+
+### ⚠️ Notes
+
+- This project uses LSPosed to extend features in target system processes and applications. Make sure LSPosed is correctly installed and enabled.
+- System OTAs, One UI updates, or target app updates may change internal implementations and require compatibility adjustments.
+- Back up important data and keep a recoverable system environment before modifying system behavior.
+- Do not treat APKs with a different application ID as in-place upgrade packages for Aloha OneUI.
+
+### 🤝 Contributing
+
+Issues, feature suggestions, and Pull Requests are welcome.
+
+When reporting a problem, please include your device model, Android / One UI version, the affected feature, and diagnostic logs generated by the app whenever possible.
+
+---
+
+<div align="center">
+
+**Aloha OneUI** · Made for Samsung One UI
+
+</div>
