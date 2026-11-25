@@ -6,6 +6,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -326,6 +328,7 @@ private fun ToolsPagerMiuix(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ToolsPagerMaterial(
     navigator: Navigator,
@@ -359,15 +362,19 @@ private fun ToolsPagerMaterial(
             WindowInsetsSides.Top + WindowInsetsSides.Horizontal
         ),
     ) { innerPadding ->
-        Column(
+        FlowRow(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .verticalScroll(rememberScrollState())
                 .padding(innerPadding),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            maxItemsInEachRow = 2,
         ) {
             SegmentedColumn(
                 modifier = Modifier
+                    .fillMaxWidth(if (shouldShowSplitPane()) 0.48f else 1f)
                     .padding(horizontal = 16.dp, vertical = 8.dp)
                     .graphicsLayer {
                         alpha = if (lsposedActive) 1f else 0.38f
@@ -485,7 +492,7 @@ private fun ToolsPagerMaterial(
                     },
                 ),
             )
-            Spacer(Modifier.height(bottomInnerPadding))
+            Spacer(Modifier.fillMaxWidth().height(bottomInnerPadding))
         }
     }
 }
