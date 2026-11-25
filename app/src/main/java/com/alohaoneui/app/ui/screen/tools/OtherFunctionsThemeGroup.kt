@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
+import com.alohaoneui.app.ui.util.shouldShowSplitPane
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.alohaOneUISegmentedColors
@@ -33,7 +34,7 @@ fun OtherFunctionsThemeGroup(
 
     when (LocalUiMode.current) {
         UiMode.Material -> SegmentedColumn(
-            modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            modifier = modifier.fillMaxWidth(if (shouldShowSplitPane()) 0.48f else 1f).padding(horizontal = 16.dp, vertical = 8.dp),
             content = items.map { item ->
                 {
                     CompositionLocalProvider(
@@ -46,7 +47,7 @@ fun OtherFunctionsThemeGroup(
         )
 
         UiMode.Miuix -> Card(
-            modifier = modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+            modifier = modifier.fillMaxWidth(if (shouldShowSplitPane()) 0.48f else 1f).padding(horizontal = 12.dp, vertical = 4.dp),
             insideMargin = PaddingValues(0.dp),
         ) {
             CompositionLocalProvider(
