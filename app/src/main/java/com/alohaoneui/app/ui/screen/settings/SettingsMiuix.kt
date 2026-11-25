@@ -3,7 +3,6 @@ package com.alohaoneui.app.ui.screen.settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -57,7 +56,7 @@ import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.dialog.rememberLoadingDialog
 import com.alohaoneui.app.ui.component.miuix.SendLogDialog
 import com.alohaoneui.app.ui.theme.LocalEnableBlur
-import com.alohaoneui.app.ui.util.shouldShowSplitPane
+import com.alohaoneui.app.ui.util.ResponsiveCardGrid
 import com.alohaoneui.app.ui.util.BlurredBar
 import com.alohaoneui.app.ui.util.rememberBlurBackdrop
 import top.yukonga.miuix.kmp.basic.Card
@@ -121,16 +120,11 @@ fun SettingPagerMiuix(
                 overscrollEffect = null,
             ) {
                 item {
-                    FlowRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        maxItemsInEachRow = 2,
-                    ) {
+                    ResponsiveCardGrid(modifier = Modifier.fillMaxWidth()) {
                     Card(
                         modifier = Modifier
                             .padding(top = 12.dp)
-                            .fillMaxWidth(if (shouldShowSplitPane()) 0.48f else 1f),
+                            .fillMaxWidth(),
                     ) {
                         SwitchPreference(
                             title = stringResource(id = R.string.settings_check_update),
