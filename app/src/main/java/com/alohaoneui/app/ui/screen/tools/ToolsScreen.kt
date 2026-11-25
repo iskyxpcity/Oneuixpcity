@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -23,7 +24,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -65,6 +68,7 @@ import com.alohaoneui.app.ui.navigation3.Navigator
 import com.alohaoneui.app.ui.navigation3.Route
 import com.alohaoneui.app.ui.screen.home.LocalLsposedHomeStatus
 import com.alohaoneui.app.ui.theme.LocalEnableBlur
+import com.alohaoneui.app.ui.util.shouldShowSplitPane
 import com.alohaoneui.app.ui.util.BlurredBar
 import com.alohaoneui.app.ui.util.rememberBlurBackdrop
 import top.yukonga.miuix.kmp.basic.BasicComponent as MiuixBasicComponent
@@ -151,17 +155,20 @@ private fun ToolsPagerMiuix(
             .only(WindowInsetsSides.Horizontal),
     ) { innerPadding ->
         Box(modifier = if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier) {
-            LazyColumn(
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(if (shouldShowSplitPane()) 2 else 1),
                 modifier = Modifier
                     .fillMaxHeight()
                     .scrollEndHaptic()
                     .overScrollVertical()
                     .nestedScroll(scrollBehavior.nestedScrollConnection)
                     .padding(horizontal = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = innerPadding,
                 overscrollEffect = null,
             ) {
-                item { Spacer(Modifier.height(12.dp)) }
+                item(span = { GridItemSpan(maxLineSpan) }) { Spacer(Modifier.height(12.dp)) }
 
                 categories.forEach { category ->
                     item {
@@ -313,7 +320,7 @@ private fun ToolsPagerMiuix(
                     }
                 }
 
-                item { Spacer(Modifier.height(bottomInnerPadding)) }
+                item(span = { GridItemSpan(maxLineSpan) }) { Spacer(Modifier.height(bottomInnerPadding)) }
             }
         }
     }
