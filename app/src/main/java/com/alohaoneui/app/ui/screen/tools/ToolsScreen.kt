@@ -404,7 +404,7 @@ private fun ToolsPagerMaterial(
 
             SegmentedColumn(
                 modifier = Modifier
-                    .fillMaxWidth(if (shouldShowSplitPane()) 0.48f else 1f)
+                    .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
                     .graphicsLayer {
                         alpha = if (lsposedActive) 1f else 0.38f
@@ -437,7 +437,7 @@ private fun ToolsPagerMaterial(
 
             SegmentedColumn(
                 modifier = Modifier
-                    .fillMaxWidth(if (shouldShowSplitPane()) 0.48f else 1f)
+                    .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
                     .graphicsLayer { alpha = if (lsposedActive) 1f else 0.38f },
                 content = listOf(
