@@ -496,6 +496,7 @@ private fun GlobalShortcutPageFrame(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
+                            .padding(horizontal = 16.dp)
                             .verticalScroll(rememberScrollState()),
                     ) {
                         if (subtitle.isNotBlank()) ShortcutBodyText(subtitle)
@@ -546,6 +547,7 @@ private fun GlobalShortcutPageFrame(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
+                            .padding(horizontal = 12.dp)
                             .scrollEndHaptic()
                             .overScrollVertical()
                             .verticalScroll(rememberScrollState()),
@@ -1353,7 +1355,7 @@ private fun ShortcutBodyText(
         UiMode.Material -> Text(
             text = text,
             modifier = Modifier.padding(
-                horizontal = if (groupedChild) 0.dp else 18.dp,
+                horizontal = 0.dp,
                 vertical = 8.dp,
             ),
             style = MaterialTheme.typography.bodySmall,
@@ -1361,7 +1363,7 @@ private fun ShortcutBodyText(
         )
         UiMode.Miuix -> MiuixText(
             text = text,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            modifier = Modifier.padding(vertical = 8.dp),
             color = colorScheme.onSurface,
         )
     }

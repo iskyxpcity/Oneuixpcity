@@ -34,7 +34,7 @@ fun OtherFunctionsThemeGroup(
 
     when (LocalUiMode.current) {
         UiMode.Material -> SegmentedColumn(
-            modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+            modifier = modifier.fillMaxWidth().padding(vertical = 8.dp),
             content = items.map { item ->
                 {
                     CompositionLocalProvider(
@@ -47,7 +47,7 @@ fun OtherFunctionsThemeGroup(
         )
 
         UiMode.Miuix -> Card(
-            modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
+            modifier = modifier.fillMaxWidth().padding(vertical = 4.dp),
             insideMargin = PaddingValues(0.dp),
         ) {
             CompositionLocalProvider(
