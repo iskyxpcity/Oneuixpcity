@@ -140,6 +140,7 @@ private fun OtherFunctionsMaterial(
             ResponsiveCardGrid(
                 modifier = Modifier
                     .fillMaxSize()
+                    .padding(horizontal = 16.dp)
                     .verticalScroll(rememberScrollState()),
             ) {
                 OtherFunctionsControls(
@@ -207,6 +208,7 @@ private fun OtherFunctionsMiuix(
             ResponsiveCardGrid(
                 modifier = Modifier
                     .fillMaxSize()
+                    .padding(horizontal = 12.dp)
                     .overScrollVertical()
                     .scrollEndHaptic()
                     .verticalScroll(rememberScrollState()),

@@ -165,7 +165,7 @@ private fun ToolsPagerMiuix(
                     .overScrollVertical()
                     .nestedScroll(scrollBehavior.nestedScrollConnection)
                     .padding(horizontal = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = innerPadding,
                 overscrollEffect = null,
@@ -367,12 +367,13 @@ private fun ToolsPagerMaterial(
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .verticalScroll(rememberScrollState())
-                .padding(innerPadding),
+                .padding(innerPadding)
+                .padding(horizontal = 16.dp),
         ) {
             SegmentedColumn(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(vertical = 8.dp)
                     .graphicsLayer {
                         alpha = if (lsposedActive) 1f else 0.38f
                     },
@@ -405,7 +406,7 @@ private fun ToolsPagerMaterial(
             SegmentedColumn(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(vertical = 8.dp)
                     .graphicsLayer {
                         alpha = if (lsposedActive) 1f else 0.38f
                     },
@@ -438,7 +439,7 @@ private fun ToolsPagerMaterial(
             SegmentedColumn(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(vertical = 8.dp)
                     .graphicsLayer { alpha = if (lsposedActive) 1f else 0.38f },
                 content = listOf(
                     {

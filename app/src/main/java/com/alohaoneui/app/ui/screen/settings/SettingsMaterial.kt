@@ -101,11 +101,12 @@ fun SettingPagerMaterial(
                 // Match AboutMaterial's full-height scroll container so blank space participates.
                 .fillMaxSize()
                 .padding(paddingValues)
+                .padding(horizontal = 16.dp)
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .verticalScroll(rememberScrollState()),
         ) {
             SegmentedColumn(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                     content = listOf(
                         {
                             SegmentedSwitchItem(
@@ -120,7 +121,7 @@ fun SettingPagerMaterial(
                 )
 
             SegmentedColumn(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                 content = buildList {
                     add {
                         SegmentedDropdownItem(
@@ -159,7 +160,7 @@ fun SettingPagerMaterial(
                 "한국어" to "ko",
             )
             SegmentedColumn(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                 content = buildList {
                     add {
                         SegmentedListItem(
@@ -209,7 +210,7 @@ fun SettingPagerMaterial(
             )
 
             SegmentedColumn(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                 content = listOf(
                     {
                         SegmentedListItem(
