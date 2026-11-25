@@ -1,6 +1,9 @@
 package com.alohaoneui.app.ui.screen.tools
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -43,6 +46,7 @@ import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.rebootlistpopup.RebootListPopup
 import com.alohaoneui.app.ui.navigation3.LocalNavigator
 import com.alohaoneui.app.ui.theme.LocalEnableBlur
+import com.alohaoneui.app.ui.util.shouldShowSplitPane
 import com.alohaoneui.app.ui.util.BlurredBar
 import com.alohaoneui.app.ui.util.rememberBlurBackdrop
 import com.alohaoneui.app.ui.viewmodel.AlohaOneUIToolsViewModel
@@ -92,6 +96,7 @@ fun OtherFunctionsScreen() {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun OtherFunctionsMaterial(
     uiState: Preference.SystemUI.Other,
@@ -131,10 +136,13 @@ private fun OtherFunctionsMaterial(
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .padding(innerPadding),
         ) {
-            Column(
+            FlowRow(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                maxItemsInEachRow = 2,
             ) {
                 OtherFunctionsControls(
                     uiState = uiState,
@@ -142,12 +150,13 @@ private fun OtherFunctionsMaterial(
                     onEvent = onEvent,
                     onOtherChange = onOtherChange,
                 )
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.fillMaxWidth().height(24.dp))
             }
         }
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun OtherFunctionsMiuix(
     uiState: Preference.SystemUI.Other,
@@ -197,12 +206,15 @@ private fun OtherFunctionsMiuix(
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .padding(innerPadding),
         ) {
-            Column(
+            FlowRow(
                 modifier = Modifier
                     .fillMaxSize()
                     .overScrollVertical()
                     .scrollEndHaptic()
                     .verticalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                maxItemsInEachRow = 2,
             ) {
                 OtherFunctionsControls(
                     uiState = uiState,
