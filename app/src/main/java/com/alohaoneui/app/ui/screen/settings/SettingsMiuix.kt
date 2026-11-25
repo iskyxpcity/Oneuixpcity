@@ -147,7 +147,7 @@ fun SettingPagerMiuix(
                     Card(
                         modifier = Modifier
                             .padding(top = 12.dp)
-                            .fillMaxWidth(if (shouldShowSplitPane()) 0.48f else 1f),
+                            .fillMaxWidth(),
                     ) {
                         OverlayDropdownPreference(
                             title = stringResource(id = R.string.settings_ui_mode),
@@ -183,7 +183,7 @@ fun SettingPagerMiuix(
                     Card(
                         modifier = Modifier
                             .padding(top = 12.dp)
-                            .fillMaxWidth(if (shouldShowSplitPane()) 0.48f else 1f),
+                            .fillMaxWidth(),
                     ) {
                         Row(
                             modifier = Modifier
@@ -233,7 +233,7 @@ fun SettingPagerMiuix(
                     Card(
                         modifier = Modifier
                             .padding(vertical = 12.dp)
-                            .fillMaxWidth(if (shouldShowSplitPane()) 0.48f else 1f),
+                            .fillMaxWidth(),
                     ) {
                         ArrowPreference(
                             title = stringResource(id = R.string.send_log),
