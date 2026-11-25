@@ -117,6 +117,7 @@ import com.alohaoneui.app.ui.component.material.alohaOneUISegmentedColors
 import com.alohaoneui.app.ui.navigation3.LocalNavigator
 import com.alohaoneui.app.ui.navigation3.Route
 import com.alohaoneui.app.ui.theme.LocalEnableBlur
+import com.alohaoneui.app.ui.util.ResponsiveCardGrid
 import com.alohaoneui.app.ui.util.BlurredBar
 import com.alohaoneui.app.ui.util.rememberBlurBackdrop
 import com.alohaoneui.app.ui.viewmodel.AlohaOneUIToolsViewModel
@@ -259,40 +260,54 @@ fun GlobalShortcutActionsScreen() {
         subtitle = "集中管理三指、状态栏、息屏按键等快捷触发。",
         onBack = navigator::pop,
     ) {
-        GlobalShortcutEntryCard(
-            title = "全局三指动作",
-            icon = ShortcutEntryIcon.Gesture,
-            description = "统一设置三指滑动、捏合和展开动作。",
-            state = if (enabledThreeFingerCount == 0) "未启用" else "已启用 ${enabledThreeFingerCount} 项",
-            onClick = { navigator.push(Route.GlobalThreeFingerActions) },
-        )
-        GlobalShortcutEntryCard(
-            title = "悬浮球",
-            icon = ShortcutEntryIcon.FloatingBall,
-            description = "设置悬浮球颜色、大小、和单击/双击/划动动作。",
-            state = if (settings.floatingBallEnabled) "已启用" else "未启用",
-            onClick = { navigator.push(Route.GlobalFloatingBallShortcut) },
-        )
-        GlobalShortcutEntryCard(
-            title = "状态栏快捷动作",
-            icon = ShortcutEntryIcon.StatusBar,
-            description = "设置状态栏双击、左上角/右上角单击和长按动作。",
-            state = if (settings.statusBarShortcutEnabled) "已启用" else "未启用",
-            onClick = { navigator.push(Route.GlobalStatusBarShortcut) },
-        )
-        GlobalShortcutEntryCard(
-            title = "虚拟导航键动作",
-            icon = ShortcutEntryIcon.NavigationBar,
-            description = "设置返回、Home、最近任务的双击和长按动作。",
-            state = if (settings.navigationKeyShortcutEnabled) "已启用" else "未启用",
-            onClick = { navigator.push(Route.GlobalNavigationKeyShortcut) },
-        )
-        GlobalShortcutEntryCard(
-            title = "息屏音量键动作",
-            icon = ShortcutEntryIcon.Volume,
-            description = "息屏长按音量键切歌，双击音量键播放/暂停。",
-            state = if (settings.screenOffVolumeKeyEnabled) "已启用" else "未启用",
-            onClick = { navigator.push(Route.GlobalScreenOffVolumeKeyShortcut) },
+        ResponsiveCardGrid(
+            content = listOf(
+                {
+                    GlobalShortcutEntryCard(
+                        title = "全局三指动作",
+                        icon = ShortcutEntryIcon.Gesture,
+                        description = "统一设置三指滑动、捏合和展开动作。",
+                        state = if (enabledThreeFingerCount == 0) "未启用" else "已启用 ${enabledThreeFingerCount} 项",
+                        onClick = { navigator.push(Route.GlobalThreeFingerActions) },
+                    )
+                },
+                {
+                    GlobalShortcutEntryCard(
+                        title = "悬浮球",
+                        icon = ShortcutEntryIcon.FloatingBall,
+                        description = "设置悬浮球颜色、大小、和单击/双击/划动动作。",
+                        state = if (settings.floatingBallEnabled) "已启用" else "未启用",
+                        onClick = { navigator.push(Route.GlobalFloatingBallShortcut) },
+                    )
+                },
+                {
+                    GlobalShortcutEntryCard(
+                        title = "状态栏快捷动作",
+                        icon = ShortcutEntryIcon.StatusBar,
+                        description = "设置状态栏双击、左上角/右上角单击和长按动作。",
+                        state = if (settings.statusBarShortcutEnabled) "已启用" else "未启用",
+                        onClick = { navigator.push(Route.GlobalStatusBarShortcut) },
+                    )
+                },
+                {
+                    GlobalShortcutEntryCard(
+                        title = "虚拟导航键动作",
+                        icon = ShortcutEntryIcon.NavigationBar,
+                        description = "设置返回、Home、最近任务的双击和长按动作。",
+                        state = if (settings.navigationKeyShortcutEnabled) "已启用" else "未启用",
+                        onClick = { navigator.push(Route.GlobalNavigationKeyShortcut) },
+                    )
+                },
+                {
+                    GlobalShortcutEntryCard(
+                        title = "息屏音量键动作",
+                        icon = ShortcutEntryIcon.Volume,
+                        description = "息屏长按音量键切歌，双击音量键播放/暂停。",
+                        state = if (settings.screenOffVolumeKeyEnabled) "已启用" else "未启用",
+                        onClick = { navigator.push(Route.GlobalScreenOffVolumeKeyShortcut) },
+                    )
+                },
+            ),
         )
     }
 }
@@ -310,26 +325,36 @@ fun GlobalThreeFingerActionsScreen() {
         subtitle = "统一管理三指滑动、捏合和展开触发方式。",
         onBack = navigator::pop,
     ) {
-        GlobalShortcutEntryCard(
-            title = "三指滑动",
-            icon = ShortcutEntryIcon.Gesture,
-            description = "设置三指上划、下划、左划、右划动作。",
-            state = if (settings.threeFingerGestureEnabled) "已启用" else "未启用",
-            onClick = { navigator.push(Route.GlobalThreeFingerSwipe) },
-        )
-        GlobalShortcutEntryCard(
-            title = "三指捏合",
-            icon = ShortcutEntryIcon.Pinch,
-            description = "设置三根手指同时向内捏合时执行的动作。",
-            state = if (settings.threeFingerPinchEnabled) "已启用" else "未启用",
-            onClick = { navigator.push(Route.GlobalThreeFingerPinch) },
-        )
-        GlobalShortcutEntryCard(
-            title = "三指展开",
-            icon = ShortcutEntryIcon.Spread,
-            description = "设置三根手指同时向外展开时执行的动作。",
-            state = if (settings.threeFingerSpreadEnabled) "已启用" else "未启用",
-            onClick = { navigator.push(Route.GlobalThreeFingerSpread) },
+        ResponsiveCardGrid(
+            content = listOf(
+                {
+                    GlobalShortcutEntryCard(
+                        title = "三指滑动",
+                        icon = ShortcutEntryIcon.Gesture,
+                        description = "设置三指上划、下划、左划、右划动作。",
+                        state = if (settings.threeFingerGestureEnabled) "已启用" else "未启用",
+                        onClick = { navigator.push(Route.GlobalThreeFingerSwipe) },
+                    )
+                },
+                {
+                    GlobalShortcutEntryCard(
+                        title = "三指捏合",
+                        icon = ShortcutEntryIcon.Pinch,
+                        description = "设置三根手指同时向内捏合时执行的动作。",
+                        state = if (settings.threeFingerPinchEnabled) "已启用" else "未启用",
+                        onClick = { navigator.push(Route.GlobalThreeFingerPinch) },
+                    )
+                },
+                {
+                    GlobalShortcutEntryCard(
+                        title = "三指展开",
+                        icon = ShortcutEntryIcon.Spread,
+                        description = "设置三根手指同时向外展开时执行的动作。",
+                        state = if (settings.threeFingerSpreadEnabled) "已启用" else "未启用",
+                        onClick = { navigator.push(Route.GlobalThreeFingerSpread) },
+                    )
+                },
+            ),
         )
     }
 }
