@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -116,7 +115,8 @@ import com.alohaoneui.app.ui.component.material.ExpressiveButtonGroup
 import com.alohaoneui.app.ui.component.material.ExpressiveContentDialog
 import com.alohaoneui.app.ui.component.material.IconShapePresetPicker
 import com.alohaoneui.app.ui.component.material.IconShapePresetDetailScreen
-import com.alohaoneui.app.ui.util.shouldShowSplitPane
+import com.alohaoneui.app.ui.util.ResponsiveCardGrid
+import com.alohaoneui.app.ui.util.responsiveGridFullSpan
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.SegmentedChoiceOptionsItem
@@ -233,13 +233,8 @@ fun ColorPaletteScreenMaterial(
                 }
             }
 
-            FlowRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                maxItemsInEachRow = 2,
+            ResponsiveCardGrid(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             ) {
                 val systemModeLabel = stringResource(R.string.settings_theme_mode_system)
                 val lightModeLabel = stringResource(R.string.settings_theme_mode_light)
@@ -256,7 +251,7 @@ fun ColorPaletteScreenMaterial(
                     List(4) { MutableInteractionSource() }
                 }
                 ExpressiveButtonGroup(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).responsiveGridFullSpan(),
                     horizontalArrangement = Arrangement.spacedBy(
                         ButtonGroupDefaults.ConnectedSpaceBetween,
                         alignment = Alignment.CenterHorizontally,
@@ -312,7 +307,7 @@ fun ColorPaletteScreenMaterial(
                     }
                 }
                 SegmentedColumn(
-                    modifier = Modifier.fillMaxWidth(if (shouldShowSplitPane()) 0.48f else 1f).padding(vertical = 4.dp),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                     content = remember(colorStyle, colorSpec, actions) { listOf(
                         {
                             val styles = PaletteStyle.entries
