@@ -162,7 +162,7 @@ fun SettingPagerMaterial(
                 "한국어" to "ko",
             )
             SegmentedColumn(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier = Modifier.fillMaxWidth(if (shouldShowSplitPane()) 0.48f else 1f).padding(horizontal = 16.dp, vertical = 8.dp),
                 content = buildList {
                     add {
                         SegmentedListItem(
@@ -212,7 +212,7 @@ fun SettingPagerMaterial(
             )
 
             SegmentedColumn(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier = Modifier.fillMaxWidth(if (shouldShowSplitPane()) 0.48f else 1f).padding(horizontal = 16.dp, vertical = 8.dp),
                 content = listOf(
                     {
                         SegmentedListItem(
@@ -241,7 +241,7 @@ fun SettingPagerMaterial(
                 )
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.fillMaxWidth().height(8.dp))
 
             if (showBottomSheet) {
                 SendLogBottomSheet(
