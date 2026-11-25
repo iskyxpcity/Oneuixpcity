@@ -117,6 +117,7 @@ import com.alohaoneui.app.ui.component.material.IconShapePresetPicker
 import com.alohaoneui.app.ui.component.material.IconShapePresetDetailScreen
 import com.alohaoneui.app.ui.util.ResponsiveCardGrid
 import com.alohaoneui.app.ui.util.responsiveGridFullSpan
+import com.alohaoneui.app.ui.util.shouldShowSplitPane
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.SegmentedChoiceOptionsItem
