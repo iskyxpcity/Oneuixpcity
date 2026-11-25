@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -114,6 +116,7 @@ import com.alohaoneui.app.ui.component.material.ExpressiveButtonGroup
 import com.alohaoneui.app.ui.component.material.ExpressiveContentDialog
 import com.alohaoneui.app.ui.component.material.IconShapePresetPicker
 import com.alohaoneui.app.ui.component.material.IconShapePresetDetailScreen
+import com.alohaoneui.app.ui.util.shouldShowSplitPane
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.SegmentedChoiceOptionsItem
@@ -132,6 +135,7 @@ import com.alohaoneui.app.ui.theme.rememberAlohaOneUIColorScheme
 import com.alohaoneui.app.ui.theme.keyColorOptions
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ColorPaletteScreenMaterial(
     state: ColorPaletteUiState,
@@ -230,11 +234,13 @@ fun ColorPaletteScreenMaterial(
                 }
             }
 
-            Column(
+            FlowRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                maxItemsInEachRow = 2,
             ) {
                 val systemModeLabel = stringResource(R.string.settings_theme_mode_system)
                 val lightModeLabel = stringResource(R.string.settings_theme_mode_light)
@@ -307,7 +313,7 @@ fun ColorPaletteScreenMaterial(
                     }
                 }
                 SegmentedColumn(
-                    modifier = Modifier.padding(vertical = 4.dp),
+                    modifier = Modifier.fillMaxWidth(if (shouldShowSplitPane()) 0.48f else 1f).padding(vertical = 4.dp),
                     content = remember(colorStyle, colorSpec, actions) { listOf(
                         {
                             val styles = PaletteStyle.entries
