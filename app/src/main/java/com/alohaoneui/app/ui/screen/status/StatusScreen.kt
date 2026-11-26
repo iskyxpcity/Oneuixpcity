@@ -77,12 +77,13 @@ import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 @Composable
 fun StatusPager(
     navigator: Navigator,
+    bottomContentPadding: Dp = 0.dp,
     isCurrentPage: Boolean = true,
 ) {
     val lsposedActive = LocalLsposedHomeStatus.current.active
     when (LocalUiMode.current) {
         UiMode.Miuix -> StatusPagerMiuix(navigator, lsposedActive)
-        UiMode.Material -> StatusPagerMaterial(navigator, lsposedActive)
+        UiMode.Material -> StatusPagerMaterial(navigator, lsposedActive, bottomContentPadding)
     }
 }
 
@@ -222,6 +223,7 @@ private fun StatusPagerMiuix(
 private fun StatusPagerMaterial(
     navigator: Navigator,
     lsposedActive: Boolean,
+    bottomContentPadding: Dp,
 ) {
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -284,6 +286,7 @@ private fun StatusPagerMaterial(
                     }
                 },
             )
+            Spacer(modifier = Modifier.fillMaxWidth().height(bottomContentPadding + 16.dp))
 
         }
     }

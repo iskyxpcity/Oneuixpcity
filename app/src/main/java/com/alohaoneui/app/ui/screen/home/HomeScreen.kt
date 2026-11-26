@@ -1,6 +1,8 @@
 package com.alohaoneui.app.ui.screen.home
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.LaunchedEffect
@@ -19,6 +21,7 @@ import com.alohaoneui.app.ui.viewmodel.HomeViewModel
 @Composable
 fun HomePager(
     navigator: Navigator,
+    bottomContentPadding: Dp = 0.dp,
     isCurrentPage: Boolean = true
 ) {
     val viewModel = viewModel<HomeViewModel>()
@@ -63,6 +66,7 @@ fun HomePager(
             UiMode.Material -> HomePagerMaterial(
                 state = uiState,
                 actions = actions,
+                bottomContentPadding = bottomContentPadding,
             )
         }
     }

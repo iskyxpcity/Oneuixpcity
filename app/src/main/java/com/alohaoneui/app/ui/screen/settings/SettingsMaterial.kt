@@ -54,6 +54,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -81,6 +82,7 @@ import com.alohaoneui.app.ui.component.material.SnackBarHost
 fun SettingPagerMaterial(
     uiState: SettingsUiState,
     actions: SettingsScreenActions,
+    bottomContentPadding: Dp,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     val snackBarHost = remember { SnackbarHostState() }
@@ -237,7 +239,7 @@ fun SettingPagerMaterial(
                 )
             )
 
-            Spacer(modifier = Modifier.fillMaxWidth().height(8.dp))
+            Spacer(modifier = Modifier.fillMaxWidth().height(bottomContentPadding + 16.dp))
 
             if (showBottomSheet) {
                 SendLogBottomSheet(

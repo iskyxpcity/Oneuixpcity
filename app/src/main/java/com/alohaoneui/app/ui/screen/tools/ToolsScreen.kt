@@ -90,12 +90,13 @@ import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 @Composable
 fun ToolsPager(
     navigator: Navigator,
+    bottomContentPadding: Dp = 0.dp,
     isCurrentPage: Boolean = true,
 ) {
     val lsposedActive = LocalLsposedHomeStatus.current.active
     when (LocalUiMode.current) {
         UiMode.Miuix -> ToolsPagerMiuix(navigator, lsposedActive)
-        UiMode.Material -> ToolsPagerMaterial(navigator, lsposedActive)
+        UiMode.Material -> ToolsPagerMaterial(navigator, lsposedActive, bottomContentPadding)
     }
 }
 
@@ -330,6 +331,7 @@ private fun ToolsPagerMiuix(
 private fun ToolsPagerMaterial(
     navigator: Navigator,
     lsposedActive: Boolean,
+    bottomContentPadding: Dp,
 ) {
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -488,6 +490,7 @@ private fun ToolsPagerMaterial(
                     },
                 ),
             )
+            Spacer(modifier = Modifier.fillMaxWidth().height(bottomContentPadding + 16.dp))
         }
     }
 }

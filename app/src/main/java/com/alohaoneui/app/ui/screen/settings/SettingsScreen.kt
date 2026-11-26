@@ -3,6 +3,8 @@ package com.alohaoneui.app.ui.screen.settings
 import android.app.Activity
 import android.content.ContextWrapper
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
@@ -22,6 +24,7 @@ import com.alohaoneui.app.ui.viewmodel.SettingsViewModel
 @Composable
 fun SettingPager(
     navigator: Navigator,
+    bottomContentPadding: Dp = 0.dp,
     isCurrentPage: Boolean = true,
 ) {
     val context = LocalContext.current
@@ -65,7 +68,7 @@ fun SettingPager(
 
     when (LocalUiMode.current) {
         UiMode.Miuix -> SettingPagerMiuix(uiState, actions)
-        UiMode.Material -> SettingPagerMaterial(uiState, actions)
+        UiMode.Material -> SettingPagerMaterial(uiState, actions, bottomContentPadding)
     }
 }
 
