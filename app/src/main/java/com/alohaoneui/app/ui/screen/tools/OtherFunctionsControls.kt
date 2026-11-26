@@ -300,22 +300,7 @@ fun OtherFunctionsControls(
                 )
         }
     )
-    val parentFrames = if (com.alohaoneui.app.ui.util.shouldShowSplitPane()) {
-        detailCards.chunked(4)
-    } else {
-        listOf(detailCards)
-    }
-    androidx.compose.runtime.key(parentFrames.size) {
-        com.alohaoneui.app.ui.util.ResponsiveCardGrid(
-            content = parentFrames.map { frame ->
-                {
-                    OtherFunctionsThemeFrame {
-                        frame.forEach { it() }
-                    }
-                }
-            },
-        )
-    }
+    OtherFunctionsThemeFrameLayout(detailCards)
 }
 
 private fun List<PowerMenuAction>.move(fromIndex: Int, toIndex: Int): List<PowerMenuAction> =
