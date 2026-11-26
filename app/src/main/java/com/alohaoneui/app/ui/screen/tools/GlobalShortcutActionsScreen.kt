@@ -118,6 +118,7 @@ import com.alohaoneui.app.ui.navigation3.LocalNavigator
 import com.alohaoneui.app.ui.navigation3.Route
 import com.alohaoneui.app.ui.theme.LocalEnableBlur
 import com.alohaoneui.app.ui.util.ResponsiveCardGrid
+import com.alohaoneui.app.ui.util.responsiveGridFullSpan
 import com.alohaoneui.app.ui.util.BlurredBar
 import com.alohaoneui.app.ui.util.rememberBlurBackdrop
 import com.alohaoneui.app.ui.viewmodel.AlohaOneUIToolsViewModel
@@ -786,7 +787,8 @@ private fun GlobalShortcutSettingsContent(
     settings: Preference.GlobalShortcutActions,
     update: ShortcutSettingsUpdater,
 ) {
-    when (kind) {
+    ResponsiveCardGrid {
+        when (kind) {
         GlobalShortcutPageKind.ThreeFingerSwipe -> {
             ShortcutFeatureEnableCard(kind, settings.threeFingerGestureEnabled) { value ->
                 update { it.copy(threeFingerGestureEnabled = value) }
@@ -1072,6 +1074,7 @@ private fun GlobalShortcutSettingsContent(
                 onStrength = { value -> update { it.copy(screenOffVolumeHapticStrength = value) } },
             )
         }
+        }
     }
 }
 
@@ -1107,14 +1110,18 @@ private fun ShortcutSectionHeading(text: String) {
     when (LocalUiMode.current) {
         UiMode.Material -> Text(
             text = text,
-            modifier = Modifier.padding(start = 24.dp, end = 16.dp, top = 18.dp, bottom = 6.dp),
+            modifier = Modifier
+                .padding(start = 24.dp, end = 16.dp, top = 18.dp, bottom = 6.dp)
+                .responsiveGridFullSpan(),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         UiMode.Miuix -> MiuixText(
             text = text,
-            modifier = Modifier.padding(start = 20.dp, end = 12.dp, top = 18.dp, bottom = 6.dp),
+            modifier = Modifier
+                .padding(start = 20.dp, end = 12.dp, top = 18.dp, bottom = 6.dp)
+                .responsiveGridFullSpan(),
             color = colorScheme.onSurfaceVariantSummary,
             fontWeight = FontWeight.SemiBold,
         )
