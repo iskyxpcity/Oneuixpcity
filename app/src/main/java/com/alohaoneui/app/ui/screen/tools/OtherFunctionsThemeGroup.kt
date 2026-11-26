@@ -1,5 +1,7 @@
 package com.alohaoneui.app.ui.screen.tools
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
+import com.alohaoneui.app.ui.util.shouldShowSplitPane
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.alohaOneUISegmentedColors
@@ -31,9 +34,24 @@ fun OtherFunctionsThemeGroup(
 ) {
     if (items.isEmpty()) return
 
+    // A parent frame already owns the outer visual group. Nested detail groups
+    // still need their own row positions so Material can assign top/middle/bottom shapes.
+    if (LocalAlohaOneUIGroupedPreference.current) {
+        when (LocalUiMode.current) {
+            UiMode.Material -> SegmentedColumn(
+                modifier = modifier.fillMaxWidth(),
+                content = items,
+            )
+            UiMode.Miuix -> Column(modifier = modifier.fillMaxWidth()) {
+                items.forEach { item -> item() }
+            }
+        }
+        return
+    }
+
     when (LocalUiMode.current) {
         UiMode.Material -> SegmentedColumn(
-            modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            modifier = modifier.fillMaxWidth().padding(vertical = 8.dp),
             content = items.map { item ->
                 {
                     CompositionLocalProvider(
@@ -46,7 +64,7 @@ fun OtherFunctionsThemeGroup(
         )
 
         UiMode.Miuix -> Card(
-            modifier = modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+            modifier = modifier.fillMaxWidth().padding(vertical = 4.dp),
             insideMargin = PaddingValues(0.dp),
         ) {
             CompositionLocalProvider(
@@ -84,6 +102,64 @@ fun OtherFunctionsThemeChildItem(
             contentAlignment = Alignment.CenterStart,
         ) {
             content()
+        }
+    }
+}
+
+
+/** Outer four-card frame used by wide layouts; child detail cards retain their own theme components. */
+@Composable
+fun OtherFunctionsThemeFrame(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    when (LocalUiMode.current) {
+        UiMode.Material -> com.alohaoneui.app.ui.component.material.TonalCard(
+            modifier = modifier.fillMaxWidth().padding(vertical = 8.dp),
+        ) {
+            Column(modifier = Modifier.padding(10.dp)) { content() }
+        }
+        UiMode.Miuix -> Card(
+            modifier = modifier.fillMaxWidth().padding(vertical = 8.dp),
+            insideMargin = PaddingValues(10.dp),
+        ) {
+            Column { content() }
+        }
+    }
+}
+
+
+/** Preserve original detail groups; distribute them row-first into two independently stacked columns. */
+@Composable
+fun OtherFunctionsThemeFrameLayout(
+    items: List<@Composable () -> Unit>,
+    modifier: Modifier = Modifier,
+) {
+    if (items.isEmpty()) return
+    if (shouldShowSplitPane()) {
+        val columns = listOf(items.filterIndexed { index, _ -> index % 2 == 0 },
+            items.filterIndexed { index, _ -> index % 2 == 1 })
+        Row(
+            modifier = modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.Top,
+        ) {
+            columns.forEach { columnItems ->
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(0.dp),
+                ) {
+                    columnItems.forEach { item ->
+                        OtherFunctionsThemeGroup(
+                            items = listOf(item),
+                        )
+                    }
+                }
+            }
+        }
+    } else {
+        Column(modifier = modifier.fillMaxWidth()) {
+            items.forEach { it() }
         }
     }
 }

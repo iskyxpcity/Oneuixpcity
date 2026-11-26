@@ -12,3 +12,8 @@ fun shouldShowSplitPane(): Boolean {
     val heightDp = windowInfo.containerSize.height / deviceDensity
     return widthDp >= 840f || (widthDp >= 600f && heightDp / widthDp < 1.2f)
 }
+
+/** Split a page only when it has more than two independent parent-level cards. */
+@Composable
+fun shouldShowSplitPane(parentCardCount: Int): Boolean =
+    parentCardCount > 2 && shouldShowSplitPane()

@@ -1,5 +1,6 @@
 package com.alohaoneui.app.ui.screen.status
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,7 +19,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -55,6 +58,8 @@ import com.alohaoneui.app.ui.navigation3.Navigator
 import com.alohaoneui.app.ui.navigation3.Route
 import com.alohaoneui.app.ui.screen.home.LocalLsposedHomeStatus
 import com.alohaoneui.app.ui.theme.LocalEnableBlur
+import com.alohaoneui.app.ui.util.ResponsiveCardGrid
+import com.alohaoneui.app.ui.util.shouldShowSplitPane
 import com.alohaoneui.app.ui.util.BlurredBar
 import com.alohaoneui.app.ui.util.rememberBlurBackdrop
 import top.yukonga.miuix.kmp.basic.Card
@@ -73,13 +78,13 @@ import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 @Composable
 fun StatusPager(
     navigator: Navigator,
-    bottomInnerPadding: Dp,
+    bottomContentPadding: Dp = 0.dp,
     isCurrentPage: Boolean = true,
 ) {
     val lsposedActive = LocalLsposedHomeStatus.current.active
     when (LocalUiMode.current) {
-        UiMode.Miuix -> StatusPagerMiuix(navigator, bottomInnerPadding, lsposedActive)
-        UiMode.Material -> StatusPagerMaterial(navigator, bottomInnerPadding, lsposedActive)
+        UiMode.Miuix -> StatusPagerMiuix(navigator, lsposedActive, bottomContentPadding)
+        UiMode.Material -> StatusPagerMaterial(navigator, lsposedActive, bottomContentPadding)
     }
 }
 
@@ -112,8 +117,8 @@ private fun StatusCategoryIcon(
 @Composable
 private fun StatusPagerMiuix(
     navigator: Navigator,
-    bottomInnerPadding: Dp,
     lsposedActive: Boolean,
+    bottomContentPadding: Dp,
 ) {
     val scrollBehavior = MiuixScrollBehavior()
     val backdrop = rememberBlurBackdrop(LocalEnableBlur.current)
@@ -144,17 +149,20 @@ private fun StatusPagerMiuix(
                 Modifier
             },
         ) {
-            LazyColumn(
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(if (shouldShowSplitPane(StatusCategory.entries.size)) 2 else 1),
                 modifier = Modifier
                     .fillMaxHeight()
                     .scrollEndHaptic()
                     .overScrollVertical()
                     .nestedScroll(scrollBehavior.nestedScrollConnection)
                     .padding(horizontal = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = innerPadding,
                 overscrollEffect = null,
             ) {
-                item { Spacer(Modifier.height(12.dp)) }
+                item(span = { GridItemSpan(maxLineSpan) }) { Spacer(Modifier.height(12.dp)) }
 
                 StatusCategory.entries.forEach { category ->
                     item {
@@ -207,8 +215,9 @@ private fun StatusPagerMiuix(
                         }
                     }
                 }
-
-                item { Spacer(Modifier.height(bottomInnerPadding)) }
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    Spacer(Modifier.height(bottomContentPadding + 16.dp))
+                }
             }
         }
     }
@@ -217,8 +226,8 @@ private fun StatusPagerMiuix(
 @Composable
 private fun StatusPagerMaterial(
     navigator: Navigator,
-    bottomInnerPadding: Dp,
     lsposedActive: Boolean,
+    bottomContentPadding: Dp,
 ) {
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -250,39 +259,51 @@ private fun StatusPagerMaterial(
                 .verticalScroll(rememberScrollState())
                 .padding(innerPadding),
         ) {
-            SegmentedColumn(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .graphicsLayer {
-                        alpha = if (lsposedActive) 1f else 0.38f
-                    },
-                content = StatusCategory.entries.map { category ->
-                    {
-                        SegmentedListItem(
-                            enabled = lsposedActive,
-                            onClick = {
-                                if (lsposedActive) {
-                                    navigator.push(Route.StatusCategory(category.name))
-                                }
+            val categoryItems: List<@Composable () -> Unit> = StatusCategory.entries.map { category ->
+                {
+                    SegmentedListItem(
+                        enabled = lsposedActive,
+                        onClick = {
+                            if (lsposedActive) {
+                                navigator.push(Route.StatusCategory(category.name))
+                            }
+                        },
+                        headlineContent = {
+                            Text(stringResource(category.titleRes))
+                        },
+                        leadingContent = {
+                            StatusCategoryIcon(category)
+                        },
+                        trailingContent = {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                            )
+                        },
+                    )
+                }
+            }
+            val parentFrames = if (shouldShowSplitPane()) {
+                categoryItems.chunked(4)
+            } else {
+                listOf(categoryItems)
+            }
+            ResponsiveCardGrid(
+                modifier = Modifier.padding(horizontal = 16.dp),
+            ) {
+                parentFrames.forEach { frameItems ->
+                    SegmentedColumn(
+                        modifier = Modifier
+                            .padding(vertical = 8.dp)
+                            .graphicsLayer {
+                                alpha = if (lsposedActive) 1f else 0.38f
                             },
-                            headlineContent = {
-                                Text(stringResource(category.titleRes))
-                            },
-                            leadingContent = {
-                                StatusCategoryIcon(category)
-                            },
-                            trailingContent = {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                    contentDescription = null,
-                                )
-                            },
-                        )
-                    }
-                },
-            )
+                        content = frameItems,
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.fillMaxWidth().height(bottomContentPadding + 16.dp))
 
-            Spacer(Modifier.height(bottomInnerPadding))
         }
     }
 }

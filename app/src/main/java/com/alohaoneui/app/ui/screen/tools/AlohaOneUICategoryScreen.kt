@@ -1,6 +1,7 @@
 package com.alohaoneui.app.ui.screen.tools
 
 import android.os.Build
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
@@ -19,7 +20,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -69,6 +72,8 @@ import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.material.ExpressiveLargeTopAppBar
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
+import com.alohaoneui.app.ui.util.shouldShowSplitPane
+import com.alohaoneui.app.ui.util.ResponsiveCardGrid
 import com.alohaoneui.app.ui.component.material.SegmentedDropdownItem
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.ExpressiveSwitch
@@ -480,52 +485,57 @@ private fun AlohaOneUICategoryMaterial(
                 }
             }
 
-            groups
-                .groupBy { it.section }
-                .forEach { (section, sectionGroups) ->
-                    SegmentedColumn(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        title = alohaOneUISectionTitle(section),
-                        content = buildList {
-                            sectionGroups.forEach { group ->
-                                group.items.forEachIndexed { index, spec ->
-                                    add {
-                                        MaterialSettingRow(
-                                            spec = spec,
-                                            preference = preference,
-                                            toolsViewModel = toolsViewModel,
-                                            hasChildren = AlohaOneUILayoutRules.hasChildren(spec.path) ||
-                                                (index == 0 && group.items.size > 1),
-                                            isChild = index > 0,
-                                        )
-                                    }
-
-                                    if (
-                                        category == AlohaOneUICategory.SystemUI &&
-                                        section == "Quick settings" &&
-                                        spec.path == "systemUI.qs.setQsClockMonospaced" &&
-                                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM
-                                    ) {
+            val sectionCards: List<@Composable () -> Unit> =
+                groups.groupBy { it.section }.map { (section, sectionGroups) ->
+                    @Composable {
+                        SegmentedColumn(
+                            modifier = Modifier.fillMaxWidth(),
+                            title = alohaOneUISectionTitle(section),
+                            content = buildList {
+                                sectionGroups.forEach { group ->
+                                    group.items.forEachIndexed { index, spec ->
                                         add {
-                                            MaterialAlohaOneUIInfoRow(
-                                                title = stringResource(R.string.alohaoneui_turnOn5gQsTile_title),
-                                                summary = stringResource(R.string.alohaoneui_root5gQsTile_summary),
-                                                icon = ImageVector.vectorResource(R.drawable.five_g),
+                                            MaterialSettingRow(
+                                                spec = spec,
+                                                preference = preference,
+                                                toolsViewModel = toolsViewModel,
+                                                hasChildren = AlohaOneUILayoutRules.hasChildren(spec.path) ||
+                                                    (index == 0 && group.items.size > 1),
+                                                isChild = index > 0,
                                             )
                                         }
-                                        add {
-                                            MaterialAlohaOneUIInfoRow(
-                                                title = stringResource(R.string.alohaoneui_immersiveModeQsTile_title),
-                                                summary = stringResource(R.string.alohaoneui_rootImmersiveModeQsTile_summary),
-                                                icon = ImageVector.vectorResource(R.drawable.immersive_mode),
-                                            )
+
+                                        if (
+                                            category == AlohaOneUICategory.SystemUI &&
+                                            section == "Quick settings" &&
+                                            spec.path == "systemUI.qs.setQsClockMonospaced" &&
+                                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM
+                                        ) {
+                                            add {
+                                                MaterialAlohaOneUIInfoRow(
+                                                    title = stringResource(R.string.alohaoneui_turnOn5gQsTile_title),
+                                                    summary = stringResource(R.string.alohaoneui_root5gQsTile_summary),
+                                                    icon = ImageVector.vectorResource(R.drawable.five_g),
+                                                )
+                                            }
+                                            add {
+                                                MaterialAlohaOneUIInfoRow(
+                                                    title = stringResource(R.string.alohaoneui_immersiveModeQsTile_title),
+                                                    summary = stringResource(R.string.alohaoneui_rootImmersiveModeQsTile_summary),
+                                                    icon = ImageVector.vectorResource(R.drawable.immersive_mode),
+                                                )
+                                            }
                                         }
                                     }
                                 }
-                            }
-                        },
-                    )
+                            },
+                        )
+                    }
                 }
+            ResponsiveCardGrid(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                content = sectionCards,
+            )
 
             Spacer(Modifier.height(24.dp))
         }
@@ -1249,20 +1259,23 @@ private fun AlohaOneUICategoryMiuix(
             .only(WindowInsetsSides.Horizontal),
     ) { innerPadding ->
         Box(modifier = if (backdrop != null) Modifier.miuixLayerBackdrop(backdrop) else Modifier) {
-            LazyColumn(
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(if (shouldShowSplitPane()) 2 else 1),
                 modifier = Modifier
                     .fillMaxHeight()
                     .scrollEndHaptic()
                     .overScrollVertical()
                     .nestedScroll(scrollBehavior.nestedScrollConnection)
                     .padding(horizontal = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = innerPadding,
                 overscrollEffect = null,
             ) {
                 var previousSection: String? = null
                 groups.forEach { group ->
                     if (previousSection != group.section) {
-                        item {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
                             top.yukonga.miuix.kmp.basic.Text(
                                 text = alohaOneUISectionTitle(group.section),
                                 color = colorScheme.primary,
@@ -1293,7 +1306,7 @@ private fun AlohaOneUICategoryMiuix(
                     previousSection = group.section
                 }
 
-                item { Spacer(Modifier.height(24.dp)) }
+                item(span = { GridItemSpan(maxLineSpan) }) { Spacer(Modifier.height(24.dp)) }
             }
         }
     }

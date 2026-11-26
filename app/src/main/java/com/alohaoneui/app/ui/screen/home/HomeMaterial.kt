@@ -57,7 +57,7 @@ import com.alohaoneui.app.ui.component.statustag.StatusTag
 fun HomePagerMaterial(
     state: HomeUiState,
     actions: HomeActions,
-    bottomInnerPadding: Dp,
+    bottomContentPadding: Dp,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
@@ -84,7 +84,7 @@ fun HomePagerMaterial(
                 UpdateCard(state = state, actions = actions)
             }
             HomeDeviceToolsCard()
-            Spacer(Modifier.height(bottomInnerPadding))
+            Spacer(modifier = Modifier.height(bottomContentPadding + 16.dp))
         }
     }
 }

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -87,11 +88,14 @@ import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.preference.ArrowPreference
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
+import com.alohaoneui.app.ui.util.ResponsiveCardGrid
+import com.alohaoneui.app.ui.util.shouldShowSplitPane
 import top.yukonga.miuix.kmp.preference.SwitchPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ColorPaletteScreenMiuix(
     state: ColorPaletteUiState,
@@ -173,6 +177,8 @@ fun ColorPaletteScreenMiuix(
                         },
                         height = 48.dp,
                     )
+                    
+                    ResponsiveCardGrid(modifier = Modifier.fillMaxWidth()) {
 
                     Card(
                         modifier = Modifier
@@ -443,6 +449,7 @@ fun ColorPaletteScreenMiuix(
                                 actions.onSetPageScale(it)
                             }
                         )
+                    }
                     }
                 }
                 item {

@@ -1,6 +1,8 @@
 package com.alohaoneui.app.ui.screen.tools
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -8,6 +10,7 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -43,6 +46,8 @@ import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.rebootlistpopup.RebootListPopup
 import com.alohaoneui.app.ui.navigation3.LocalNavigator
 import com.alohaoneui.app.ui.theme.LocalEnableBlur
+import com.alohaoneui.app.ui.util.ResponsiveCardGrid
+import com.alohaoneui.app.ui.util.responsiveGridFullSpan
 import com.alohaoneui.app.ui.util.BlurredBar
 import com.alohaoneui.app.ui.util.rememberBlurBackdrop
 import com.alohaoneui.app.ui.viewmodel.AlohaOneUIToolsViewModel
@@ -92,6 +97,7 @@ fun OtherFunctionsScreen() {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun OtherFunctionsMaterial(
     uiState: Preference.SystemUI.Other,
@@ -131,9 +137,10 @@ private fun OtherFunctionsMaterial(
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .padding(innerPadding),
         ) {
-            Column(
+            ResponsiveCardGrid(
                 modifier = Modifier
                     .fillMaxSize()
+                    .padding(horizontal = 16.dp)
                     .verticalScroll(rememberScrollState()),
             ) {
                 OtherFunctionsControls(
@@ -142,12 +149,13 @@ private fun OtherFunctionsMaterial(
                     onEvent = onEvent,
                     onOtherChange = onOtherChange,
                 )
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.fillMaxWidth().height(24.dp).responsiveGridFullSpan())
             }
         }
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun OtherFunctionsMiuix(
     uiState: Preference.SystemUI.Other,
@@ -197,9 +205,10 @@ private fun OtherFunctionsMiuix(
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .padding(innerPadding),
         ) {
-            Column(
+            ResponsiveCardGrid(
                 modifier = Modifier
                     .fillMaxSize()
+                    .padding(horizontal = 12.dp)
                     .overScrollVertical()
                     .scrollEndHaptic()
                     .verticalScroll(rememberScrollState()),
@@ -210,7 +219,7 @@ private fun OtherFunctionsMiuix(
                     onEvent = onEvent,
                     onOtherChange = onOtherChange,
                 )
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.fillMaxWidth().height(24.dp).responsiveGridFullSpan())
             }
         }
     }

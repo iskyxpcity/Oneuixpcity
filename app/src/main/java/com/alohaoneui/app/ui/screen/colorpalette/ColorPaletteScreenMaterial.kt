@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -114,6 +115,9 @@ import com.alohaoneui.app.ui.component.material.ExpressiveButtonGroup
 import com.alohaoneui.app.ui.component.material.ExpressiveContentDialog
 import com.alohaoneui.app.ui.component.material.IconShapePresetPicker
 import com.alohaoneui.app.ui.component.material.IconShapePresetDetailScreen
+import com.alohaoneui.app.ui.util.ResponsiveCardGrid
+import com.alohaoneui.app.ui.util.responsiveGridFullSpan
+import com.alohaoneui.app.ui.util.shouldShowSplitPane
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.SegmentedChoiceOptionsItem
@@ -131,7 +135,7 @@ import com.alohaoneui.app.ui.theme.LocalMaterialShadowSliders
 import com.alohaoneui.app.ui.theme.rememberAlohaOneUIColorScheme
 import com.alohaoneui.app.ui.theme.keyColorOptions
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalLayoutApi::class)
 @Composable
 fun ColorPaletteScreenMaterial(
     state: ColorPaletteUiState,
@@ -230,11 +234,8 @@ fun ColorPaletteScreenMaterial(
                 }
             }
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ResponsiveCardGrid(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             ) {
                 val systemModeLabel = stringResource(R.string.settings_theme_mode_system)
                 val lightModeLabel = stringResource(R.string.settings_theme_mode_light)
@@ -251,7 +252,7 @@ fun ColorPaletteScreenMaterial(
                     List(4) { MutableInteractionSource() }
                 }
                 ExpressiveButtonGroup(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).responsiveGridFullSpan(),
                     horizontalArrangement = Arrangement.spacedBy(
                         ButtonGroupDefaults.ConnectedSpaceBetween,
                         alignment = Alignment.CenterHorizontally,
@@ -307,7 +308,7 @@ fun ColorPaletteScreenMaterial(
                     }
                 }
                 SegmentedColumn(
-                    modifier = Modifier.padding(vertical = 4.dp),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                     content = remember(colorStyle, colorSpec, actions) { listOf(
                         {
                             val styles = PaletteStyle.entries
@@ -338,7 +339,7 @@ fun ColorPaletteScreenMaterial(
                 )
 
                 SegmentedColumn(
-                    modifier = Modifier.padding(vertical = 4.dp),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                     content = buildList {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                             add {
@@ -381,7 +382,7 @@ fun ColorPaletteScreenMaterial(
                 )
 
                 SegmentedColumn(
-                    modifier = Modifier.padding(vertical = 4.dp),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                     content = buildList {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                             add {
@@ -596,7 +597,7 @@ fun ColorPaletteScreenMaterial(
 
                 // Shape group: the slider remains a row in the source-style group.
                 SegmentedColumn(
-                    modifier = Modifier.padding(vertical = 4.dp),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                     title = stringResource(R.string.theme_group_shape),
                     content = listOf(
                         {
@@ -787,7 +788,7 @@ fun ColorPaletteScreenMaterial(
 
                 // Components group: outline width is another source-style slider row.
                 SegmentedColumn(
-                    modifier = Modifier.padding(vertical = 4.dp),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                     title = stringResource(R.string.theme_group_components),
                     content = listOf(
                         {
@@ -981,7 +982,7 @@ fun ColorPaletteScreenMaterial(
 
                 // Shadows group exposes six independent component switches.
                 SegmentedColumn(
-                    modifier = Modifier.padding(vertical = 4.dp),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                     title = stringResource(R.string.theme_group_shadows),
                     content = remember(
                         uiState.materialShadowContainers,
