@@ -48,7 +48,6 @@ import com.alohaoneui.common.PowerMenuAction
 import com.alohaoneui.common.Preference
 import com.alohaoneui.mod.ui.category.SystemUIEvent
 import com.alohaoneui.mod.ui.component.AlohaOneUIActionButton
-import com.alohaoneui.mod.ui.component.AlohaOneUIInfoItem
 import com.alohaoneui.mod.ui.component.AlohaOneUISwitch
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.alohaOneUISegmentedColors
@@ -102,15 +101,24 @@ fun OtherFunctionsControls(
                             actions.forEachIndexed { index, action ->
                                 add {
                                     val visiblePosition = actions.take(index + 1).count { it.visible }
-                                    AlohaOneUIInfoItem(
-                                        title = stringResource(id = powerMenuActionTitle(action.name)),
-                                        summary = if (action.visible) {
-                                            stringResource(
-                                                id = R.string.alohaoneui_powerMenuActionVisible_summary,
-                                                visiblePosition,
+                                    SegmentedListItem(
+                                        colors = alohaOneUISegmentedColors(),
+                                        headlineContent = {
+                                            MaterialText(
+                                                text = stringResource(id = powerMenuActionTitle(action.name)),
                                             )
-                                        } else {
-                                            stringResource(id = R.string.alohaoneui_powerMenuActionHidden_summary)
+                                        },
+                                        supportingContent = {
+                                            MaterialText(
+                                                text = if (action.visible) {
+                                                    stringResource(
+                                                        id = R.string.alohaoneui_powerMenuActionVisible_summary,
+                                                        visiblePosition,
+                                                    )
+                                                } else {
+                                                    stringResource(id = R.string.alohaoneui_powerMenuActionHidden_summary)
+                                                },
+                                            )
                                         },
                                         trailingContent = {
                                             Row(verticalAlignment = Alignment.CenterVertically) {
