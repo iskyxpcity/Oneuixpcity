@@ -341,6 +341,110 @@ private fun ToolsPagerMaterial(
         .filterNot { it == AlohaOneUICategory.SystemUI }
     val appCategories = AlohaOneUICategory.entries.drop(5)
 
+    val coreItems: List<@Composable () -> Unit> = coreCategories.map { category ->
+        @Composable {
+            SegmentedListItem(
+                enabled = lsposedActive,
+                onClick = {
+                    if (lsposedActive) {
+                        navigator.push(Route.AlohaOneUICategory(category.name))
+                    }
+                },
+                headlineContent = {
+                    Text(alohaOneUICategoryTitle(category))
+                },
+                leadingContent = {
+                    CategoryIcon(category = category, size = 48.dp)
+                },
+                trailingContent = {
+                    Icon(
+                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                    )
+                },
+            )
+        }
+    }
+    val appItems: List<@Composable () -> Unit> = appCategories.map { category ->
+        @Composable {
+            SegmentedListItem(
+                enabled = lsposedActive,
+                onClick = {
+                    if (lsposedActive) {
+                        navigator.push(Route.AlohaOneUICategory(category.name))
+                    }
+                },
+                headlineContent = {
+                    Text(alohaOneUICategoryTitle(category))
+                },
+                leadingContent = {
+                    CategoryIcon(category = category, size = 48.dp)
+                },
+                trailingContent = {
+                    Icon(
+                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                    )
+                },
+            )
+        }
+    }
+    val shortcutItems: List<@Composable () -> Unit> = listOf(
+        @Composable {
+            SegmentedListItem(
+                enabled = lsposedActive,
+                onClick = {
+                    if (lsposedActive) navigator.push(Route.GlobalShortcutActions)
+                },
+                colors = com.alohaoneui.app.ui.component.material.alohaOneUISegmentedColors(),
+                headlineContent = {
+                    Text(stringResource(R.string.alohaoneui_global_shortcut_actions_title))
+                },
+                leadingContent = {
+                    NavigationFeatureIcon(
+                        icon = ShortcutEntryIcon.Gesture,
+                        size = 48.dp,
+                    )
+                },
+                trailingContent = {
+                    Icon(
+                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                    )
+                },
+            )
+        },
+        @Composable {
+            SegmentedListItem(
+                enabled = lsposedActive,
+                onClick = {
+                    if (lsposedActive) navigator.push(Route.OtherFunctions)
+                },
+                colors = com.alohaoneui.app.ui.component.material.alohaOneUISegmentedColors(),
+                headlineContent = {
+                    Text(stringResource(R.string.alohaoneui_other_functions_title))
+                },
+                leadingContent = {
+                    NavigationFeatureIcon(
+                        icon = ShortcutEntryIcon.OtherFunctions,
+                        size = 48.dp,
+                    )
+                },
+                trailingContent = {
+                    Icon(
+                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = null,
+                    )
+                },
+            )
+        },
+    )
+    val allFeatureItems = coreItems + appItems + shortcutItems
+    val parentFrames = if (shouldShowSplitPane()) {
+        allFeatureItems.chunked(4)
+    } else {
+        listOf(coreItems, appItems, shortcutItems)
+    }
     ExpressiveScaffold(
         topBar = {
             ExpressiveLargeTopAppBar(
@@ -369,128 +473,17 @@ private fun ToolsPagerMaterial(
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp),
         ) {
-            SegmentedColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-                    .graphicsLayer {
-                        alpha = if (lsposedActive) 1f else 0.38f
-                    },
-                content = coreCategories.map { category ->
-                    {
-                        SegmentedListItem(
-                            enabled = lsposedActive,
-                            onClick = {
-                                if (lsposedActive) {
-                                    navigator.push(Route.AlohaOneUICategory(category.name))
-                                }
-                            },
-                            headlineContent = {
-                                Text(alohaOneUICategoryTitle(category))
-                            },
-                            leadingContent = {
-                                CategoryIcon(category = category, size = 48.dp)
-                            },
-                            trailingContent = {
-                                Icon(
-                                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                    contentDescription = null,
-                                )
-                            },
-                        )
-                    }
-                },
-            )
-
-            SegmentedColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-                    .graphicsLayer {
-                        alpha = if (lsposedActive) 1f else 0.38f
-                    },
-                content = appCategories.map { category ->
-                    {
-                        SegmentedListItem(
-                            enabled = lsposedActive,
-                            onClick = {
-                                if (lsposedActive) {
-                                    navigator.push(Route.AlohaOneUICategory(category.name))
-                                }
-                            },
-                            headlineContent = {
-                                Text(alohaOneUICategoryTitle(category))
-                            },
-                            leadingContent = {
-                                CategoryIcon(category = category, size = 48.dp)
-                            },
-                            trailingContent = {
-                                Icon(
-                                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                    contentDescription = null,
-                                )
-                            },
-                        )
-                    }
-                },
-            )
-
-            SegmentedColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-                    .graphicsLayer { alpha = if (lsposedActive) 1f else 0.38f },
-                content = listOf(
-                    {
-                        SegmentedListItem(
-                            enabled = lsposedActive,
-                            onClick = {
-                                if (lsposedActive) navigator.push(Route.GlobalShortcutActions)
-                            },
-                            colors = com.alohaoneui.app.ui.component.material.alohaOneUISegmentedColors(),
-                            headlineContent = {
-                                Text(stringResource(R.string.alohaoneui_global_shortcut_actions_title))
-                            },
-                            leadingContent = {
-                                NavigationFeatureIcon(
-                                    icon = ShortcutEntryIcon.Gesture,
-                                    size = 48.dp,
-                                )
-                            },
-                            trailingContent = {
-                                Icon(
-                                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                    contentDescription = null,
-                                )
-                            },
-                        )
-                    },
-                    {
-                        SegmentedListItem(
-                            enabled = lsposedActive,
-                            onClick = {
-                                if (lsposedActive) navigator.push(Route.OtherFunctions)
-                            },
-                            colors = com.alohaoneui.app.ui.component.material.alohaOneUISegmentedColors(),
-                            headlineContent = {
-                                Text(stringResource(R.string.alohaoneui_other_functions_title))
-                            },
-                            leadingContent = {
-                                NavigationFeatureIcon(
-                                    icon = ShortcutEntryIcon.OtherFunctions,
-                                    size = 48.dp,
-                                )
-                            },
-                            trailingContent = {
-                                Icon(
-                                    Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                    contentDescription = null,
-                                )
-                            },
-                        )
-                    },
-                ),
-            )
+            parentFrames.forEach { frameItems ->
+                SegmentedColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                        .graphicsLayer {
+                            alpha = if (lsposedActive) 1f else 0.38f
+                        },
+                    content = frameItems,
+                )
+            }
             Spacer(
                 modifier = Modifier
                     .fillMaxWidth()
