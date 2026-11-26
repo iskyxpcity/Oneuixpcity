@@ -306,8 +306,7 @@ fun GlobalShortcutActionsScreen() {
                         onClick = { navigator.push(Route.GlobalScreenOffVolumeKeyShortcut) },
                     )
                 },
-            ),
-        )
+            )
         OtherFunctionsThemeFrameLayout(entryCards)
     }
 }
