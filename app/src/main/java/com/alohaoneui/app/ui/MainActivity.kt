@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
@@ -272,7 +273,7 @@ class MainActivity : ComponentActivity() {
                                 .then(
                                     if (navigator.current() is Route.Main || navigator.current() is Route.ColorPalette) Modifier
                                     else Modifier.windowInsetsPadding(
-                                        WindowInsets.systemBars.only(WindowInsetsSides.Bottom)
+                                        WindowInsets.navigationBars
                                     )
                                 ),
                         ) {
