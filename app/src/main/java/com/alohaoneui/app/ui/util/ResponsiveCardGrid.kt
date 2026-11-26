@@ -28,7 +28,6 @@ fun Modifier.responsiveGridFullSpan(): Modifier = then(ResponsiveGridFullSpanMod
 @Composable
 fun ResponsiveCardGrid(
     modifier: Modifier = Modifier,
-    minItemsForSplit: Int = 3,
     content: @Composable () -> Unit,
 ) {
     val split = shouldShowSplitPane()
@@ -43,7 +42,7 @@ fun ResponsiveCardGrid(
             val parentCardCount = measurables.count {
                 (it.parentData as? ResponsiveGridParentData)?.fullSpan != true
             }
-            val columns = if (split && parentCardCount >= minItemsForSplit && finiteWidth) 2 else 1
+            val columns = if (split && parentCardCount > 2 && finiteWidth) 2 else 1
             val columnWidth = if (columns == 2) ((width - gapX) / 2).coerceAtLeast(0)
                 else if (finiteWidth) width else constraints.minWidth
             val heights = IntArray(columns)
