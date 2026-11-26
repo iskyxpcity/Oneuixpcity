@@ -8,7 +8,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.alohaoneui.app.ui.LocalUiMode
@@ -20,7 +19,6 @@ import com.alohaoneui.app.ui.viewmodel.HomeViewModel
 @Composable
 fun HomePager(
     navigator: Navigator,
-    bottomInnerPadding: Dp,
     isCurrentPage: Boolean = true
 ) {
     val viewModel = viewModel<HomeViewModel>()
@@ -60,13 +58,11 @@ fun HomePager(
             UiMode.Miuix -> HomePagerMiuix(
                 state = uiState,
                 actions = actions,
-                bottomInnerPadding = bottomInnerPadding,
             )
 
             UiMode.Material -> HomePagerMaterial(
                 state = uiState,
                 actions = actions,
-                bottomInnerPadding = bottomInnerPadding,
             )
         }
     }

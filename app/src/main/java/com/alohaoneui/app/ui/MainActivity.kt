@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.widthIn
@@ -269,13 +268,7 @@ class MainActivity : ComponentActivity() {
                         }
                         Box(
                             modifier = Modifier
-                                .fillMaxSize()
-                                .then(
-                                    if (navigator.current() is Route.Main || navigator.current() is Route.ColorPalette) Modifier
-                                    else Modifier.windowInsetsPadding(
-                                        WindowInsets.navigationBars
-                                    )
-                                ),
+                                .fillMaxSize(),
                         ) {
                             CompositionLocalProvider(
                                 LocalMaterialSwitchBackdrop provides switchBackdrop,
@@ -396,7 +389,7 @@ fun MainScreen(
                     Modifier.fillMaxSize().layerBackdrop(blurBackdrop)
                 } else {
                     Modifier.fillMaxSize()
-                }),
+                }).padding(bottom = bottomInnerPadding),
             ) {
                 val responsivePagerModifier = if (showNavigationRail) {
                     Modifier
@@ -428,16 +421,16 @@ fun MainScreen(
                         val isCurrentPage = page == settledPage
                         when (page) {
                             0 -> if (isCurrentPage || contentReady) {
-                                HomePager(navController, bottomInnerPadding, isCurrentPage)
+                                HomePager(navController, isCurrentPage)
                             }
                             1 -> if (isCurrentPage || contentReady) {
-                                ToolsPager(navController, bottomInnerPadding, isCurrentPage)
+                                ToolsPager(navController, isCurrentPage)
                             }
                             2 -> if (isCurrentPage || contentReady) {
-                                StatusPager(navController, bottomInnerPadding, isCurrentPage)
+                                StatusPager(navController, isCurrentPage)
                             }
                             3 -> if (isCurrentPage || contentReady) {
-                                SettingPager(navController, bottomInnerPadding, isCurrentPage)
+                                SettingPager(navController, isCurrentPage)
                             }
                         }
                     }
@@ -452,7 +445,7 @@ fun MainScreen(
             val startInsets = WindowInsets.systemBars.union(WindowInsets.displayCutout)
                 .only(WindowInsetsSides.Start)
             val navigationBottomPadding =
-                WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()
+                WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
             when (uiMode) {
                 UiMode.Material -> androidx.compose.material3.Scaffold {

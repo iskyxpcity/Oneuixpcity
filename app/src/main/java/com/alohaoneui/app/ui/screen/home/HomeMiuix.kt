@@ -69,7 +69,7 @@ import top.yukonga.miuix.kmp.utils.overScrollVertical
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
 @Composable
-fun HomePagerMiuix(state: HomeUiState, actions: HomeActions, bottomInnerPadding: Dp) {
+fun HomePagerMiuix(state: HomeUiState, actions: HomeActions) {
     val scrollBehavior = MiuixScrollBehavior()
     val backdrop = rememberBlurBackdrop(LocalEnableBlur.current)
     val barColor = if (backdrop != null) Color.Transparent else colorScheme.surface
@@ -104,7 +104,6 @@ fun HomePagerMiuix(state: HomeUiState, actions: HomeActions, bottomInnerPadding:
                         StatusCard(onActivateLsposed = actions.onActivateLsposed)
                         if (state.checkUpdateEnabled) UpdateCard(state, actions)
                         HomeDeviceToolsCard()
-                        Spacer(Modifier.height(bottomInnerPadding))
                     }
                 }
             }

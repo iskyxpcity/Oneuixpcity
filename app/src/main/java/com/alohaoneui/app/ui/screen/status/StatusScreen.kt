@@ -77,13 +77,12 @@ import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 @Composable
 fun StatusPager(
     navigator: Navigator,
-    bottomInnerPadding: Dp,
     isCurrentPage: Boolean = true,
 ) {
     val lsposedActive = LocalLsposedHomeStatus.current.active
     when (LocalUiMode.current) {
-        UiMode.Miuix -> StatusPagerMiuix(navigator, bottomInnerPadding, lsposedActive)
-        UiMode.Material -> StatusPagerMaterial(navigator, bottomInnerPadding, lsposedActive)
+        UiMode.Miuix -> StatusPagerMiuix(navigator, lsposedActive)
+        UiMode.Material -> StatusPagerMaterial(navigator, lsposedActive)
     }
 }
 
@@ -116,7 +115,6 @@ private fun StatusCategoryIcon(
 @Composable
 private fun StatusPagerMiuix(
     navigator: Navigator,
-    bottomInnerPadding: Dp,
     lsposedActive: Boolean,
 ) {
     val scrollBehavior = MiuixScrollBehavior()
@@ -215,7 +213,6 @@ private fun StatusPagerMiuix(
                     }
                 }
 
-                item(span = { GridItemSpan(maxLineSpan) }) { Spacer(Modifier.height(bottomInnerPadding)) }
             }
         }
     }
@@ -224,7 +221,6 @@ private fun StatusPagerMiuix(
 @Composable
 private fun StatusPagerMaterial(
     navigator: Navigator,
-    bottomInnerPadding: Dp,
     lsposedActive: Boolean,
 ) {
     val scrollBehavior =
@@ -289,7 +285,6 @@ private fun StatusPagerMaterial(
                 },
             )
 
-            Spacer(Modifier.height(bottomInnerPadding))
         }
     }
 }

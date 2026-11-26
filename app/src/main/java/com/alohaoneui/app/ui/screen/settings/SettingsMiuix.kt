@@ -49,7 +49,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.UiMode
@@ -57,7 +56,6 @@ import com.alohaoneui.app.ui.component.dialog.rememberLoadingDialog
 import com.alohaoneui.app.ui.component.miuix.SendLogDialog
 import com.alohaoneui.app.ui.theme.LocalEnableBlur
 import com.alohaoneui.app.ui.util.ResponsiveCardGrid
-import com.alohaoneui.app.ui.util.responsiveGridFullSpan
 import com.alohaoneui.app.ui.util.shouldShowSplitPane
 import com.alohaoneui.app.ui.util.BlurredBar
 import com.alohaoneui.app.ui.util.rememberBlurBackdrop
@@ -86,7 +84,6 @@ import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 fun SettingPagerMiuix(
     uiState: SettingsUiState,
     actions: SettingsScreenActions,
-    bottomInnerPadding: Dp,
 ) {
     val scrollBehavior = MiuixScrollBehavior()
     val enableBlur = LocalEnableBlur.current
@@ -267,7 +264,6 @@ fun SettingPagerMiuix(
                             onClick = actions.onOpenAbout,
                         )
                     }
-                    Spacer(Modifier.fillMaxWidth().height(bottomInnerPadding).responsiveGridFullSpan())
                     }
                 }
             }
