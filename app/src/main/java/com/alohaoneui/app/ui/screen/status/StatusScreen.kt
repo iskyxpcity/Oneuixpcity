@@ -256,7 +256,7 @@ private fun StatusPagerMaterial(
                 .verticalScroll(rememberScrollState())
                 .padding(innerPadding),
         ) {
-            val categoryItems = StatusCategory.entries.map { category ->
+            val categoryItems: List<@Composable () -> Unit> = StatusCategory.entries.map { category ->
                 {
                     SegmentedListItem(
                         enabled = lsposedActive,
@@ -287,7 +287,6 @@ private fun StatusPagerMaterial(
             }
             ResponsiveCardGrid(
                 modifier = Modifier.padding(horizontal = 16.dp),
-                minItemsForSplit = 2,
             ) {
                 parentFrames.forEach { frameItems ->
                     SegmentedColumn(
