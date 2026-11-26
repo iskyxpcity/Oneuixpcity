@@ -1,5 +1,7 @@
 package com.alohaoneui.app.ui.screen.tools
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -11,6 +13,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.alohaoneui.app.ui.util.shouldShowSplitPane
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.util.shouldShowSplitPane
@@ -107,6 +110,46 @@ fun OtherFunctionsThemeFrame(
             insideMargin = PaddingValues(10.dp),
         ) {
             Column { content() }
+        }
+    }
+}
+
+
+/** Four sibling detail cards per parent frame; wide windows flow frames into two equal columns. */
+@Composable
+fun OtherFunctionsThemeFrameLayout(
+    items: List<@Composable () -> Unit>,
+    modifier: Modifier = Modifier,
+) {
+    if (items.isEmpty()) return
+    val split = shouldShowSplitPane()
+    val frames = if (split) items.chunked(4) else listOf(items)
+    if (split) {
+        Row(
+            modifier = modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            repeat(2) { column ->
+                Column(
+                    modifier = Modifier.weight(1f),
+                ) {
+                    frames.forEachIndexed { index, frame ->
+                        if (index % 2 == column) {
+                            OtherFunctionsThemeFrame {
+                                frame.forEach { it() }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        Column(modifier = modifier.fillMaxWidth()) {
+            frames.forEach { frame ->
+                OtherFunctionsThemeFrame {
+                    frame.forEach { it() }
+                }
+            }
         }
     }
 }
