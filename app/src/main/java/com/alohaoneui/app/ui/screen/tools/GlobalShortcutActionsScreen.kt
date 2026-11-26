@@ -118,6 +118,7 @@ import com.alohaoneui.app.ui.navigation3.LocalNavigator
 import com.alohaoneui.app.ui.navigation3.Route
 import com.alohaoneui.app.ui.theme.LocalEnableBlur
 import com.alohaoneui.app.ui.util.ResponsiveCardGrid
+import com.alohaoneui.app.ui.util.shouldShowSplitPane
 import com.alohaoneui.app.ui.util.BlurredBar
 import com.alohaoneui.app.ui.util.rememberBlurBackdrop
 import com.alohaoneui.app.ui.viewmodel.AlohaOneUIToolsViewModel
@@ -260,8 +261,7 @@ fun GlobalShortcutActionsScreen() {
         subtitle = "集中管理三指、状态栏、息屏按键等快捷触发。",
         onBack = navigator::pop,
     ) {
-        ResponsiveCardGrid(
-            content = listOf(
+        val entryCards: List<@Composable () -> Unit> = listOf(
                 {
                     GlobalShortcutEntryCard(
                         title = "全局三指动作",
@@ -308,6 +308,16 @@ fun GlobalShortcutActionsScreen() {
                     )
                 },
             ),
+        )
+        val parentFrames = if (shouldShowSplitPane()) entryCards.chunked(4) else listOf(entryCards)
+        ResponsiveCardGrid(
+            content = parentFrames.map { frame ->
+                {
+                    OtherFunctionsThemeFrame {
+                        frame.forEach { it() }
+                    }
+                }
+            },
         )
     }
 }
