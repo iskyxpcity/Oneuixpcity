@@ -800,7 +800,7 @@ private fun GlobalShortcutSettingsContent(
                     enabled = settings.threeFingerGestureEnabled,
                     format = { "三指滑动：${it}dp 后接管" },
                     helpTitle = "禁止交互阈值",
-                    helpMessage = "“阈值”指的是三根手指滑动的距离。\\n· 数值越小：三指刚开始动一点点，就会立刻接管触摸，页面更不容易滚动，但更灵敏\\n· 数值越大：要三指滑动更远一点才接管，误触更少，但页面可能会先跟着滚一点",
+                    helpMessage = "“阈值”指的是三根手指滑动的距离。\n· 数值越小：三指刚开始动一点点，就会立刻接管触摸，页面更不容易滚动，但更灵敏\n· 数值越大：要三指滑动更远一点才接管，误触更少，但页面可能会先跟着滚一点",
                     onCommit = { value -> update { it.copy(threeFingerTouchCancelThresholdDp = value) } },
                 )
             },
@@ -851,7 +851,7 @@ private fun GlobalShortcutSettingsContent(
                     enabled = settings.threeFingerPinchEnabled,
                     format = { "三指平均间距向内收缩 ${it} dp 后触发" },
                     helpTitle = "捏合阈值",
-                    helpMessage = "“阈值”指的是三根手指之间的平均距离向内缩小了多少。\\n· 数值越小：轻轻一捏就会触发，更灵敏，但更容易误触\\n· 数值越大：需要捏合得更明显才触发，误触更少，但动作要做得更完整",
+                    helpMessage = "“阈值”指的是三根手指之间的平均距离向内缩小了多少。\n· 数值越小：轻轻一捏就会触发，更灵敏，但更容易误触\n· 数值越大：需要捏合得更明显才触发，误触更少，但动作要做得更完整",
                     onCommit = { value -> update { it.copy(threeFingerPinchThresholdDp = value) } },
                 )
             },
@@ -887,7 +887,7 @@ private fun GlobalShortcutSettingsContent(
                     enabled = settings.threeFingerSpreadEnabled,
                     format = { "三指平均间距向外扩大 ${it} dp 后触发" },
                     helpTitle = "展开阈值",
-                    helpMessage = "“阈值”指的是三根手指之间的平均距离向外扩大了多少。\\n· 数值越小：手指刚分开一点就会触发，更灵敏，但更容易误触\\n· 数值越大：需要展开得更明显才触发，误触更少，但动作要做得更完整",
+                    helpMessage = "“阈值”指的是三根手指之间的平均距离向外扩大了多少。\n· 数值越小：手指刚分开一点就会触发，更灵敏，但更容易误触\n· 数值越大：需要展开得更明显才触发，误触更少，但动作要做得更完整",
                     onCommit = { value -> update { it.copy(threeFingerSpreadThresholdDp = value) } },
                 )
             },
