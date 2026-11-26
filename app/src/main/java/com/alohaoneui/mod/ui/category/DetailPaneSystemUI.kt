@@ -5,6 +5,9 @@ import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -49,6 +52,8 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 import com.alohaoneui.common.R as CommonR
+import com.alohaoneui.app.ui.util.ResponsiveCardGrid
+import com.alohaoneui.app.ui.util.responsiveGridFullSpan
 
 private const val ESIM_ADAPTER_SIM_BOTH = 2
 private val DOUBLE_LINE_CLOCK_SIZE_VALUES = listOf(
@@ -73,10 +78,10 @@ fun DetailPaneSystemUI(
     onEvent: (SystemUIEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    ResponsiveCardGrid(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(rememberScrollState()),
     ) {
         DividerText(R.string.alohaoneui_status_bar)
         AlohaOneUIDetailSegmentedGroup(
@@ -675,7 +680,9 @@ fun DetailPaneSystemUI(
 @Composable
 private fun DividerText(@StringRes id: Int) = AlohaOneUISectionLabel(
     text = stringResource(id),
-    modifier = Modifier.padding(start = 16.dp, top = 32.dp, end = 16.dp),
+    modifier = Modifier
+        .padding(start = 16.dp, top = 32.dp, end = 16.dp)
+        .responsiveGridFullSpan(),
 )
 
 @Composable
@@ -778,6 +785,12 @@ private fun StatusBarVerticalPaddingControl(
 private fun List<PowerMenuAction>.move(fromIndex: Int, toIndex: Int): List<PowerMenuAction> =
     toMutableList().apply {
         add(toIndex, removeAt(fromIndex))
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(24.dp)
+                .responsiveGridFullSpan(),
+        )
     }
 
 @StringRes

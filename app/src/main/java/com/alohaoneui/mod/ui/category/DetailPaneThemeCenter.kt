@@ -6,6 +6,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -51,6 +54,8 @@ import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.basic.Switch as MiuixSwitch
 import com.alohaoneui.app.ui.component.material.ExpressiveSwitch
+import com.alohaoneui.app.ui.util.ResponsiveCardGrid
+import com.alohaoneui.app.ui.util.responsiveGridFullSpan
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 
 @Composable
@@ -63,7 +68,7 @@ fun DetailPaneThemeCenter(
     val scope = rememberCoroutineScope()
     // Keep the two settings in independent native frames. The region setting
     // must not be nested inside the trial-expiry group.
-    Column(
+    ResponsiveCardGrid(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState()),
@@ -93,6 +98,12 @@ fun DetailPaneThemeCenter(
                     }
                 }
             }
+        )
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(24.dp)
+                .responsiveGridFullSpan(),
         )
     }
 }
