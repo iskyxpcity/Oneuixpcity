@@ -139,21 +139,24 @@ fun OtherFunctionsThemeFrameLayout(
     val split = shouldShowSplitPane()
     val frames = if (split) items.chunked(4) else listOf(items)
     if (split) {
-        Row(
+        Column(
             modifier = modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            repeat(2) { column ->
-                Column(
-                    modifier = Modifier.weight(1f),
+            frames.chunked(2).forEach { rowFrames ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.Top,
                 ) {
-                    frames.forEachIndexed { index, frame ->
-                        if (index % 2 == column) {
-                            OtherFunctionsThemeGroup(
-                                modifier = Modifier.fillMaxWidth(),
-                                items = frame,
-                            )
-                        }
+                    rowFrames.forEach { frame ->
+                        OtherFunctionsThemeGroup(
+                            modifier = Modifier.weight(1f),
+                            items = frame,
+                        )
+                    }
+                    if (rowFrames.size == 1) {
+                        Spacer(modifier = Modifier.weight(1f))
                     }
                 }
             }
