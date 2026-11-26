@@ -129,7 +129,7 @@ fun OtherFunctionsThemeFrame(
 }
 
 
-/** Preserve each original detail group as one unit; wide windows place those groups row-first in two columns. */
+/** Preserve original detail groups; distribute them row-first into two independently stacked columns. */
 @Composable
 fun OtherFunctionsThemeFrameLayout(
     items: List<@Composable () -> Unit>,
@@ -137,24 +137,22 @@ fun OtherFunctionsThemeFrameLayout(
 ) {
     if (items.isEmpty()) return
     if (shouldShowSplitPane()) {
-        Column(
+        val columns = listOf(items.filterIndexed { index, _ -> index % 2 == 0 },
+            items.filterIndexed { index, _ -> index % 2 == 1 })
+        Row(
             modifier = modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.Top,
         ) {
-            items.chunked(2).forEach { rowItems ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalAlignment = Alignment.Top,
+            columns.forEach { columnItems ->
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(0.dp),
                 ) {
-                    rowItems.forEach { item ->
+                    columnItems.forEach { item ->
                         OtherFunctionsThemeGroup(
-                            modifier = Modifier.weight(1f),
                             items = listOf(item),
                         )
-                    }
-                    if (rowItems.size == 1) {
-                        Box(modifier = Modifier.weight(1f))
                     }
                 }
             }
