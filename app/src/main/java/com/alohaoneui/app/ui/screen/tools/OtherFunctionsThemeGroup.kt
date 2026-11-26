@@ -13,7 +13,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.alohaoneui.app.ui.util.shouldShowSplitPane
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.util.shouldShowSplitPane
@@ -145,11 +144,7 @@ fun OtherFunctionsThemeFrameLayout(
         }
     } else {
         Column(modifier = modifier.fillMaxWidth()) {
-            frames.forEach { frame ->
-                OtherFunctionsThemeFrame {
-                    frame.forEach { it() }
-                }
-            }
+            items.forEach { it() }
         }
     }
 }
