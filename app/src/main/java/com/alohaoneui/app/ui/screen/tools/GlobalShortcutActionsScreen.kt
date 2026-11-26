@@ -117,7 +117,6 @@ import com.alohaoneui.app.ui.component.material.alohaOneUISegmentedColors
 import com.alohaoneui.app.ui.navigation3.LocalNavigator
 import com.alohaoneui.app.ui.navigation3.Route
 import com.alohaoneui.app.ui.theme.LocalEnableBlur
-import com.alohaoneui.app.ui.util.ResponsiveCardGrid
 import com.alohaoneui.app.ui.util.BlurredBar
 import com.alohaoneui.app.ui.util.rememberBlurBackdrop
 import com.alohaoneui.app.ui.viewmodel.AlohaOneUIToolsViewModel
@@ -324,8 +323,8 @@ fun GlobalThreeFingerActionsScreen() {
         subtitle = "统一管理三指滑动、捏合和展开触发方式。",
         onBack = navigator::pop,
     ) {
-        ResponsiveCardGrid(
-            content = listOf(
+        OtherFunctionsThemeFrameLayout(
+            items = listOf(
                 {
                     GlobalShortcutEntryCard(
                         title = "三指滑动",
@@ -785,242 +784,332 @@ private fun GlobalShortcutSettingsContent(
     settings: Preference.GlobalShortcutActions,
     update: ShortcutSettingsUpdater,
 ) {
-    when (kind) {
-        GlobalShortcutPageKind.ThreeFingerSwipe -> {
-            ShortcutFeatureEnableCard(kind, settings.threeFingerGestureEnabled) { value ->
-                update { it.copy(threeFingerGestureEnabled = value) }
-            }
-            ThresholdShortcutCard(
-                title = "禁止交互阈值",
-                summary = "",
-                value = settings.threeFingerTouchCancelThresholdDp,
-                range = 1..20,
-                enabled = settings.threeFingerGestureEnabled,
-                format = { "三指滑动：${it}dp 后接管" },
-                helpTitle = "禁止交互阈值",
-                helpMessage = "“阈值”指的是三根手指滑动的距离。\n· 数值越小：三指刚开始动一点点，就会立刻接管触摸，页面更不容易滚动，但更灵敏\n· 数值越大：要三指滑动更远一点才接管，误触更少，但页面可能会先跟着滚一点",
-                onCommit = { value -> update { it.copy(threeFingerTouchCancelThresholdDp = value) } },
-            )
-            ShortcutSectionHeading("三指滑动动作")
-            ShortcutHapticCard(
-                enabled = settings.threeFingerGestureEnabled,
-                hapticEnabled = settings.threeFingerHapticEnabled,
-                strength = settings.threeFingerHapticStrength,
-                onHapticEnabled = { value -> update { it.copy(threeFingerHapticEnabled = value) } },
-                onStrength = { value -> update { it.copy(threeFingerHapticStrength = value) } },
-            )
-            ShortcutActionRow("三指上划", "三根手指同时向上滑动。", settings.threeFingerSwipeUpAction, settings.threeFingerGestureEnabled, pickerMessage = "选择这个方向触发的动作。") {
-                value -> update { it.copy(threeFingerSwipeUpAction = value) }
-            }
-            ShortcutActionRow("三指下划", "三根手指同时向下滑动。", settings.threeFingerSwipeDownAction, settings.threeFingerGestureEnabled, pickerMessage = "选择这个方向触发的动作。") {
-                value -> update { it.copy(threeFingerSwipeDownAction = value) }
-            }
-            ShortcutActionRow("三指左划", "三根手指同时向左滑动。", settings.threeFingerSwipeLeftAction, settings.threeFingerGestureEnabled, pickerMessage = "选择这个方向触发的动作。") {
-                value -> update { it.copy(threeFingerSwipeLeftAction = value) }
-            }
-            ShortcutActionRow("三指右划", "三根手指同时向右滑动。", settings.threeFingerSwipeRightAction, settings.threeFingerGestureEnabled, pickerMessage = "选择这个方向触发的动作。") {
-                value -> update { it.copy(threeFingerSwipeRightAction = value) }
-            }
-        }
-        GlobalShortcutPageKind.ThreeFingerPinch -> {
-            ShortcutFeatureEnableCard(kind, settings.threeFingerPinchEnabled) { value ->
-                update { it.copy(threeFingerPinchEnabled = value) }
-            }
-            ThresholdShortcutCard(
-                title = "捏合阈值",
-                summary = "",
-                value = settings.threeFingerPinchThresholdDp,
-                range = 8..160,
-                enabled = settings.threeFingerPinchEnabled,
-                format = { "三指平均间距向内收缩 ${it} dp 后触发" },
-                helpTitle = "捏合阈值",
-                helpMessage = "“阈值”指的是三根手指之间的平均距离向内缩小了多少。\n· 数值越小：轻轻一捏就会触发，更灵敏，但更容易误触\n· 数值越大：需要捏合得更明显才触发，误触更少，但动作要做得更完整",
-                onCommit = { value -> update { it.copy(threeFingerPinchThresholdDp = value) } },
-            )
-            ShortcutSectionHeading("触发动作")
-            ShortcutHapticCard(
-                enabled = settings.threeFingerPinchEnabled,
-                hapticEnabled = settings.threeFingerPinchHapticEnabled,
-                strength = settings.threeFingerPinchHapticStrength,
-                onHapticEnabled = { value -> update { it.copy(threeFingerPinchHapticEnabled = value) } },
-                onStrength = { value -> update { it.copy(threeFingerPinchHapticStrength = value) } },
-            )
-            ShortcutActionRow("三指捏合", "三根手指同时向内捏合，收缩距离达到阈值后执行。", settings.threeFingerPinchAction, settings.threeFingerPinchEnabled) {
-                value -> update { it.copy(threeFingerPinchAction = value) }
-            }
-        }
-        GlobalShortcutPageKind.ThreeFingerSpread -> {
-            ShortcutFeatureEnableCard(kind, settings.threeFingerSpreadEnabled) { value ->
-                update { it.copy(threeFingerSpreadEnabled = value) }
-            }
-            ThresholdShortcutCard(
-                title = "展开阈值",
-                summary = "",
-                value = settings.threeFingerSpreadThresholdDp,
-                range = 8..160,
-                enabled = settings.threeFingerSpreadEnabled,
-                format = { "三指平均间距向外扩大 ${it} dp 后触发" },
-                helpTitle = "展开阈值",
-                helpMessage = "“阈值”指的是三根手指之间的平均距离向外扩大了多少。\n· 数值越小：手指刚分开一点就会触发，更灵敏，但更容易误触\n· 数值越大：需要展开得更明显才触发，误触更少，但动作要做得更完整",
-                onCommit = { value -> update { it.copy(threeFingerSpreadThresholdDp = value) } },
-            )
-            ShortcutSectionHeading("触发动作")
-            ShortcutHapticCard(
-                enabled = settings.threeFingerSpreadEnabled,
-                hapticEnabled = settings.threeFingerSpreadHapticEnabled,
-                strength = settings.threeFingerSpreadHapticStrength,
-                onHapticEnabled = { value -> update { it.copy(threeFingerSpreadHapticEnabled = value) } },
-                onStrength = { value -> update { it.copy(threeFingerSpreadHapticStrength = value) } },
-            )
-            ShortcutActionRow("三指展开", "三根手指同时向外展开，扩大距离达到阈值后执行。", settings.threeFingerSpreadAction, settings.threeFingerSpreadEnabled) {
-                value -> update { it.copy(threeFingerSpreadAction = value) }
-            }
-        }
-        GlobalShortcutPageKind.FloatingBall -> {
-            ShortcutFeatureEnableCard(kind, settings.floatingBallEnabled) { value ->
-                update { it.copy(floatingBallEnabled = value) }
-            }
-            FloatingBallColorControl(
-                argb = settings.floatingBallColorArgb,
-                enabled = settings.floatingBallEnabled,
-                onCommit = { value -> update { it.copy(floatingBallColorArgb = value) } },
-            )
-            ShortcutSettingsSection(
-                title = "悬浮球大小",
-                summary = "",
-                items = listOf({
-                    OtherFunctionsThemeChildItem {
-                        NumericShortcutSlider(
-                            title = "",
-                            summary = "",
-                            value = settings.floatingBallSizeDp,
-                            range = 40..88,
-                            enabled = settings.floatingBallEnabled,
-                            format = { "${it} dp" },
-                            onCommit = { value -> update { it.copy(floatingBallSizeDp = value) } },
-                            showTitleAndSummary = false,
-                        )
-                    }
-                }),
-            )
-            ShortcutSettingsSection(
-                title = "自动贴边",
-                summary = "",
-                items = listOf({
-                    OtherFunctionsThemeChildItem {
-                        NumericShortcutSlider(
-                            title = "",
-                            summary = "",
-                            value = settings.floatingBallAutoEdgeDelaySeconds,
-                            range = 0..10,
-                            enabled = settings.floatingBallEnabled,
-                            format = { if (it <= 0) "已关闭" else "${it} 秒无操作后贴边" },
-                            onCommit = { value -> update { it.copy(floatingBallAutoEdgeDelaySeconds = value) } },
-                            showTitleAndSummary = false,
-                        )
-                    }
-                }),
-            )
-            ShortcutSectionHeading("触发动作")
-            ShortcutHapticCard(
-                enabled = settings.floatingBallEnabled,
-                hapticEnabled = settings.floatingBallHapticEnabled,
-                strength = settings.floatingBallHapticStrength,
-                onHapticEnabled = { value -> update { it.copy(floatingBallHapticEnabled = value) } },
-                onStrength = { value -> update { it.copy(floatingBallHapticStrength = value) } },
-            )
-            ShortcutActionRow("单击", "点击一次悬浮球。", settings.floatingBallClickAction, settings.floatingBallEnabled) {
-                value -> update { it.copy(floatingBallClickAction = value) }
-            }
-            ShortcutActionRow("双击", "快速点击两次悬浮球。", settings.floatingBallDoubleClickAction, settings.floatingBallEnabled) {
-                value -> update { it.copy(floatingBallDoubleClickAction = value) }
-            }
-            ShortcutActionRow("上划", "按住悬浮球向上滑。", settings.floatingBallSwipeUpAction, settings.floatingBallEnabled) {
-                value -> update { it.copy(floatingBallSwipeUpAction = value) }
-            }
-            ShortcutActionRow("下划", "按住悬浮球向下滑。", settings.floatingBallSwipeDownAction, settings.floatingBallEnabled) {
-                value -> update { it.copy(floatingBallSwipeDownAction = value) }
-            }
-            ShortcutActionRow("左划", "按住悬浮球向左滑。", settings.floatingBallSwipeLeftAction, settings.floatingBallEnabled) {
-                value -> update { it.copy(floatingBallSwipeLeftAction = value) }
-            }
-            ShortcutActionRow("右划", "按住悬浮球向右滑。", settings.floatingBallSwipeRightAction, settings.floatingBallEnabled) {
-                value -> update { it.copy(floatingBallSwipeRightAction = value) }
-            }
-        }
-        GlobalShortcutPageKind.StatusBar -> {
-            ShortcutFeatureEnableCard(kind, settings.statusBarShortcutEnabled) { value ->
-                update { it.copy(statusBarShortcutEnabled = value) }
-            }
-            ShortcutSectionHeading("触发动作")
-            ShortcutHapticCard(
-                enabled = settings.statusBarShortcutEnabled,
-                hapticEnabled = settings.statusBarShortcutHapticEnabled,
-                strength = settings.statusBarShortcutHapticStrength,
-                onHapticEnabled = { value -> update { it.copy(statusBarShortcutHapticEnabled = value) } },
-                onStrength = { value -> update { it.copy(statusBarShortcutHapticStrength = value) } },
-            )
-            ShortcutActionRow("状态栏双击", "快速点击状态栏任意位置两次。", settings.statusBarDoubleClickAction, settings.statusBarShortcutEnabled) {
-                value -> update { it.copy(statusBarDoubleClickAction = value) }
-            }
-            ShortcutActionRow("状态栏左上角单击", "点击状态栏左上角区域。", settings.statusBarLeftClickAction, settings.statusBarShortcutEnabled) {
-                value -> update { it.copy(statusBarLeftClickAction = value) }
-            }
-            ShortcutActionRow("状态栏左上角长按", "长按状态栏左上角区域。", settings.statusBarLeftLongPressAction, settings.statusBarShortcutEnabled) {
-                value -> update { it.copy(statusBarLeftLongPressAction = value) }
-            }
-            ShortcutActionRow("状态栏右上角单击", "点击状态栏右上角区域。", settings.statusBarRightClickAction, settings.statusBarShortcutEnabled) {
-                value -> update { it.copy(statusBarRightClickAction = value) }
-            }
-            ShortcutActionRow("状态栏右上角长按", "长按状态栏右上角区域。", settings.statusBarRightLongPressAction, settings.statusBarShortcutEnabled) {
-                value -> update { it.copy(statusBarRightLongPressAction = value) }
-            }
-        }
-        GlobalShortcutPageKind.NavigationKeys -> {
-            ShortcutFeatureEnableCard(kind, settings.navigationKeyShortcutEnabled) { value ->
-                update { it.copy(navigationKeyShortcutEnabled = value) }
-            }
-            ShortcutSectionHeading("触发动作")
-            ShortcutHapticCard(
-                enabled = settings.navigationKeyShortcutEnabled,
-                hapticEnabled = settings.navigationKeyHapticEnabled,
-                strength = settings.navigationKeyHapticStrength,
-                onHapticEnabled = { value -> update { it.copy(navigationKeyHapticEnabled = value) } },
-                onStrength = { value -> update { it.copy(navigationKeyHapticStrength = value) } },
-            )
-            ShortcutActionRow("双击返回", "快速点击返回键两次。", settings.navigationBackDoubleTapAction, settings.navigationKeyShortcutEnabled) {
-                value -> update { it.copy(navigationBackDoubleTapAction = value) }
-            }
-            ShortcutActionRow("长按返回", "按住返回键不放。", settings.navigationBackLongPressAction, settings.navigationKeyShortcutEnabled) {
-                value -> update { it.copy(navigationBackLongPressAction = value) }
-            }
-            ShortcutActionRow("双击 Home", "快速点击 Home 键两次。", settings.navigationHomeDoubleTapAction, settings.navigationKeyShortcutEnabled) {
-                value -> update { it.copy(navigationHomeDoubleTapAction = value) }
-            }
-            ShortcutActionRow("长按 Home", "按住 Home 键不放。", settings.navigationHomeLongPressAction, settings.navigationKeyShortcutEnabled) {
-                value -> update { it.copy(navigationHomeLongPressAction = value) }
-            }
-            ShortcutActionRow("双击最近任务", "快速点击最近任务键两次。", settings.navigationRecentsDoubleTapAction, settings.navigationKeyShortcutEnabled) {
-                value -> update { it.copy(navigationRecentsDoubleTapAction = value) }
-            }
-            ShortcutActionRow("长按最近任务", "按住最近任务键不放。", settings.navigationRecentsLongPressAction, settings.navigationKeyShortcutEnabled) {
-                value -> update { it.copy(navigationRecentsLongPressAction = value) }
-            }
-        }
-        GlobalShortcutPageKind.ScreenOffVolume -> {
-            ShortcutFeatureEnableCard(kind, settings.screenOffVolumeKeyEnabled) { value ->
-                update { it.copy(screenOffVolumeKeyEnabled = value) }
-            }
-            ShortcutSettingsSection(
-                title = "长按切歌",
-                summary = "音量上：下一曲；音量下：上一曲。",
-                headerChecked = settings.screenOffVolumeLongPressEnabled,
-                headerEnabled = settings.screenOffVolumeKeyEnabled,
-                onHeaderCheckedChange = { value ->
-                    update { it.copy(screenOffVolumeLongPressEnabled = value) }
-                },
-                items = listOf(
-                    {
+    val detailCards: List<@Composable () -> Unit> = when (kind) {
+        GlobalShortcutPageKind.ThreeFingerSwipe -> listOf(
+            {
+                ShortcutFeatureEnableCard(kind, settings.threeFingerGestureEnabled) { value ->
+                    update { it.copy(threeFingerGestureEnabled = value) }
+                }
+            },
+            {
+                ThresholdShortcutCard(
+                    title = "禁止交互阈值",
+                    summary = "",
+                    value = settings.threeFingerTouchCancelThresholdDp,
+                    range = 1..20,
+                    enabled = settings.threeFingerGestureEnabled,
+                    format = { "三指滑动：${it}dp 后接管" },
+                    helpTitle = "禁止交互阈值",
+                    helpMessage = "“阈值”指的是三根手指滑动的距离。\\n· 数值越小：三指刚开始动一点点，就会立刻接管触摸，页面更不容易滚动，但更灵敏\\n· 数值越大：要三指滑动更远一点才接管，误触更少，但页面可能会先跟着滚一点",
+                    onCommit = { value -> update { it.copy(threeFingerTouchCancelThresholdDp = value) } },
+                )
+            },
+            {
+                ShortcutSectionHeading("三指滑动动作")
+                ShortcutHapticCard(
+                    enabled = settings.threeFingerGestureEnabled,
+                    hapticEnabled = settings.threeFingerHapticEnabled,
+                    strength = settings.threeFingerHapticStrength,
+                    onHapticEnabled = { value -> update { it.copy(threeFingerHapticEnabled = value) } },
+                    onStrength = { value -> update { it.copy(threeFingerHapticStrength = value) } },
+                )
+            },
+            {
+                ShortcutActionRow("三指上划", "三根手指同时向上滑动。", settings.threeFingerSwipeUpAction, settings.threeFingerGestureEnabled, pickerMessage = "选择这个方向触发的动作。") {
+                    value -> update { it.copy(threeFingerSwipeUpAction = value) }
+                }
+            },
+            {
+                ShortcutActionRow("三指下划", "三根手指同时向下滑动。", settings.threeFingerSwipeDownAction, settings.threeFingerGestureEnabled, pickerMessage = "选择这个方向触发的动作。") {
+                    value -> update { it.copy(threeFingerSwipeDownAction = value) }
+                }
+            },
+            {
+                ShortcutActionRow("三指左划", "三根手指同时向左滑动。", settings.threeFingerSwipeLeftAction, settings.threeFingerGestureEnabled, pickerMessage = "选择这个方向触发的动作。") {
+                    value -> update { it.copy(threeFingerSwipeLeftAction = value) }
+                }
+            },
+            {
+                ShortcutActionRow("三指右划", "三根手指同时向右滑动。", settings.threeFingerSwipeRightAction, settings.threeFingerGestureEnabled, pickerMessage = "选择这个方向触发的动作。") {
+                    value -> update { it.copy(threeFingerSwipeRightAction = value) }
+                }
+            },
+        )
+
+        GlobalShortcutPageKind.ThreeFingerPinch -> listOf(
+            {
+                ShortcutFeatureEnableCard(kind, settings.threeFingerPinchEnabled) { value ->
+                    update { it.copy(threeFingerPinchEnabled = value) }
+                }
+            },
+            {
+                ThresholdShortcutCard(
+                    title = "捏合阈值",
+                    summary = "",
+                    value = settings.threeFingerPinchThresholdDp,
+                    range = 8..160,
+                    enabled = settings.threeFingerPinchEnabled,
+                    format = { "三指平均间距向内收缩 ${it} dp 后触发" },
+                    helpTitle = "捏合阈值",
+                    helpMessage = "“阈值”指的是三根手指之间的平均距离向内缩小了多少。\\n· 数值越小：轻轻一捏就会触发，更灵敏，但更容易误触\\n· 数值越大：需要捏合得更明显才触发，误触更少，但动作要做得更完整",
+                    onCommit = { value -> update { it.copy(threeFingerPinchThresholdDp = value) } },
+                )
+            },
+            {
+                ShortcutSectionHeading("触发动作")
+                ShortcutHapticCard(
+                    enabled = settings.threeFingerPinchEnabled,
+                    hapticEnabled = settings.threeFingerPinchHapticEnabled,
+                    strength = settings.threeFingerPinchHapticStrength,
+                    onHapticEnabled = { value -> update { it.copy(threeFingerPinchHapticEnabled = value) } },
+                    onStrength = { value -> update { it.copy(threeFingerPinchHapticStrength = value) } },
+                )
+            },
+            {
+                ShortcutActionRow("三指捏合", "三根手指同时向内捏合，收缩距离达到阈值后执行。", settings.threeFingerPinchAction, settings.threeFingerPinchEnabled) {
+                    value -> update { it.copy(threeFingerPinchAction = value) }
+                }
+            },
+        )
+
+        GlobalShortcutPageKind.ThreeFingerSpread -> listOf(
+            {
+                ShortcutFeatureEnableCard(kind, settings.threeFingerSpreadEnabled) { value ->
+                    update { it.copy(threeFingerSpreadEnabled = value) }
+                }
+            },
+            {
+                ThresholdShortcutCard(
+                    title = "展开阈值",
+                    summary = "",
+                    value = settings.threeFingerSpreadThresholdDp,
+                    range = 8..160,
+                    enabled = settings.threeFingerSpreadEnabled,
+                    format = { "三指平均间距向外扩大 ${it} dp 后触发" },
+                    helpTitle = "展开阈值",
+                    helpMessage = "“阈值”指的是三根手指之间的平均距离向外扩大了多少。\\n· 数值越小：手指刚分开一点就会触发，更灵敏，但更容易误触\\n· 数值越大：需要展开得更明显才触发，误触更少，但动作要做得更完整",
+                    onCommit = { value -> update { it.copy(threeFingerSpreadThresholdDp = value) } },
+                )
+            },
+            {
+                ShortcutSectionHeading("触发动作")
+                ShortcutHapticCard(
+                    enabled = settings.threeFingerSpreadEnabled,
+                    hapticEnabled = settings.threeFingerSpreadHapticEnabled,
+                    strength = settings.threeFingerSpreadHapticStrength,
+                    onHapticEnabled = { value -> update { it.copy(threeFingerSpreadHapticEnabled = value) } },
+                    onStrength = { value -> update { it.copy(threeFingerSpreadHapticStrength = value) } },
+                )
+            },
+            {
+                ShortcutActionRow("三指展开", "三根手指同时向外展开，扩大距离达到阈值后执行。", settings.threeFingerSpreadAction, settings.threeFingerSpreadEnabled) {
+                    value -> update { it.copy(threeFingerSpreadAction = value) }
+                }
+            },
+        )
+
+        GlobalShortcutPageKind.FloatingBall -> listOf(
+            {
+                ShortcutFeatureEnableCard(kind, settings.floatingBallEnabled) { value ->
+                    update { it.copy(floatingBallEnabled = value) }
+                }
+            },
+            {
+                FloatingBallColorControl(
+                    argb = settings.floatingBallColorArgb,
+                    enabled = settings.floatingBallEnabled,
+                    onCommit = { value -> update { it.copy(floatingBallColorArgb = value) } },
+                )
+            },
+            {
+                ShortcutSettingsSection(
+                    title = "悬浮球大小",
+                    summary = "",
+                    items = listOf({
+                        OtherFunctionsThemeChildItem {
+                            NumericShortcutSlider(
+                                title = "",
+                                summary = "",
+                                value = settings.floatingBallSizeDp,
+                                range = 40..88,
+                                enabled = settings.floatingBallEnabled,
+                                format = { "${it} dp" },
+                                onCommit = { value -> update { it.copy(floatingBallSizeDp = value) } },
+                                showTitleAndSummary = false,
+                            )
+                        }
+                    }),
+                )
+            },
+            {
+                ShortcutSettingsSection(
+                    title = "自动贴边",
+                    summary = "",
+                    items = listOf({
+                        OtherFunctionsThemeChildItem {
+                            NumericShortcutSlider(
+                                title = "",
+                                summary = "",
+                                value = settings.floatingBallAutoEdgeDelaySeconds,
+                                range = 0..10,
+                                enabled = settings.floatingBallEnabled,
+                                format = { if (it <= 0) "已关闭" else "${it} 秒无操作后贴边" },
+                                onCommit = { value -> update { it.copy(floatingBallAutoEdgeDelaySeconds = value) } },
+                                showTitleAndSummary = false,
+                            )
+                        }
+                    }),
+                )
+            },
+            {
+                ShortcutSectionHeading("触发动作")
+                ShortcutHapticCard(
+                    enabled = settings.floatingBallEnabled,
+                    hapticEnabled = settings.floatingBallHapticEnabled,
+                    strength = settings.floatingBallHapticStrength,
+                    onHapticEnabled = { value -> update { it.copy(floatingBallHapticEnabled = value) } },
+                    onStrength = { value -> update { it.copy(floatingBallHapticStrength = value) } },
+                )
+            },
+            {
+                ShortcutActionRow("单击", "点击一次悬浮球。", settings.floatingBallClickAction, settings.floatingBallEnabled) {
+                    value -> update { it.copy(floatingBallClickAction = value) }
+                }
+            },
+            {
+                ShortcutActionRow("双击", "快速点击两次悬浮球。", settings.floatingBallDoubleClickAction, settings.floatingBallEnabled) {
+                    value -> update { it.copy(floatingBallDoubleClickAction = value) }
+                }
+            },
+            {
+                ShortcutActionRow("上划", "按住悬浮球向上滑。", settings.floatingBallSwipeUpAction, settings.floatingBallEnabled) {
+                    value -> update { it.copy(floatingBallSwipeUpAction = value) }
+                }
+            },
+            {
+                ShortcutActionRow("下划", "按住悬浮球向下滑。", settings.floatingBallSwipeDownAction, settings.floatingBallEnabled) {
+                    value -> update { it.copy(floatingBallSwipeDownAction = value) }
+                }
+            },
+            {
+                ShortcutActionRow("左划", "按住悬浮球向左滑。", settings.floatingBallSwipeLeftAction, settings.floatingBallEnabled) {
+                    value -> update { it.copy(floatingBallSwipeLeftAction = value) }
+                }
+            },
+            {
+                ShortcutActionRow("右划", "按住悬浮球向右滑。", settings.floatingBallSwipeRightAction, settings.floatingBallEnabled) {
+                    value -> update { it.copy(floatingBallSwipeRightAction = value) }
+                }
+            },
+        )
+
+        GlobalShortcutPageKind.StatusBar -> listOf(
+            {
+                ShortcutFeatureEnableCard(kind, settings.statusBarShortcutEnabled) { value ->
+                    update { it.copy(statusBarShortcutEnabled = value) }
+                }
+            },
+            {
+                ShortcutSectionHeading("触发动作")
+                ShortcutHapticCard(
+                    enabled = settings.statusBarShortcutEnabled,
+                    hapticEnabled = settings.statusBarShortcutHapticEnabled,
+                    strength = settings.statusBarShortcutHapticStrength,
+                    onHapticEnabled = { value -> update { it.copy(statusBarShortcutHapticEnabled = value) } },
+                    onStrength = { value -> update { it.copy(statusBarShortcutHapticStrength = value) } },
+                )
+            },
+            {
+                ShortcutActionRow("状态栏双击", "快速点击状态栏任意位置两次。", settings.statusBarDoubleClickAction, settings.statusBarShortcutEnabled) {
+                    value -> update { it.copy(statusBarDoubleClickAction = value) }
+                }
+            },
+            {
+                ShortcutActionRow("状态栏左上角单击", "点击状态栏左上角区域。", settings.statusBarLeftClickAction, settings.statusBarShortcutEnabled) {
+                    value -> update { it.copy(statusBarLeftClickAction = value) }
+                }
+            },
+            {
+                ShortcutActionRow("状态栏左上角长按", "长按状态栏左上角区域。", settings.statusBarLeftLongPressAction, settings.statusBarShortcutEnabled) {
+                    value -> update { it.copy(statusBarLeftLongPressAction = value) }
+                }
+            },
+            {
+                ShortcutActionRow("状态栏右上角单击", "点击状态栏右上角区域。", settings.statusBarRightClickAction, settings.statusBarShortcutEnabled) {
+                    value -> update { it.copy(statusBarRightClickAction = value) }
+                }
+            },
+            {
+                ShortcutActionRow("状态栏右上角长按", "长按状态栏右上角区域。", settings.statusBarRightLongPressAction, settings.statusBarShortcutEnabled) {
+                    value -> update { it.copy(statusBarRightLongPressAction = value) }
+                }
+            },
+        )
+
+        GlobalShortcutPageKind.NavigationKeys -> listOf(
+            {
+                ShortcutFeatureEnableCard(kind, settings.navigationKeyShortcutEnabled) { value ->
+                    update { it.copy(navigationKeyShortcutEnabled = value) }
+                }
+            },
+            {
+                ShortcutSectionHeading("触发动作")
+                ShortcutHapticCard(
+                    enabled = settings.navigationKeyShortcutEnabled,
+                    hapticEnabled = settings.navigationKeyHapticEnabled,
+                    strength = settings.navigationKeyHapticStrength,
+                    onHapticEnabled = { value -> update { it.copy(navigationKeyHapticEnabled = value) } },
+                    onStrength = { value -> update { it.copy(navigationKeyHapticStrength = value) } },
+                )
+            },
+            {
+                ShortcutActionRow("双击返回", "快速点击返回键两次。", settings.navigationBackDoubleTapAction, settings.navigationKeyShortcutEnabled) {
+                    value -> update { it.copy(navigationBackDoubleTapAction = value) }
+                }
+            },
+            {
+                ShortcutActionRow("长按返回", "按住返回键不放。", settings.navigationBackLongPressAction, settings.navigationKeyShortcutEnabled) {
+                    value -> update { it.copy(navigationBackLongPressAction = value) }
+                }
+            },
+            {
+                ShortcutActionRow("双击 Home", "快速点击 Home 键两次。", settings.navigationHomeDoubleTapAction, settings.navigationKeyShortcutEnabled) {
+                    value -> update { it.copy(navigationHomeDoubleTapAction = value) }
+                }
+            },
+            {
+                ShortcutActionRow("长按 Home", "按住 Home 键不放。", settings.navigationHomeLongPressAction, settings.navigationKeyShortcutEnabled) {
+                    value -> update { it.copy(navigationHomeLongPressAction = value) }
+                }
+            },
+            {
+                ShortcutActionRow("双击最近任务", "快速点击最近任务键两次。", settings.navigationRecentsDoubleTapAction, settings.navigationKeyShortcutEnabled) {
+                    value -> update { it.copy(navigationRecentsDoubleTapAction = value) }
+                }
+            },
+            {
+                ShortcutActionRow("长按最近任务", "按住最近任务键不放。", settings.navigationRecentsLongPressAction, settings.navigationKeyShortcutEnabled) {
+                    value -> update { it.copy(navigationRecentsLongPressAction = value) }
+                }
+            },
+        )
+
+        GlobalShortcutPageKind.ScreenOffVolume -> listOf(
+            {
+                ShortcutFeatureEnableCard(kind, settings.screenOffVolumeKeyEnabled) { value ->
+                    update { it.copy(screenOffVolumeKeyEnabled = value) }
+                }
+            },
+            {
+                ShortcutSettingsSection(
+                    title = "长按切歌",
+                    summary = "音量上：下一曲；音量下：上一曲。",
+                    headerChecked = settings.screenOffVolumeLongPressEnabled,
+                    headerEnabled = settings.screenOffVolumeKeyEnabled,
+                    onHeaderCheckedChange = { value ->
+                        update { it.copy(screenOffVolumeLongPressEnabled = value) }
+                    },
+                    items = listOf({
                         OtherFunctionsThemeChildItem {
                             NumericShortcutSlider(
                                 title = "",
@@ -1033,19 +1122,19 @@ private fun GlobalShortcutSettingsContent(
                                 showTitleAndSummary = false,
                             )
                         }
+                    }),
+                )
+            },
+            {
+                ShortcutSettingsSection(
+                    title = "双击播放/暂停",
+                    summary = "息屏时快速双击同一个音量键，发送媒体播放/暂停。",
+                    headerChecked = settings.screenOffVolumeDoubleClickEnabled,
+                    headerEnabled = settings.screenOffVolumeKeyEnabled,
+                    onHeaderCheckedChange = { value ->
+                        update { it.copy(screenOffVolumeDoubleClickEnabled = value) }
                     },
-                ),
-            )
-            ShortcutSettingsSection(
-                title = "双击播放/暂停",
-                summary = "息屏时快速双击同一个音量键，发送媒体播放/暂停。",
-                headerChecked = settings.screenOffVolumeDoubleClickEnabled,
-                headerEnabled = settings.screenOffVolumeKeyEnabled,
-                onHeaderCheckedChange = { value ->
-                    update { it.copy(screenOffVolumeDoubleClickEnabled = value) }
-                },
-                items = listOf(
-                    {
+                    items = listOf({
                         OtherFunctionsThemeChildItem {
                             NumericShortcutSlider(
                                 title = "",
@@ -1058,22 +1147,23 @@ private fun GlobalShortcutSettingsContent(
                                 showTitleAndSummary = false,
                             )
                         }
-                    },
-                ),
-            )
-
-
-            ScreenOffVolumeHapticCard(
-                enabled = settings.screenOffVolumeKeyEnabled,
-                hapticEnabled = settings.screenOffVolumeHapticEnabled,
-                strength = settings.screenOffVolumeHapticStrength,
-                onHapticEnabled = { value -> update { it.copy(screenOffVolumeHapticEnabled = value) } },
-                onStrength = { value -> update { it.copy(screenOffVolumeHapticStrength = value) } },
-            )
-        }
+                    }),
+                )
+            },
+            {
+                ScreenOffVolumeHapticCard(
+                    enabled = settings.screenOffVolumeKeyEnabled,
+                    hapticEnabled = settings.screenOffVolumeHapticEnabled,
+                    strength = settings.screenOffVolumeHapticStrength,
+                    onHapticEnabled = { value -> update { it.copy(screenOffVolumeHapticEnabled = value) } },
+                    onStrength = { value -> update { it.copy(screenOffVolumeHapticStrength = value) } },
+                )
+            },
+        )
     }
-}
 
+    OtherFunctionsThemeFrameLayout(detailCards)
+}
 @Composable
 private fun ShortcutFeatureEnableCard(
     kind: GlobalShortcutPageKind,
