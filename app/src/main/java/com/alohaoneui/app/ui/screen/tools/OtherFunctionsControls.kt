@@ -101,66 +101,68 @@ fun OtherFunctionsControls(
                             actions.forEachIndexed { index, action ->
                                 add {
                                     val visiblePosition = actions.take(index + 1).count { it.visible }
-                                    SegmentedListItem(
-                                        colors = alohaOneUISegmentedColors(),
-                                        headlineContent = {
-                                            MaterialText(
-                                                text = stringResource(id = powerMenuActionTitle(action.name)),
-                                            )
-                                        },
-                                        supportingContent = {
-                                            MaterialText(
-                                                text = if (action.visible) {
-                                                    stringResource(
-                                                        id = R.string.alohaoneui_powerMenuActionVisible_summary,
-                                                        visiblePosition,
+                                    val actionTitle = stringResource(id = powerMenuActionTitle(action.name))
+                                    val actionSummary = if (action.visible) {
+                                        stringResource(
+                                            id = R.string.alohaoneui_powerMenuActionVisible_summary,
+                                            visiblePosition,
+                                        )
+                                    } else {
+                                        stringResource(id = R.string.alohaoneui_powerMenuActionHidden_summary)
+                                    }
+                                    val actionControls: @Composable () -> Unit = {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            AlohaOneUIActionButton(
+                                                text = stringResource(id = R.string.alohaoneui_moveUp),
+                                                enabled = index > 0,
+                                                onClick = {
+                                                    onEvent(
+                                                        SystemUIEvent.Other.PowerMenuActions(
+                                                            actions.move(index, index - 1)
+                                                        )
                                                     )
-                                                } else {
-                                                    stringResource(id = R.string.alohaoneui_powerMenuActionHidden_summary)
                                                 },
                                             )
-                                        },
-                                        trailingContent = {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                AlohaOneUIActionButton(
-                                                    text = stringResource(id = R.string.alohaoneui_moveUp),
-                                                    enabled = index > 0,
-                                                    onClick = {
-                                                        onEvent(
-                                                            SystemUIEvent.Other.PowerMenuActions(
-                                                                actions.move(index, index - 1)
-                                                            )
+                                            Spacer(Modifier.width(8.dp))
+                                            AlohaOneUIActionButton(
+                                                text = stringResource(id = R.string.alohaoneui_moveDown),
+                                                enabled = index < actions.lastIndex,
+                                                onClick = {
+                                                    onEvent(
+                                                        SystemUIEvent.Other.PowerMenuActions(
+                                                            actions.move(index, index + 1)
                                                         )
-                                                    },
-                                                )
-                                                Spacer(Modifier.width(8.dp))
-                                                AlohaOneUIActionButton(
-                                                    text = stringResource(id = R.string.alohaoneui_moveDown),
-                                                    enabled = index < actions.lastIndex,
-                                                    onClick = {
-                                                        onEvent(
-                                                            SystemUIEvent.Other.PowerMenuActions(
-                                                                actions.move(index, index + 1)
-                                                            )
+                                                    )
+                                                },
+                                            )
+                                            Spacer(Modifier.width(8.dp))
+                                            AlohaOneUISwitch(
+                                                checked = action.visible,
+                                                onCheckedChange = { visible ->
+                                                    onEvent(
+                                                        SystemUIEvent.Other.PowerMenuActions(
+                                                            actions.mapIndexed { actionIndex, item ->
+                                                                if (actionIndex == index) item.copy(visible = visible) else item
+                                                            }
                                                         )
-                                                    },
-                                                )
-                                                Spacer(Modifier.width(8.dp))
-                                                AlohaOneUISwitch(
-                                                    checked = action.visible,
-                                                    onCheckedChange = { visible ->
-                                                        onEvent(
-                                                            SystemUIEvent.Other.PowerMenuActions(
-                                                                actions.mapIndexed { actionIndex, item ->
-                                                                    if (actionIndex == index) item.copy(visible = visible) else item
-                                                                }
-                                                            )
-                                                        )
-                                                    },
-                                                )
-                                            }
-                                        },
-                                    )
+                                                    )
+                                                },
+                                            )
+                                        }
+                                    }
+                                    when (LocalUiMode.current) {
+                                        UiMode.Material -> SegmentedListItem(
+                                            colors = alohaOneUISegmentedColors(),
+                                            headlineContent = { MaterialText(text = actionTitle) },
+                                            supportingContent = { MaterialText(text = actionSummary) },
+                                            trailingContent = actionControls,
+                                        )
+                                        UiMode.Miuix -> BasicComponent(
+                                            title = actionTitle,
+                                            summary = actionSummary,
+                                            endActions = actionControls,
+                                        )
+                                    }
                                 }
                             }
                         }

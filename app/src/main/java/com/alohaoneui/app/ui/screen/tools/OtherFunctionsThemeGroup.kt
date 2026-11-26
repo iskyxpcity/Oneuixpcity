@@ -34,11 +34,17 @@ fun OtherFunctionsThemeGroup(
 ) {
     if (items.isEmpty()) return
 
-    // A parent SegmentedColumn/Card already owns the visual group.
-    // Nested feature helpers must emit rows only, never another card/group.
+    // A parent frame already owns the outer visual group. Nested detail groups
+    // still need their own row positions so Material can assign top/middle/bottom shapes.
     if (LocalAlohaOneUIGroupedPreference.current) {
-        Column(modifier = modifier.fillMaxWidth()) {
-            items.forEach { item -> item() }
+        when (LocalUiMode.current) {
+            UiMode.Material -> SegmentedColumn(
+                modifier = modifier.fillMaxWidth(),
+                content = items,
+            )
+            UiMode.Miuix -> Column(modifier = modifier.fillMaxWidth()) {
+                items.forEach { item -> item() }
+            }
         }
         return
     }
