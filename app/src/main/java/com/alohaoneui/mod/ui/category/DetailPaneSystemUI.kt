@@ -789,12 +789,6 @@ private fun StatusBarVerticalPaddingControl(
 private fun List<PowerMenuAction>.move(fromIndex: Int, toIndex: Int): List<PowerMenuAction> =
     toMutableList().apply {
         add(toIndex, removeAt(fromIndex))
-        Spacer(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(24.dp)
-                .responsiveGridFullSpan(),
-        )
     }
 
 @StringRes
