@@ -129,34 +129,32 @@ fun OtherFunctionsThemeFrame(
 }
 
 
-/** Four sibling detail cards per parent frame; wide windows flow frames into two equal columns. */
+/** Preserve each original detail group as one unit; wide windows place those groups row-first in two columns. */
 @Composable
 fun OtherFunctionsThemeFrameLayout(
     items: List<@Composable () -> Unit>,
     modifier: Modifier = Modifier,
 ) {
     if (items.isEmpty()) return
-    val split = shouldShowSplitPane()
-    val frames = if (split) items.chunked(4) else listOf(items)
-    if (split) {
+    if (shouldShowSplitPane()) {
         Column(
             modifier = modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            frames.chunked(2).forEach { rowFrames ->
+            items.chunked(2).forEach { rowItems ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.Top,
                 ) {
-                    rowFrames.forEach { frame ->
+                    rowItems.forEach { item ->
                         OtherFunctionsThemeGroup(
                             modifier = Modifier.weight(1f),
-                            items = frame,
+                            items = listOf(item),
                         )
                     }
-                    if (rowFrames.size == 1) {
-                        Spacer(modifier = Modifier.weight(1f))
+                    if (rowItems.size == 1) {
+                        Box(modifier = Modifier.weight(1f))
                     }
                 }
             }
