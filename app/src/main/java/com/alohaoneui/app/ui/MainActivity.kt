@@ -44,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.Dp
@@ -379,6 +380,9 @@ fun MainScreen(
         LocalLsposedHomeStatus provides lsposedStatus,
     ) {
         val contentReady = rememberContentReady()
+        // Measure the actual Material bottom bar so the main-page viewport
+        // reserves its visible height instead of relying on Scaffold innerPadding.
+        val materialBottomBarHeightPx = remember { androidx.compose.runtime.mutableIntStateOf(0) }
 
         // Re-read the actual window bounds so fold/unfold and freeform resizing adapt
         // without depending on a device model or requiring an Activity restart.
@@ -479,7 +483,15 @@ fun MainScreen(
             // Compact windows retain the validated bottom-bar implementation, including
             // Miuix's native floating selection indicator when that style is enabled.
             val bottomBar = @Composable {
-                Box(modifier = Modifier.fillMaxWidth()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onSizeChanged { size ->
+                            if (uiMode == UiMode.Material && !enableFloatingBottomBar) {
+                                materialBottomBarHeightPx.intValue = size.height
+                            }
+                        }
+                ) {
                     BottomBar(
                         blurBackdrop = blurBackdrop,
                         backdrop = backdrop,
@@ -491,8 +503,11 @@ fun MainScreen(
             when (uiMode) {
                 UiMode.Material -> ExpressiveScaffold(
                     bottomBar = bottomBar,
-                ) { innerPadding ->
-                    pagerContent(innerPadding.calculateBottomPadding())
+                ) {
+                    val measuredBottomBar = with(LocalDensity.current) {
+                        materialBottomBarHeightPx.intValue.toDp()
+                    }
+                    pagerContent(measuredBottomBar)
                 }
 
                 UiMode.Miuix -> Scaffold(
