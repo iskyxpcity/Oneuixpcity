@@ -25,6 +25,8 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -53,6 +55,9 @@ import com.alohaoneui.app.ui.theme.LocalEnableBlur
 import com.alohaoneui.app.ui.theme.isInDarkTheme
 import com.alohaoneui.app.ui.util.BlurredBar
 import com.alohaoneui.app.ui.util.rememberBlurBackdrop
+import com.alohaoneui.app.ui.util.rememberBlurBackdrop
+import com.alohaoneui.app.ui.util.ResponsiveCardGrid
+import com.alohaoneui.app.ui.util.responsiveGridFullSpan
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.Icon
@@ -89,23 +94,31 @@ fun HomePagerMiuix(state: HomeUiState, actions: HomeActions) {
             .only(WindowInsetsSides.Horizontal),
     ) { innerPadding ->
         Box(modifier = if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier) {
-            LazyColumn(
-                modifier = Modifier.fillMaxHeight().scrollEndHaptic().overScrollVertical()
-                    .nestedScroll(scrollBehavior.nestedScrollConnection).padding(horizontal = 12.dp),
-                contentPadding = innerPadding,
-                overscrollEffect = null,
+            ResponsiveCardGrid(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .scrollEndHaptic()
+                    .overScrollVertical()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .padding(innerPadding)
+                    .padding(horizontal = 12.dp)
+                    .verticalScroll(rememberScrollState()),
             ) {
-                item {
-                    Column(
-                        modifier = Modifier.padding(vertical = 12.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        StatusCard(onActivateLsposed = actions.onActivateLsposed)
-                        if (state.checkUpdateEnabled) UpdateCard(state, actions)
-                        HomeDeviceToolsCard()
-                    }
-                }
+                Spacer(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(12.dp)
+                        .responsiveGridFullSpan(),
+                )
+                StatusCard(onActivateLsposed = actions.onActivateLsposed)
+                if (state.checkUpdateEnabled) UpdateCard(state, actions)
+                HomeDeviceToolsCard()
+                Spacer(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(24.dp)
+                        .responsiveGridFullSpan(),
+                )
             }
         }
     }
