@@ -34,6 +34,15 @@ fun OtherFunctionsThemeGroup(
 ) {
     if (items.isEmpty()) return
 
+    // A parent SegmentedColumn/Card already owns the visual group.
+    // Nested feature helpers must emit rows only, never another card/group.
+    if (LocalAlohaOneUIGroupedPreference.current) {
+        Column(modifier = modifier.fillMaxWidth()) {
+            items.forEach { item -> item() }
+        }
+        return
+    }
+
     when (LocalUiMode.current) {
         UiMode.Material -> SegmentedColumn(
             modifier = modifier.fillMaxWidth().padding(vertical = 8.dp),
@@ -134,9 +143,10 @@ fun OtherFunctionsThemeFrameLayout(
                 ) {
                     frames.forEachIndexed { index, frame ->
                         if (index % 2 == column) {
-                            OtherFunctionsThemeFrame {
-                                frame.forEach { it() }
-                            }
+                            OtherFunctionsThemeGroup(
+                                modifier = Modifier.fillMaxWidth(),
+                                items = frame,
+                            )
                         }
                     }
                 }
