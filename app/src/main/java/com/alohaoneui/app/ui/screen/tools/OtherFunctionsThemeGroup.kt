@@ -88,3 +88,25 @@ fun OtherFunctionsThemeChildItem(
         }
     }
 }
+
+
+/** Outer four-card frame used by wide layouts; child detail cards retain their own theme components. */
+@Composable
+fun OtherFunctionsThemeFrame(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    when (LocalUiMode.current) {
+        UiMode.Material -> com.alohaoneui.app.ui.component.material.TonalCard(
+            modifier = modifier.fillMaxWidth().padding(vertical = 8.dp),
+        ) {
+            Column(modifier = Modifier.padding(10.dp)) { content() }
+        }
+        UiMode.Miuix -> Card(
+            modifier = modifier.fillMaxWidth().padding(vertical = 8.dp),
+            insideMargin = PaddingValues(10.dp),
+        ) {
+            Column { content() }
+        }
+    }
+}
