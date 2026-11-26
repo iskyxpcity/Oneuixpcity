@@ -487,7 +487,7 @@ fun MainScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .onSizeChanged { size ->
-                            if (uiMode == UiMode.Material) {
+                            if (uiMode == UiMode.Material && !enableFloatingBottomBar) {
                                 materialBottomBarHeightPx.intValue = size.height
                             }
                         }
