@@ -23,8 +23,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.widthIn
@@ -44,7 +43,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.Dp
@@ -270,7 +268,13 @@ class MainActivity : ComponentActivity() {
                         }
                         Box(
                             modifier = Modifier
-                                .fillMaxSize(),
+                                .fillMaxSize()
+                                .then(
+                                    if (navigator.current() is Route.Main || navigator.current() is Route.ColorPalette) Modifier
+                                    else Modifier.windowInsetsPadding(
+                                        WindowInsets.systemBars.only(WindowInsetsSides.Bottom)
+                                    )
+                                ),
                         ) {
                             CompositionLocalProvider(
                                 LocalMaterialSwitchBackdrop provides switchBackdrop,
@@ -380,9 +384,6 @@ fun MainScreen(
         LocalLsposedHomeStatus provides lsposedStatus,
     ) {
         val contentReady = rememberContentReady()
-        // Measure the actual Material bottom bar so the main-page viewport
-        // reserves its visible height instead of relying on Scaffold innerPadding.
-        val materialBottomBarHeightPx = remember { androidx.compose.runtime.mutableIntStateOf(0) }
 
         // Re-read the actual window bounds so fold/unfold and freeform resizing adapt
         // without depending on a device model or requiring an Activity restart.
@@ -394,7 +395,7 @@ fun MainScreen(
                     Modifier.fillMaxSize().layerBackdrop(blurBackdrop)
                 } else {
                     Modifier.fillMaxSize()
-                }).padding(bottom = bottomInnerPadding),
+                }),
             ) {
                 val responsivePagerModifier = if (showNavigationRail) {
                     Modifier
@@ -426,16 +427,16 @@ fun MainScreen(
                         val isCurrentPage = page == settledPage
                         when (page) {
                             0 -> if (isCurrentPage || contentReady) {
-                                HomePager(navController, isCurrentPage)
+                                HomePager(navController, bottomInnerPadding, isCurrentPage)
                             }
                             1 -> if (isCurrentPage || contentReady) {
-                                ToolsPager(navController, isCurrentPage)
+                                ToolsPager(navController, bottomInnerPadding, isCurrentPage)
                             }
                             2 -> if (isCurrentPage || contentReady) {
-                                StatusPager(navController, isCurrentPage)
+                                StatusPager(navController, bottomInnerPadding, isCurrentPage)
                             }
                             3 -> if (isCurrentPage || contentReady) {
-                                SettingPager(navController, isCurrentPage)
+                                SettingPager(navController, bottomInnerPadding, isCurrentPage)
                             }
                         }
                     }
@@ -450,7 +451,7 @@ fun MainScreen(
             val startInsets = WindowInsets.systemBars.union(WindowInsets.displayCutout)
                 .only(WindowInsetsSides.Start)
             val navigationBottomPadding =
-                WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+                WindowInsets.systemBars.asPaddingValues().calculateBottomPadding()
 
             when (uiMode) {
                 UiMode.Material -> androidx.compose.material3.Scaffold {
@@ -483,15 +484,7 @@ fun MainScreen(
             // Compact windows retain the validated bottom-bar implementation, including
             // Miuix's native floating selection indicator when that style is enabled.
             val bottomBar = @Composable {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .onSizeChanged { size ->
-                            if (uiMode == UiMode.Material && !enableFloatingBottomBar) {
-                                materialBottomBarHeightPx.intValue = size.height
-                            }
-                        }
-                ) {
+                Box(modifier = Modifier.fillMaxWidth()) {
                     BottomBar(
                         blurBackdrop = blurBackdrop,
                         backdrop = backdrop,
@@ -503,11 +496,8 @@ fun MainScreen(
             when (uiMode) {
                 UiMode.Material -> ExpressiveScaffold(
                     bottomBar = bottomBar,
-                ) {
-                    val measuredBottomBar = with(LocalDensity.current) {
-                        materialBottomBarHeightPx.intValue.toDp()
-                    }
-                    pagerContent(measuredBottomBar)
+                ) { innerPadding ->
+                    pagerContent(innerPadding.calculateBottomPadding())
                 }
 
                 UiMode.Miuix -> Scaffold(
