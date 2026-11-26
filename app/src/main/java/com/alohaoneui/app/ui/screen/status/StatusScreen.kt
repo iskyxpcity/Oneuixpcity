@@ -149,7 +149,7 @@ private fun StatusPagerMiuix(
             },
         ) {
             LazyVerticalGrid(
-                columns = GridCells.Fixed(if (shouldShowSplitPane()) 2 else 1),
+                columns = GridCells.Fixed(if (shouldShowSplitPane(StatusCategory.entries.size)) 2 else 1),
                 modifier = Modifier
                     .fillMaxHeight()
                     .scrollEndHaptic()

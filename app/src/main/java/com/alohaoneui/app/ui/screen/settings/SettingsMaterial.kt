@@ -62,6 +62,7 @@ import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.material.ExpressiveLargeTopAppBar
 import com.alohaoneui.app.ui.util.ResponsiveCardGrid
+import com.alohaoneui.app.ui.util.responsiveGridFullSpan
 import com.alohaoneui.app.ui.util.shouldShowSplitPane
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
@@ -247,7 +248,7 @@ fun SettingPagerMaterial(
                     snackbarHostState = snackBarHost,
                 )
             }
-            Spacer(modifier = Modifier.fillMaxWidth().height(bottomInnerPadding))
+            Spacer(modifier = Modifier.fillMaxWidth().height(bottomInnerPadding).responsiveGridFullSpan())
         }
     }
 }

@@ -57,6 +57,7 @@ import com.alohaoneui.app.ui.component.dialog.rememberLoadingDialog
 import com.alohaoneui.app.ui.component.miuix.SendLogDialog
 import com.alohaoneui.app.ui.theme.LocalEnableBlur
 import com.alohaoneui.app.ui.util.ResponsiveCardGrid
+import com.alohaoneui.app.ui.util.responsiveGridFullSpan
 import com.alohaoneui.app.ui.util.shouldShowSplitPane
 import com.alohaoneui.app.ui.util.BlurredBar
 import com.alohaoneui.app.ui.util.rememberBlurBackdrop
@@ -266,7 +267,7 @@ fun SettingPagerMiuix(
                             onClick = actions.onOpenAbout,
                         )
                     }
-                    Spacer(Modifier.fillMaxWidth().height(bottomInnerPadding))
+                    Spacer(Modifier.fillMaxWidth().height(bottomInnerPadding).responsiveGridFullSpan())
                     }
                 }
             }

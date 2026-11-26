@@ -158,7 +158,7 @@ private fun ToolsPagerMiuix(
     ) { innerPadding ->
         Box(modifier = if (backdrop != null) Modifier.layerBackdrop(backdrop) else Modifier) {
             LazyVerticalGrid(
-                columns = GridCells.Fixed(if (shouldShowSplitPane()) 2 else 1),
+                columns = GridCells.Fixed(if (shouldShowSplitPane(categories.size + 2)) 2 else 1),
                 modifier = Modifier
                     .fillMaxHeight()
                     .scrollEndHaptic()
