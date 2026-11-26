@@ -155,7 +155,7 @@ fun OtherFunctionsControls(
                                             colors = alohaOneUISegmentedColors(),
                                             headlineContent = { MaterialText(text = actionTitle) },
                                             supportingContent = { MaterialText(text = actionSummary) },
-                                            trailingContent = actionControls,
+                                            trailingContent = { actionControls() },
                                         )
                                         UiMode.Miuix -> BasicComponent(
                                             title = actionTitle,
