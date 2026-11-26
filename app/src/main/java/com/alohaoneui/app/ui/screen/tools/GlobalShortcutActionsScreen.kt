@@ -309,16 +309,7 @@ fun GlobalShortcutActionsScreen() {
                 },
             ),
         )
-        val parentFrames = if (shouldShowSplitPane()) entryCards.chunked(4) else listOf(entryCards)
-        ResponsiveCardGrid(
-            content = parentFrames.map { frame ->
-                {
-                    OtherFunctionsThemeFrame {
-                        frame.forEach { it() }
-                    }
-                }
-            },
-        )
+        OtherFunctionsThemeFrameLayout(entryCards)
     }
 }
 
