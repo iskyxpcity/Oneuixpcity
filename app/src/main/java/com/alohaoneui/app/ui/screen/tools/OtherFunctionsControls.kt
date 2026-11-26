@@ -160,7 +160,7 @@ fun OtherFunctionsControls(
                                         UiMode.Miuix -> BasicComponent(
                                             title = actionTitle,
                                             summary = actionSummary,
-                                            endActions = actionControls,
+                                            endActions = { actionControls() },
                                         )
                                     }
                                 }
