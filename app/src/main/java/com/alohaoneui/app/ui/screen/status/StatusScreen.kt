@@ -59,8 +59,6 @@ import com.alohaoneui.app.ui.navigation3.Route
 import com.alohaoneui.app.ui.screen.home.LocalLsposedHomeStatus
 import com.alohaoneui.app.ui.theme.LocalEnableBlur
 import com.alohaoneui.app.ui.util.shouldShowSplitPane
-import com.alohaoneui.app.ui.util.ResponsiveCardGrid
-import com.alohaoneui.app.ui.util.responsiveGridFullSpan
 import com.alohaoneui.app.ui.util.BlurredBar
 import com.alohaoneui.app.ui.util.rememberBlurBackdrop
 import top.yukonga.miuix.kmp.basic.Card
@@ -250,59 +248,46 @@ private fun StatusPagerMaterial(
             WindowInsetsSides.Top + WindowInsetsSides.Horizontal
         ),
     ) { innerPadding ->
-        ResponsiveCardGrid(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(rememberScrollState())
+                .padding(innerPadding),
         ) {
-            Spacer(
+            SegmentedColumn(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(12.dp)
-                    .responsiveGridFullSpan(),
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .graphicsLayer {
+                        alpha = if (lsposedActive) 1f else 0.38f
+                    },
+                content = StatusCategory.entries.map { category ->
+                    {
+                        SegmentedListItem(
+                            enabled = lsposedActive,
+                            onClick = {
+                                if (lsposedActive) {
+                                    navigator.push(Route.StatusCategory(category.name))
+                                }
+                            },
+                            headlineContent = {
+                                Text(stringResource(category.titleRes))
+                            },
+                            leadingContent = {
+                                StatusCategoryIcon(category)
+                            },
+                            trailingContent = {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                    contentDescription = null,
+                                )
+                            },
+                        )
+                    }
+                },
             )
-            StatusCategory.entries.forEach { category ->
-                SegmentedColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 6.dp)
-                        .graphicsLayer {
-                            alpha = if (lsposedActive) 1f else 0.38f
-                        },
-                    content = listOf(
-                        {
-                            SegmentedListItem(
-                                enabled = lsposedActive,
-                                onClick = {
-                                    if (lsposedActive) {
-                                        navigator.push(Route.StatusCategory(category.name))
-                                    }
-                                },
-                                headlineContent = {
-                                    Text(stringResource(category.titleRes))
-                                },
-                                leadingContent = {
-                                    StatusCategoryIcon(category)
-                                },
-                                trailingContent = {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                        contentDescription = null,
-                                    )
-                                },
-                            )
-                        },
-                    ),
-                )
-            }
-            Spacer(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(bottomContentPadding + 16.dp)
-                    .responsiveGridFullSpan(),
-            )
+            Spacer(modifier = Modifier.fillMaxWidth().height(bottomContentPadding + 16.dp))
+
         }
     }
 }

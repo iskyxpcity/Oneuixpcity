@@ -7,9 +7,6 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -45,8 +42,6 @@ import com.alohaoneui.app.ui.navigation3.LocalNavigator
 import com.alohaoneui.app.ui.theme.LocalEnableBlur
 import com.alohaoneui.app.ui.util.BlurredBar
 import com.alohaoneui.app.ui.util.rememberBlurBackdrop
-import com.alohaoneui.app.ui.util.ResponsiveCardGrid
-import com.alohaoneui.app.ui.util.responsiveGridFullSpan
 import com.alohaoneui.app.ui.viewmodel.AlohaOneUIToolsViewModel
 import com.alohaoneui.mod.ui.category.onSystemUIEvent
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
@@ -93,26 +88,6 @@ private fun Modifier.statusCategoryScroll(state: ScrollState): Modifier {
 }
 
 @Composable
-private fun StatusCategoryGrid(
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
-) {
-    ResponsiveCardGrid(
-        modifier = modifier
-            .fillMaxSize()
-            .statusCategoryScroll(rememberScrollState()),
-    ) {
-        content()
-        Spacer(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(24.dp)
-                .responsiveGridFullSpan(),
-        )
-    }
-}
-
-@Composable
 private fun StatusCategoryContent(
     category: StatusCategory,
     modifier: Modifier = Modifier,
@@ -121,7 +96,11 @@ private fun StatusCategoryContent(
         StatusCategory.Padding -> {
             val toolsViewModel = viewModel<AlohaOneUIToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
-            StatusCategoryGrid(modifier = modifier) {
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .statusCategoryScroll(rememberScrollState()),
+            ) {
                 StatusPaddingCategoryControls(
                     uiState = preference.systemUI.statusBar,
                     onEvent = toolsViewModel::onSystemUIEvent,
@@ -131,7 +110,11 @@ private fun StatusCategoryContent(
         StatusCategory.Time -> {
             val toolsViewModel = viewModel<AlohaOneUIToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
-            StatusCategoryGrid(modifier = modifier) {
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .statusCategoryScroll(rememberScrollState()),
+            ) {
                 StatusTimeCategoryControls(
                     uiState = preference.systemUI.statusBar,
                     onEvent = toolsViewModel::onSystemUIEvent,
@@ -141,7 +124,11 @@ private fun StatusCategoryContent(
         StatusCategory.Notification -> {
             val toolsViewModel = viewModel<AlohaOneUIToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
-            StatusCategoryGrid(modifier = modifier) {
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .statusCategoryScroll(rememberScrollState()),
+            ) {
                 StatusNotificationCategoryControls(
                     uiState = preference.systemUI.statusBar,
                     onEvent = toolsViewModel::onSystemUIEvent,
@@ -151,7 +138,11 @@ private fun StatusCategoryContent(
         StatusCategory.NetworkSpeed -> {
             val toolsViewModel = viewModel<AlohaOneUIToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
-            StatusCategoryGrid(modifier = modifier) {
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .statusCategoryScroll(rememberScrollState()),
+            ) {
                 StatusNetworkSpeedCategoryControls(
                     uiState = preference.systemUI.statusBar,
                     onEvent = toolsViewModel::onSystemUIEvent,
@@ -161,7 +152,11 @@ private fun StatusCategoryContent(
         StatusCategory.Power -> {
             val toolsViewModel = viewModel<AlohaOneUIToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
-            StatusCategoryGrid(modifier = modifier) {
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .statusCategoryScroll(rememberScrollState()),
+            ) {
                 StatusPowerCategoryControls(
                     uiState = preference.systemUI.statusBar,
                     onEvent = toolsViewModel::onSystemUIEvent,
@@ -193,7 +188,11 @@ private fun StatusCategoryContent(
         StatusCategory.ComboStyleOne -> {
             val toolsViewModel = viewModel<AlohaOneUIToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
-            StatusCategoryGrid(modifier = modifier) {
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .statusCategoryScroll(rememberScrollState()),
+            ) {
                 StatusComboStyleOneCategoryControls(
                     uiState = preference.systemUI.statusBar,
                     onEvent = toolsViewModel::onSystemUIEvent,
@@ -203,7 +202,11 @@ private fun StatusCategoryContent(
         StatusCategory.Signal -> {
             val toolsViewModel = viewModel<AlohaOneUIToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
-            StatusCategoryGrid(modifier = modifier) {
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .statusCategoryScroll(rememberScrollState()),
+            ) {
                 StatusSignalCategoryControls(
                     uiState = preference.systemUI.statusBar,
                     onEvent = toolsViewModel::onSystemUIEvent,
@@ -213,7 +216,11 @@ private fun StatusCategoryContent(
         StatusCategory.Wifi -> {
             val toolsViewModel = viewModel<AlohaOneUIToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
-            StatusCategoryGrid(modifier = modifier) {
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .statusCategoryScroll(rememberScrollState()),
+            ) {
                 StatusWifiCategoryControls(
                     wifiRuntime = preference.systemUI.statusBar.wifiRuntime,
                     onPreview = { runtime ->
@@ -244,7 +251,11 @@ private fun StatusCategoryContent(
         StatusCategory.Bluetooth -> {
             val toolsViewModel = viewModel<AlohaOneUIToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
-            StatusCategoryGrid(modifier = modifier) {
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .statusCategoryScroll(rememberScrollState()),
+            ) {
                 StatusBluetoothCategoryControls(
                     uiState = preference.systemUI.statusBar,
                     onEvent = toolsViewModel::onSystemUIEvent,
@@ -254,7 +265,11 @@ private fun StatusCategoryContent(
         StatusCategory.Lockscreen -> {
             val toolsViewModel = viewModel<AlohaOneUIToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
-            StatusCategoryGrid(modifier = modifier) {
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .statusCategoryScroll(rememberScrollState()),
+            ) {
                 StatusLockscreenCategoryControls(
                     statusBar = preference.systemUI.statusBar,
                     aod = preference.systemUI.aod,
@@ -265,7 +280,11 @@ private fun StatusCategoryContent(
         StatusCategory.NotificationCenter -> {
             val toolsViewModel = viewModel<AlohaOneUIToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
-            StatusCategoryGrid(modifier = modifier) {
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .statusCategoryScroll(rememberScrollState()),
+            ) {
                 StatusNotificationCenterCategoryControls(
                     uiState = preference.systemUI.notification,
                     onEvent = toolsViewModel::onSystemUIEvent,
@@ -275,7 +294,11 @@ private fun StatusCategoryContent(
         StatusCategory.ControlCenter -> {
             val toolsViewModel = viewModel<AlohaOneUIToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
-            StatusCategoryGrid(modifier = modifier) {
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .statusCategoryScroll(rememberScrollState()),
+            ) {
                 StatusControlCenterCategoryControls(
                     uiState = preference.systemUI.qs,
                     onEvent = toolsViewModel::onSystemUIEvent,
@@ -285,7 +308,11 @@ private fun StatusCategoryContent(
         StatusCategory.Other -> {
             val toolsViewModel = viewModel<AlohaOneUIToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
-            StatusCategoryGrid(modifier = modifier) {
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .statusCategoryScroll(rememberScrollState()),
+            ) {
                 StatusOtherCategoryControls(
                     statusBarState = preference.systemUI.statusBar,
                     onEvent = toolsViewModel::onSystemUIEvent,

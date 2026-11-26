@@ -42,7 +42,7 @@ fun ResponsiveCardGrid(
             val parentCardCount = measurables.count {
                 (it.parentData as? ResponsiveGridParentData)?.fullSpan != true
             }
-            val columns = if (split && parentCardCount > 1 && finiteWidth) 2 else 1
+            val columns = if (split && parentCardCount > 2 && finiteWidth) 2 else 1
             val columnWidth = if (columns == 2) ((width - gapX) / 2).coerceAtLeast(0)
                 else if (finiteWidth) width else constraints.minWidth
             val heights = IntArray(columns)

@@ -52,8 +52,6 @@ import com.alohaoneui.app.ui.component.material.TonalCard
 import com.alohaoneui.app.ui.component.material.ExpressiveScaffold
 import com.alohaoneui.app.ui.component.rebootlistpopup.RebootListPopup
 import com.alohaoneui.app.ui.component.statustag.StatusTag
-import com.alohaoneui.app.ui.util.ResponsiveCardGrid
-import com.alohaoneui.app.ui.util.responsiveGridFullSpan
 
 @Composable
 fun HomePagerMaterial(
@@ -67,14 +65,16 @@ fun HomePagerMaterial(
         topBar = { TopBar(scrollBehavior = scrollBehavior) },
         contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
     ) { innerPadding ->
-        ResponsiveCardGrid(
+        Column(
             modifier = Modifier
+                // Match AboutMaterial: keep the whole viewport, including blank space, scrollable.
                 .fillMaxSize()
                 .padding(innerPadding)
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
                 .padding(top = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             StatusCard(
                 state = state,
@@ -84,12 +84,7 @@ fun HomePagerMaterial(
                 UpdateCard(state = state, actions = actions)
             }
             HomeDeviceToolsCard()
-            Spacer(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(bottomContentPadding + 16.dp)
-                    .responsiveGridFullSpan(),
-            )
+            Spacer(modifier = Modifier.height(bottomContentPadding + 16.dp))
         }
     }
 }
