@@ -58,6 +58,7 @@ import com.alohaoneui.app.ui.navigation3.Navigator
 import com.alohaoneui.app.ui.navigation3.Route
 import com.alohaoneui.app.ui.screen.home.LocalLsposedHomeStatus
 import com.alohaoneui.app.ui.theme.LocalEnableBlur
+import com.alohaoneui.app.ui.util.ResponsiveCardGrid
 import com.alohaoneui.app.ui.util.shouldShowSplitPane
 import com.alohaoneui.app.ui.util.BlurredBar
 import com.alohaoneui.app.ui.util.rememberBlurBackdrop
@@ -255,37 +256,50 @@ private fun StatusPagerMaterial(
                 .verticalScroll(rememberScrollState())
                 .padding(innerPadding),
         ) {
-            SegmentedColumn(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .graphicsLayer {
-                        alpha = if (lsposedActive) 1f else 0.38f
-                    },
-                content = StatusCategory.entries.map { category ->
-                    {
-                        SegmentedListItem(
-                            enabled = lsposedActive,
-                            onClick = {
-                                if (lsposedActive) {
-                                    navigator.push(Route.StatusCategory(category.name))
-                                }
+            val categoryItems = StatusCategory.entries.map { category ->
+                {
+                    SegmentedListItem(
+                        enabled = lsposedActive,
+                        onClick = {
+                            if (lsposedActive) {
+                                navigator.push(Route.StatusCategory(category.name))
+                            }
+                        },
+                        headlineContent = {
+                            Text(stringResource(category.titleRes))
+                        },
+                        leadingContent = {
+                            StatusCategoryIcon(category)
+                        },
+                        trailingContent = {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                            )
+                        },
+                    )
+                }
+            }
+            val parentFrames = if (shouldShowSplitPane()) {
+                categoryItems.chunked(4)
+            } else {
+                listOf(categoryItems)
+            }
+            ResponsiveCardGrid(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                minItemsForSplit = 2,
+            ) {
+                parentFrames.forEach { frameItems ->
+                    SegmentedColumn(
+                        modifier = Modifier
+                            .padding(vertical = 8.dp)
+                            .graphicsLayer {
+                                alpha = if (lsposedActive) 1f else 0.38f
                             },
-                            headlineContent = {
-                                Text(stringResource(category.titleRes))
-                            },
-                            leadingContent = {
-                                StatusCategoryIcon(category)
-                            },
-                            trailingContent = {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                    contentDescription = null,
-                                )
-                            },
-                        )
-                    }
-                },
-            )
+                        content = frameItems,
+                    )
+                }
+            }
             Spacer(modifier = Modifier.fillMaxWidth().height(bottomContentPadding + 16.dp))
 
         }
