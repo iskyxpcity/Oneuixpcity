@@ -78,219 +78,244 @@ fun OtherFunctionsControls(
 
     var powerMenuExpanded by rememberSaveable { mutableStateOf(false) }
 
-    OtherFunctionsThemeGroup(
-        items = buildList {
-            add {
-                SwitchItem(
-                    icon = ImageVector.vectorResource(id = R.drawable.power_settings_new),
-                    title = stringResource(id = R.string.alohaoneui_customPowerMenu_title),
-                    summary = stringResource(id = R.string.alohaoneui_customPowerMenu_summary),
-                    clickable = true,
-                    onClick = { powerMenuExpanded = !powerMenuExpanded },
-                    checked = uiState.customPowerMenu,
-                    onCheckedChange = {
-                        powerMenuExpanded = it
-                        onEvent(SystemUIEvent.Other.CustomPowerMenu(it))
-                    },
-                )
-            }
-
-            if (powerMenuExpanded && uiState.customPowerMenu) {
-                val actions = PowerMenuAction.normalize(uiState.powerMenuActions)
-                actions.forEachIndexed { index, action ->
-                    add {
-                        val visiblePosition = actions.take(index + 1).count { it.visible }
-                        AlohaOneUIInfoItem(
-                            title = stringResource(id = powerMenuActionTitle(action.name)),
-                            summary = if (action.visible) {
-                                stringResource(
-                                    id = R.string.alohaoneui_powerMenuActionVisible_summary,
-                                    visiblePosition,
-                                )
-                            } else {
-                                stringResource(id = R.string.alohaoneui_powerMenuActionHidden_summary)
-                            },
-                            trailingContent = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    AlohaOneUIActionButton(
-                                        text = stringResource(id = R.string.alohaoneui_moveUp),
-                                        enabled = index > 0,
-                                        onClick = {
-                                            onEvent(
-                                                SystemUIEvent.Other.PowerMenuActions(
-                                                    actions.move(index, index - 1)
-                                                )
+    val detailCards: List<@Composable () -> Unit> = listOf(
+        @Composable {
+            OtherFunctionsThemeGroup(
+                    items = buildList {
+                        add {
+                            SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.power_settings_new),
+                                title = stringResource(id = R.string.alohaoneui_customPowerMenu_title),
+                                summary = stringResource(id = R.string.alohaoneui_customPowerMenu_summary),
+                                clickable = true,
+                                onClick = { powerMenuExpanded = !powerMenuExpanded },
+                                checked = uiState.customPowerMenu,
+                                onCheckedChange = {
+                                    powerMenuExpanded = it
+                                    onEvent(SystemUIEvent.Other.CustomPowerMenu(it))
+                                },
+                            )
+                        }
+            
+                        if (powerMenuExpanded && uiState.customPowerMenu) {
+                            val actions = PowerMenuAction.normalize(uiState.powerMenuActions)
+                            actions.forEachIndexed { index, action ->
+                                add {
+                                    val visiblePosition = actions.take(index + 1).count { it.visible }
+                                    AlohaOneUIInfoItem(
+                                        title = stringResource(id = powerMenuActionTitle(action.name)),
+                                        summary = if (action.visible) {
+                                            stringResource(
+                                                id = R.string.alohaoneui_powerMenuActionVisible_summary,
+                                                visiblePosition,
                                             )
+                                        } else {
+                                            stringResource(id = R.string.alohaoneui_powerMenuActionHidden_summary)
                                         },
-                                    )
-                                    Spacer(Modifier.width(8.dp))
-                                    AlohaOneUIActionButton(
-                                        text = stringResource(id = R.string.alohaoneui_moveDown),
-                                        enabled = index < actions.lastIndex,
-                                        onClick = {
-                                            onEvent(
-                                                SystemUIEvent.Other.PowerMenuActions(
-                                                    actions.move(index, index + 1)
+                                        trailingContent = {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                AlohaOneUIActionButton(
+                                                    text = stringResource(id = R.string.alohaoneui_moveUp),
+                                                    enabled = index > 0,
+                                                    onClick = {
+                                                        onEvent(
+                                                            SystemUIEvent.Other.PowerMenuActions(
+                                                                actions.move(index, index - 1)
+                                                            )
+                                                        )
+                                                    },
                                                 )
-                                            )
-                                        },
-                                    )
-                                    Spacer(Modifier.width(8.dp))
-                                    AlohaOneUISwitch(
-                                        checked = action.visible,
-                                        onCheckedChange = { visible ->
-                                            onEvent(
-                                                SystemUIEvent.Other.PowerMenuActions(
-                                                    actions.mapIndexed { actionIndex, item ->
-                                                        if (actionIndex == index) item.copy(visible = visible) else item
-                                                    }
+                                                Spacer(Modifier.width(8.dp))
+                                                AlohaOneUIActionButton(
+                                                    text = stringResource(id = R.string.alohaoneui_moveDown),
+                                                    enabled = index < actions.lastIndex,
+                                                    onClick = {
+                                                        onEvent(
+                                                            SystemUIEvent.Other.PowerMenuActions(
+                                                                actions.move(index, index + 1)
+                                                            )
+                                                        )
+                                                    },
                                                 )
-                                            )
+                                                Spacer(Modifier.width(8.dp))
+                                                AlohaOneUISwitch(
+                                                    checked = action.visible,
+                                                    onCheckedChange = { visible ->
+                                                        onEvent(
+                                                            SystemUIEvent.Other.PowerMenuActions(
+                                                                actions.mapIndexed { actionIndex, item ->
+                                                                    if (actionIndex == index) item.copy(visible = visible) else item
+                                                                }
+                                                            )
+                                                        )
+                                                    },
+                                                )
+                                            }
                                         },
                                     )
                                 }
-                            },
-                        )
+                            }
+                        }
+                    },
+                )
+        },
+        @Composable {
+            OtherFunctionsThemeGroup(
+                    items = buildList {
+                        add {
+                            SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.screenshot),
+                                title = stringResource(id = R.string.alohaoneui_disableScreenshotCaptureSound_title),
+                                summary = stringResource(id = R.string.alohaoneui_disableScreenshotCaptureSound_summary),
+                                checked = uiState.disableScreenshotCaptureSound,
+                                onCheckedChange = {
+                                    onEvent(SystemUIEvent.Other.DisableScreenshotCaptureSound(it))
+                                },
+                            )
+                        }
+                    },
+                )
+        },
+        @Composable {
+            OtherFunctionsThemeGroup(
+                    items = buildList {
+                        add {
+                            when (LocalUiMode.current) {
+                                UiMode.Material -> SegmentedListItem(
+                                    onClick = { navigator.push(Route.CallReturnDelay) },
+                                    colors = alohaOneUISegmentedColors(),
+                                    headlineContent = {
+                                        MaterialText(text = stringResource(R.string.alohaoneui_callReturnDelay_title))
+                                    },
+                                    supportingContent = {
+                                        MaterialText(text = callReturnDelaySummary)
+                                    },
+                                    leadingContent = {
+                                        MaterialIcon(
+                                            imageVector = ImageVector.vectorResource(id = R.drawable.phone_forwarded),
+                                            contentDescription = stringResource(R.string.alohaoneui_callReturnDelay_title),
+                                        )
+                                    },
+                                    trailingContent = {
+                                        MaterialIcon(
+                                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                            contentDescription = null,
+                                        )
+                                    },
+                                )
+                                UiMode.Miuix -> BasicComponent(
+                                    title = stringResource(R.string.alohaoneui_callReturnDelay_title),
+                                    summary = callReturnDelaySummary,
+                                    startAction = {
+                                        MiuixIcon(
+                                            imageVector = ImageVector.vectorResource(id = R.drawable.phone_forwarded),
+                                            contentDescription = stringResource(R.string.alohaoneui_callReturnDelay_title),
+                                            tint = colorScheme.onSurface,
+                                        )
+                                    },
+                                    endActions = {
+                                        MiuixIcon(
+                                            imageVector = MiuixIcons.Basic.ArrowRight,
+                                            contentDescription = null,
+                                            tint = colorScheme.onSurfaceVariantActions,
+                                        )
+                                    },
+                                    onClick = { navigator.push(Route.CallReturnDelay) },
+                                )
+                            }
+                        }
+                    },
+                )
+        },
+        @Composable {
+            OtherFunctionsThemeGroup(
+                    items = buildList {
+                        add {
+                            SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.expand),
+                                title = stringResource(id = R.string.alohaoneui_settingsTwoPane_title),
+                                summary = stringResource(id = R.string.alohaoneui_settingsTwoPane_summary),
+                                checked = otherState.settingsTwoPaneEnabled,
+                                onCheckedChange = { checked ->
+                                    onOtherChange { current -> current.copy(settingsTwoPaneEnabled = checked) }
+                                },
+                            )
+                        }
+                    },
+                )
+        },
+        @Composable {
+            OtherFunctionsThemeGroup(
+                    items = buildList {
+                        add {
+                            SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.apk_document),
+                                title = stringResource(id = R.string.alohaoneui_allowAppDowngrade_title),
+                                summary = stringResource(id = R.string.alohaoneui_allowAppDowngrade_summary),
+                                checked = otherState.allowAppDowngradeEnabled,
+                                onCheckedChange = { checked ->
+                                    onOtherChange { current -> current.copy(allowAppDowngradeEnabled = checked) }
+                                },
+                            )
+                        }
+                    },
+                )
+        },
+        @Composable {
+            OtherFunctionsThemeGroup(
+                    items = buildList {
+                        add {
+                            SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.screenshot),
+                                title = stringResource(id = R.string.alohaoneui_disableSecureScreenshotRestriction_title),
+                                summary = stringResource(id = R.string.alohaoneui_disableSecureScreenshotRestriction_summary),
+                                checked = otherState.disableSecureScreenshotRestrictionEnabled,
+                                onCheckedChange = { checked ->
+                                    onOtherChange { current ->
+                                        current.copy(disableSecureScreenshotRestrictionEnabled = checked)
+                                    }
+                                },
+                            )
+                        }
+                    },
+                )
+        },
+        @Composable {
+            OtherFunctionsThemeGroup(
+                    items = buildList {
+                        add {
+                            SwitchItem(
+                                icon = ImageVector.vectorResource(id = R.drawable.ad_off),
+                                title = stringResource(id = R.string.alohaoneui_hidePackageInstallerRecommendation_title),
+                                summary = stringResource(id = R.string.alohaoneui_hidePackageInstallerRecommendation_summary),
+                                checked = otherState.hidePackageInstallerRecommendationEnabled,
+                                onCheckedChange = { checked ->
+                                    onOtherChange { current ->
+                                        current.copy(hidePackageInstallerRecommendationEnabled = checked)
+                                    }
+                                },
+                            )
+                        }
+                    },
+                )
+        }
+    )
+    val parentFrames = if (com.alohaoneui.app.ui.util.shouldShowSplitPane()) {
+        detailCards.chunked(4)
+    } else {
+        listOf(detailCards)
+    }
+    androidx.compose.runtime.key(parentFrames.size) {
+        com.alohaoneui.app.ui.util.ResponsiveCardGrid(
+            content = parentFrames.map { frame ->
+                {
+                    OtherFunctionsThemeFrame {
+                        frame.forEach { it() }
                     }
                 }
-            }
-        },
-    )
-
-    OtherFunctionsThemeGroup(
-        items = buildList {
-            add {
-                SwitchItem(
-                    icon = ImageVector.vectorResource(id = R.drawable.screenshot),
-                    title = stringResource(id = R.string.alohaoneui_disableScreenshotCaptureSound_title),
-                    summary = stringResource(id = R.string.alohaoneui_disableScreenshotCaptureSound_summary),
-                    checked = uiState.disableScreenshotCaptureSound,
-                    onCheckedChange = {
-                        onEvent(SystemUIEvent.Other.DisableScreenshotCaptureSound(it))
-                    },
-                )
-            }
-        },
-    )
-
-    // 「通话返回」只在独立页里实现，这里只做入口，避免两份逻辑各改各的。
-    OtherFunctionsThemeGroup(
-        items = buildList {
-            add {
-                when (LocalUiMode.current) {
-                    UiMode.Material -> SegmentedListItem(
-                        onClick = { navigator.push(Route.CallReturnDelay) },
-                        colors = alohaOneUISegmentedColors(),
-                        headlineContent = {
-                            MaterialText(text = stringResource(R.string.alohaoneui_callReturnDelay_title))
-                        },
-                        supportingContent = {
-                            MaterialText(text = callReturnDelaySummary)
-                        },
-                        leadingContent = {
-                            MaterialIcon(
-                                imageVector = ImageVector.vectorResource(id = R.drawable.phone_forwarded),
-                                contentDescription = stringResource(R.string.alohaoneui_callReturnDelay_title),
-                            )
-                        },
-                        trailingContent = {
-                            MaterialIcon(
-                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                contentDescription = null,
-                            )
-                        },
-                    )
-                    UiMode.Miuix -> BasicComponent(
-                        title = stringResource(R.string.alohaoneui_callReturnDelay_title),
-                        summary = callReturnDelaySummary,
-                        startAction = {
-                            MiuixIcon(
-                                imageVector = ImageVector.vectorResource(id = R.drawable.phone_forwarded),
-                                contentDescription = stringResource(R.string.alohaoneui_callReturnDelay_title),
-                                tint = colorScheme.onSurface,
-                            )
-                        },
-                        endActions = {
-                            MiuixIcon(
-                                imageVector = MiuixIcons.Basic.ArrowRight,
-                                contentDescription = null,
-                                tint = colorScheme.onSurfaceVariantActions,
-                            )
-                        },
-                        onClick = { navigator.push(Route.CallReturnDelay) },
-                    )
-                }
-            }
-        },
-    )
-
-    OtherFunctionsThemeGroup(
-        items = buildList {
-            add {
-                SwitchItem(
-                    icon = ImageVector.vectorResource(id = R.drawable.expand),
-                    title = stringResource(id = R.string.alohaoneui_settingsTwoPane_title),
-                    summary = stringResource(id = R.string.alohaoneui_settingsTwoPane_summary),
-                    checked = otherState.settingsTwoPaneEnabled,
-                    onCheckedChange = { checked ->
-                        onOtherChange { current -> current.copy(settingsTwoPaneEnabled = checked) }
-                    },
-                )
-            }
-        },
-    )
-
-    OtherFunctionsThemeGroup(
-        items = buildList {
-            add {
-                SwitchItem(
-                    icon = ImageVector.vectorResource(id = R.drawable.apk_document),
-                    title = stringResource(id = R.string.alohaoneui_allowAppDowngrade_title),
-                    summary = stringResource(id = R.string.alohaoneui_allowAppDowngrade_summary),
-                    checked = otherState.allowAppDowngradeEnabled,
-                    onCheckedChange = { checked ->
-                        onOtherChange { current -> current.copy(allowAppDowngradeEnabled = checked) }
-                    },
-                )
-            }
-        },
-    )
-
-    OtherFunctionsThemeGroup(
-        items = buildList {
-            add {
-                SwitchItem(
-                    icon = ImageVector.vectorResource(id = R.drawable.screenshot),
-                    title = stringResource(id = R.string.alohaoneui_disableSecureScreenshotRestriction_title),
-                    summary = stringResource(id = R.string.alohaoneui_disableSecureScreenshotRestriction_summary),
-                    checked = otherState.disableSecureScreenshotRestrictionEnabled,
-                    onCheckedChange = { checked ->
-                        onOtherChange { current ->
-                            current.copy(disableSecureScreenshotRestrictionEnabled = checked)
-                        }
-                    },
-                )
-            }
-        },
-    )
-
-    OtherFunctionsThemeGroup(
-        items = buildList {
-            add {
-                SwitchItem(
-                    icon = ImageVector.vectorResource(id = R.drawable.ad_off),
-                    title = stringResource(id = R.string.alohaoneui_hidePackageInstallerRecommendation_title),
-                    summary = stringResource(id = R.string.alohaoneui_hidePackageInstallerRecommendation_summary),
-                    checked = otherState.hidePackageInstallerRecommendationEnabled,
-                    onCheckedChange = { checked ->
-                        onOtherChange { current ->
-                            current.copy(hidePackageInstallerRecommendationEnabled = checked)
-                        }
-                    },
-                )
-            }
-        },
-    )
+            },
+        )
+    }
 }
 
 private fun List<PowerMenuAction>.move(fromIndex: Int, toIndex: Int): List<PowerMenuAction> =
