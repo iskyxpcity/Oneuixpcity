@@ -1,6 +1,9 @@
 package com.alohaoneui.mod.ui.category
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -22,5 +25,6 @@ internal fun PackagePane(
             modifier = Modifier,
             content = content,
         )
+        Spacer(Modifier.height(24.dp))
     }
 }
