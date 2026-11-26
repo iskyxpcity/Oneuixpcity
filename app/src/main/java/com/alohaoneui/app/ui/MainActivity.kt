@@ -270,7 +270,7 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier
                                 .fillMaxSize()
                                 .then(
-                                    if (navigator.current() is Route.Main) Modifier
+                                    if (navigator.current() is Route.Main || navigator.current() is Route.ColorPalette) Modifier
                                     else Modifier.windowInsetsPadding(
                                         WindowInsets.systemBars.only(WindowInsetsSides.Bottom)
                                     )
