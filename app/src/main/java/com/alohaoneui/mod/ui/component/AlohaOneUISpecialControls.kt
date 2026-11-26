@@ -34,6 +34,8 @@ import com.alohaoneui.app.ui.component.material.LocalListItemShapes
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.alohaOneUISegmentedColors
+import com.alohaoneui.app.ui.util.ResponsiveCardGrid
+import com.alohaoneui.app.ui.util.shouldShowSplitPane
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Button as MiuixButton
 import top.yukonga.miuix.kmp.basic.ButtonDefaults as MiuixButtonDefaults
@@ -125,10 +127,25 @@ fun AlohaOneUIDetailSegmentedGroup(
         UiMode.Material -> CompositionLocalProvider(
             LocalAlohaOneUIGroupedPreference provides true,
         ) {
-            SegmentedColumn(
-                modifier = modifier.padding(contentPadding),
-                content = content,
-            )
+            // Keep the existing segmented theme surface intact. Only the
+            // outer parent frames are rearranged on expanded landscape:
+            // every four direct child cards stay together in one frame.
+            val parentFrames = if (shouldShowSplitPane()) {
+                content.chunked(4)
+            } else {
+                listOf(content)
+            }
+            ResponsiveCardGrid(
+                modifier = modifier,
+                minItemsForSplit = 2,
+            ) {
+                parentFrames.forEach { frameItems ->
+                    SegmentedColumn(
+                        modifier = Modifier.padding(contentPadding),
+                        content = frameItems,
+                    )
+                }
+            }
         }
         UiMode.Miuix -> Column(modifier = modifier) {
             content.forEach { it() }
