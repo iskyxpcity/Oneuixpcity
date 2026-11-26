@@ -84,6 +84,7 @@ import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 fun SettingPagerMiuix(
     uiState: SettingsUiState,
     actions: SettingsScreenActions,
+    bottomContentPadding: Dp,
 ) {
     val scrollBehavior = MiuixScrollBehavior()
     val enableBlur = LocalEnableBlur.current
@@ -266,6 +267,7 @@ fun SettingPagerMiuix(
                     }
                     }
                 }
+                item { Spacer(Modifier.height(bottomContentPadding + 16.dp)) }
             }
         }
     }

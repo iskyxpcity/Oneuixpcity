@@ -83,7 +83,7 @@ fun StatusPager(
 ) {
     val lsposedActive = LocalLsposedHomeStatus.current.active
     when (LocalUiMode.current) {
-        UiMode.Miuix -> StatusPagerMiuix(navigator, lsposedActive)
+        UiMode.Miuix -> StatusPagerMiuix(navigator, lsposedActive, bottomContentPadding)
         UiMode.Material -> StatusPagerMaterial(navigator, lsposedActive, bottomContentPadding)
     }
 }
@@ -118,6 +118,7 @@ private fun StatusCategoryIcon(
 private fun StatusPagerMiuix(
     navigator: Navigator,
     lsposedActive: Boolean,
+    bottomContentPadding: Dp,
 ) {
     val scrollBehavior = MiuixScrollBehavior()
     val backdrop = rememberBlurBackdrop(LocalEnableBlur.current)
@@ -214,7 +215,9 @@ private fun StatusPagerMiuix(
                         }
                     }
                 }
-
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    Spacer(Modifier.height(bottomContentPadding + 16.dp))
+                }
             }
         }
     }

@@ -96,7 +96,7 @@ fun ToolsPager(
 ) {
     val lsposedActive = LocalLsposedHomeStatus.current.active
     when (LocalUiMode.current) {
-        UiMode.Miuix -> ToolsPagerMiuix(navigator, lsposedActive)
+        UiMode.Miuix -> ToolsPagerMiuix(navigator, lsposedActive, bottomContentPadding)
         UiMode.Material -> ToolsPagerMaterial(navigator, lsposedActive, bottomContentPadding)
     }
 }
@@ -133,6 +133,7 @@ private fun CategoryIcon(
 private fun ToolsPagerMiuix(
     navigator: Navigator,
     lsposedActive: Boolean,
+    bottomContentPadding: Dp,
 ) {
     val scrollBehavior = MiuixScrollBehavior()
     val backdrop = rememberBlurBackdrop(LocalEnableBlur.current)
@@ -321,7 +322,9 @@ private fun ToolsPagerMiuix(
                         }
                     }
                 }
-
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    Spacer(Modifier.height(bottomContentPadding + 16.dp))
+                }
             }
         }
     }
