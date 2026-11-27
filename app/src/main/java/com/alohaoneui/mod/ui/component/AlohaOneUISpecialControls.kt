@@ -173,6 +173,7 @@ fun AlohaOneUIActionButton(
     enabled: Boolean = true,
     primary: Boolean = true,
     fillWidth: Boolean = false,
+    contentPadding: PaddingValues? = null,
     containerColor: Color? = null,
     contentColor: Color? = null,
 ) {
@@ -181,6 +182,7 @@ fun AlohaOneUIActionButton(
             onClick = onClick,
             modifier = modifier,
             enabled = enabled,
+            contentPadding = contentPadding ?: ButtonDefaults.ContentPadding,
             colors = if (containerColor != null || contentColor != null) {
                 ButtonDefaults.buttonColors(
                     containerColor = containerColor ?: MaterialTheme.colorScheme.primary,
