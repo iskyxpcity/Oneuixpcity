@@ -168,6 +168,7 @@ fun HomeDeviceToolsCard() {
 
     DeviceToolsSurface {
         Column(modifier = Modifier.fillMaxWidth()) {
+            // Keep each theme's header implementation independent.
             when (LocalUiMode.current) {
                 UiMode.Material -> SegmentedListItem(
                     onClick = { expanded = !expanded },
