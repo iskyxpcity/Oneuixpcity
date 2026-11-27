@@ -342,10 +342,10 @@ object QS {
                             if (view != null) {
                                 if (datePart) {
                                     registerShadeClockDateView(view)
-                                    applyShadeClockDate(view, view.text)
+                                    applyShadeClockDate(view)
                                 } else {
                                     registerShadeClockClockView(view)
-                                    applyShadeClockClock(view, view.text)
+                                    applyShadeClockClock(view)
                                 }
                             }
                             result
@@ -362,10 +362,10 @@ object QS {
                             if (view != null) {
                                 if (datePart) {
                                     registerShadeClockDateView(view)
-                                    applyShadeClockDate(view, view.text)
+                                    applyShadeClockDate(view)
                                 } else {
                                     registerShadeClockClockView(view)
-                                    applyShadeClockClock(view, view.text)
+                                    applyShadeClockClock(view)
                                 }
                             }
                             result
@@ -397,6 +397,11 @@ object QS {
                         shadeClockRuntime.shadeClockCustomEnabled &&
                         !isShadeClockGuarded(view)
                     ) {
+                        // Save Samsung's incoming native text before replacing it,
+                        // so disabling customization can restore the original view.
+                        synchronized(shadeClockNativeTexts) {
+                            shadeClockNativeTexts[view] = chain.args.getOrNull(0) as? CharSequence ?: ""
+                        }
                         when {
                             isShadeClockTimeView(view) -> {
                                 registerShadeClockClockView(view)
