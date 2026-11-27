@@ -47,9 +47,6 @@ object QS {
     private fun registerShadeClockDateView(view: TextView) {
         synchronized(shadeClockDateViews) {
             shadeClockDateViews[view] = Unit
-            shadeClockOriginalStyles.getOrPut(view) {
-                ShadeClockOriginalStyle(view.maxLines, view.isSingleLine, view.textSize, view.typeface, view.currentTextColor, view.gravity)
-            }
             shadeClockNativeTexts.putIfAbsent(view, view.text ?: "")
         }
     }
@@ -68,6 +65,11 @@ object QS {
     private fun applyShadeClock(dateView: TextView, nativeText: CharSequence? = null) {
         if (nativeText != null) synchronized(shadeClockNativeTexts) { shadeClockNativeTexts[dateView] = nativeText }
         val config = shadeClockRuntime
+        synchronized(shadeClockOriginalStyles) {
+            shadeClockOriginalStyles.getOrPut(dateView) {
+                ShadeClockOriginalStyle(dateView.maxLines, dateView.isSingleLine, dateView.textSize, dateView.typeface, dateView.currentTextColor, dateView.gravity)
+            }
+        }
         val clockView = findShadeClockView(dateView)
         if (!config.shadeClockCustomEnabled) {
             if (clockView != null) {
@@ -76,7 +78,7 @@ object QS {
             }
             synchronized(shadeClockNativeTexts) { shadeClockNativeTexts[dateView] }?.let { dateView.text = it }
             synchronized(shadeClockOriginalStyles) { shadeClockOriginalStyles[dateView] }?.let {
-                dateView.maxLines = it.maxLines.coerceAtLeast(1)
+                dateView.maxLines = if (it.maxLines > 0) it.maxLines else Int.MAX_VALUE
                 dateView.isSingleLine = it.singleLine
                 dateView.setTextSize(TypedValue.COMPLEX_UNIT_PX, it.textSizePx)
                 dateView.typeface = it.typeface
