@@ -313,11 +313,12 @@ object QS {
     ): java.lang.reflect.Method? {
         var current: Class<*>? = clazz
         while (current != null) {
+            val owner = current
             val method = runCatching {
-                current.getDeclaredMethod(name, *parameterTypes)
+                owner.getDeclaredMethod(name, *parameterTypes)
             }.getOrNull()
             if (method != null) return method
-            current = current.superclass
+            current = owner.superclass
         }
         return null
     }
