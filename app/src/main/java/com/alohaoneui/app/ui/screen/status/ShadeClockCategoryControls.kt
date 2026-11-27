@@ -78,6 +78,7 @@ fun ShadeClockCategoryControls(
             StatusThemeGroup(
                 compact = true,
                 horizontalPadding = 0.dp,
+                miuixContentPadding = if (LocalUiMode.current == UiMode.Miuix) 16.dp else 0.dp,
                 items = listOf(
                     {
                         StatusThemeChildItem {
@@ -102,6 +103,7 @@ fun ShadeClockCategoryControls(
             StatusThemeGroup(
                 compact = true,
                 horizontalPadding = 0.dp,
+                miuixContentPadding = if (LocalUiMode.current == UiMode.Miuix) 16.dp else 0.dp,
                 items = listOf(
                     {
                         StatusThemeChildItem {
@@ -253,6 +255,7 @@ fun ShadeClockCategoryControls(
             StatusThemeGroup(
                 compact = true,
                 horizontalPadding = 0.dp,
+                miuixContentPadding = if (LocalUiMode.current == UiMode.Miuix) 16.dp else 0.dp,
                 items = listOf(
                     {
                         StatusThemeChildItem {
@@ -483,7 +486,13 @@ private fun ShadeClockChoiceButton(
         fillWidth = fixedWidth == null,
         containerColor = containerColor,
         contentColor = contentColor,
-        contentPadding = if (fixedWidth != null) PaddingValues(horizontal = 4.dp, vertical = 0.dp) else null,
+        contentPadding = when (LocalUiMode.current) {
+            UiMode.Material -> if (fixedWidth != null) PaddingValues(horizontal = 4.dp, vertical = 0.dp) else null
+            UiMode.Miuix -> PaddingValues(
+                horizontal = if (fixedWidth != null) 4.dp else 10.dp,
+                vertical = 0.dp,
+            )
+        },
     )
 }
 
