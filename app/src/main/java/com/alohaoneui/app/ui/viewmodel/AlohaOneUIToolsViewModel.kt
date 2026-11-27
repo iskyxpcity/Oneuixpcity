@@ -97,6 +97,13 @@ class AlohaOneUIToolsViewModel : ViewModel() {
         )
     }
 
+    /** Flush the latest persisted preferences to the LSPosed/SystemUI bridge on explicit apply. */
+    fun applyNow() {
+        viewModelScope.launch {
+            AlohaOneUIPreferenceBridge.synchronizeNow(alohaOneUIApp)
+        }
+    }
+
     /**
      * Export the complete user configuration: all LSPosed feature preferences plus
      * the app's own appearance, navigation, gesture, and update-check settings.
