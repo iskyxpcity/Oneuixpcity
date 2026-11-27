@@ -131,9 +131,9 @@ fun AlohaComposeSwitch(
     colors: SwitchColors = SwitchDefaults.colors(),
     thumbShape: Shape,
     trackShape: Shape,
-    thumbShadow: Boolean = false,
     interactionSource: MutableInteractionSource? = null,
     showThumbIcon: Boolean = true,
+    thumbShadow: Boolean = false,
 ) {
     ComposeSwitchImpl(
         modifier = modifier,
