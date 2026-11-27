@@ -143,6 +143,7 @@ fun AlohaMaterialYouSwitch(
         trackColor = if (enabled) { if (checked) colors.checkedTrackColor else colors.uncheckedTrackColor } else { if (checked) colors.disabledCheckedTrackColor else colors.disabledUncheckedTrackColor },
         borderColor = if (enabled) { if (checked) colors.checkedBorderColor else colors.uncheckedBorderColor } else { if (checked) colors.disabledCheckedBorderColor else colors.disabledUncheckedBorderColor },
         interactionSource = interactionSource,
+        thumbShadow = thumbShadow,
     )
 }
 
@@ -161,6 +162,7 @@ private fun SwitchImpl(
     trackColor: Color,
     borderColor: Color,
     interactionSource: MutableInteractionSource?,
+    thumbShadow: Boolean,
 ) {
     @Suppress("NAME_SHADOWING")
     val interactionSource = interactionSource ?: remember { MutableInteractionSource() }
