@@ -3,6 +3,7 @@ package com.alohaoneui.app.ui.screen.status
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -44,6 +45,7 @@ fun StatusThemeGroup(
     compact: Boolean = false,
     titleAlignedToContent: Boolean = false,
     horizontalPadding: Dp? = null,
+    miuixInsideMargin: PaddingValues = PaddingValues(0.dp),
 ) {
     if (items.isEmpty()) return
 
@@ -89,6 +91,7 @@ fun StatusThemeGroup(
         UiMode.Miuix -> {
             Card(
                 modifier = modifier.padding(horizontal = horizontalPadding ?: 12.dp, vertical = groupVerticalPadding),
+                insideMargin = miuixInsideMargin,
             ) {
                 CompositionLocalProvider(
                     LocalAlohaOneUIGroupedPreference provides true,

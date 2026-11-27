@@ -9,7 +9,10 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 
-private data class ResponsiveGridParentData(val fullSpan: Boolean)
+private data class ResponsiveGridParentData(
+    val fullSpan: Boolean,
+    val column: Int? = null,
+)
 
 private class ResponsiveGridFullSpanModifier : ParentDataModifier {
     override fun Density.modifyParentData(parentData: Any?) =
@@ -18,6 +21,17 @@ private class ResponsiveGridFullSpanModifier : ParentDataModifier {
 
 /** Marks a child (for example, a preview or segmented mode selector) as full-width. */
 fun Modifier.responsiveGridFullSpan(): Modifier = then(ResponsiveGridFullSpanModifier())
+
+private class ResponsiveGridColumnModifier(
+    private val column: Int,
+) : ParentDataModifier {
+    override fun Density.modifyParentData(parentData: Any?) =
+        ResponsiveGridParentData(fullSpan = false, column = column.coerceIn(0, 1))
+}
+
+/** Pins a child to a column when the responsive grid is split. */
+fun Modifier.responsiveGridColumn(column: Int): Modifier =
+    then(ResponsiveGridColumnModifier(column))
 
 /**
  * Equal-width responsive card layout. Expanded windows use two independently
@@ -42,7 +56,13 @@ fun ResponsiveCardGrid(
             val parentCardCount = measurables.count {
                 (it.parentData as? ResponsiveGridParentData)?.fullSpan != true
             }
-            val columns = if (split && parentCardCount > 2 && finiteWidth) 2 else 1
+            val hasExplicitColumns = measurables.any {
+                (it.parentData as? ResponsiveGridParentData)?.column != null
+            }
+            val columns = if (
+                split && finiteWidth &&
+                (parentCardCount > 2 || (hasExplicitColumns && parentCardCount > 1))
+            ) 2 else 1
             val columnWidth = if (columns == 2) ((width - gapX) / 2).coerceAtLeast(0)
                 else if (finiteWidth) width else constraints.minWidth
             val heights = IntArray(columns)
@@ -60,7 +80,9 @@ fun ResponsiveCardGrid(
                     heights[0] = nextY
                     heights[1] = nextY
                 } else {
-                    val column = if (columns == 1) 0 else if (heights[0] <= heights[1]) 0 else 1
+                    val requestedColumn = (measurable.parentData as? ResponsiveGridParentData)?.column
+                    val column = if (columns == 1) 0 else requestedColumn
+                        ?: if (heights[0] <= heights[1]) 0 else 1
                     val childWidth = if (fullSpan) width else columnWidth
                     val placeable = measurable.measure(
                         Constraints(minWidth = childWidth, maxWidth = childWidth, minHeight = 0, maxHeight = constraints.maxHeight)

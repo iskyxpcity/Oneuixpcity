@@ -25,10 +25,13 @@ import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.util.ResponsiveCardGrid
+import com.alohaoneui.app.ui.util.responsiveGridColumn
+import com.alohaoneui.app.ui.util.shouldShowSplitPane
 import com.alohaoneui.common.Preference
 import com.alohaoneui.hook.util.ShadeClockFormatter
 import com.alohaoneui.mod.ui.component.AlohaOneUIActionButton
 import com.alohaoneui.mod.ui.component.AlohaOneUISwitch
+import com.alohaoneui.mod.ui.component.SwitchItem
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import java.text.SimpleDateFormat
@@ -64,9 +67,215 @@ fun ShadeClockCategoryControls(
         )
     }
 
-    // Preserve the source screen's enable/options/preview cards and apply
-    // action. The project-wide ResponsiveCardGrid supplies the existing
-    // expanded-screen two-column rule; the apply action remains full-width.
+    // Use the shared StatusThemeGroup adapter for every frame: Material stays on
+    // SegmentedColumn and Miuix stays on the project's native Miuix Card path.
+    // Keep the responsive two-column placement and full-width apply action.
+    val useSplitColumns = shouldShowSplitPane()
+
+    val displayOptionItems: List<@Composable () -> Unit> = listOf(
+        {
+            StatusThemeChildItem {
+                ShadeClockSwitchRow(
+                    title = stringResource(R.string.status_shade_clock_time),
+                    checked = uiState.shadeClockTimeEnabled,
+                    enabled = enabled,
+                    onCheckedChange = { onChange(uiState.copy(shadeClockTimeEnabled = it)) },
+                )
+            }
+        },
+        {
+            StatusThemeChildItem {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    ShadeClockSwitchRow(
+                        title = stringResource(R.string.status_shade_clock_week),
+                        checked = uiState.shadeClockWeekEnabled,
+                        enabled = enabled,
+                        onCheckedChange = { onChange(uiState.copy(shadeClockWeekEnabled = it)) },
+                    )
+                    ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_week_format), topPadding = 8.dp)
+                    ShadeClockChoiceRow(
+                        choices = listOf(
+                            ShadeClockChoice(weekSample(0), 0),
+                            ShadeClockChoice(weekSample(1), 1),
+                            ShadeClockChoice(weekSample(2), 2),
+                        ),
+                        selectedValue = uiState.shadeClockWeekFormat,
+                        enabled = enabled && uiState.shadeClockWeekEnabled,
+                        onSelected = { onChange(uiState.copy(shadeClockWeekFormat = it)) },
+                    )
+                }
+            }
+        },
+        {
+            StatusThemeChildItem {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    ShadeClockSwitchRow(
+                        title = stringResource(R.string.status_shade_clock_date),
+                        checked = uiState.shadeClockDateEnabled,
+                        enabled = enabled,
+                        onCheckedChange = { onChange(uiState.copy(shadeClockDateEnabled = it)) },
+                    )
+                    ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_date_format), topPadding = 8.dp)
+                    ShadeClockChoiceGrid(
+                        choices = listOf(
+                            ShadeClockChoice(dateSample(0), 0),
+                            ShadeClockChoice(dateSample(1), 1),
+                            ShadeClockChoice(dateSample(2), 2),
+                        ),
+                        selectedValue = uiState.shadeClockDateFormat,
+                        enabled = enabled && uiState.shadeClockDateEnabled,
+                        onSelected = { onChange(uiState.copy(shadeClockDateFormat = it)) },
+                    )
+                }
+            }
+        },
+        {
+            StatusThemeChildItem {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    ShadeClockSwitchRow(
+                        title = stringResource(R.string.status_shade_clock_lunar),
+                        checked = uiState.shadeClockLunarEnabled,
+                        enabled = enabled,
+                        onCheckedChange = { onChange(uiState.copy(shadeClockLunarEnabled = it)) },
+                    )
+                    ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_lunar_format), topPadding = 8.dp)
+                    ShadeClockChoiceGrid(
+                        choices = listOf(
+                            ShadeClockChoice(stringResource(R.string.status_shade_clock_option_lunar_special), 0),
+                            ShadeClockChoice(stringResource(R.string.status_shade_clock_option_animal_lunar_special), 1),
+                            ShadeClockChoice(stringResource(R.string.status_shade_clock_option_lunar_animal), 2),
+                            ShadeClockChoice(stringResource(R.string.status_shade_clock_option_detail_year_lunar_special), 3),
+                            ShadeClockChoice(stringResource(R.string.status_shade_clock_option_lunar_only), 4),
+                            ShadeClockChoice(stringResource(R.string.status_shade_clock_option_animal_lunar), 5),
+                            ShadeClockChoice(stringResource(R.string.status_shade_clock_option_detail_year_lunar), 6),
+                        ),
+                        selectedValue = uiState.shadeClockLunarFormat,
+                        enabled = enabled && uiState.shadeClockLunarEnabled,
+                        onSelected = { onChange(uiState.copy(shadeClockLunarFormat = it)) },
+                    )
+                }
+            }
+        },
+    )
+
+    val displayModeItem: @Composable () -> Unit = {
+        StatusThemeChildItem {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_layout), topPadding = 0.dp)
+                ShadeClockChoiceRow(
+                    choices = listOf(
+                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_single_line), 0),
+                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_double_line), 1),
+                    ),
+                    selectedValue = uiState.shadeClockLayoutStyle,
+                    enabled = enabled,
+                    onSelected = { onChange(uiState.copy(shadeClockLayoutStyle = it)) },
+                )
+                ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_group_lines))
+                ShadeClockLinePicker(
+                    title = stringResource(R.string.status_shade_clock_line_time),
+                    selectedValue = uiState.shadeClockTimeLine,
+                    enabled = enabled && uiState.shadeClockLayoutStyle == 1,
+                    onSelected = { onChange(uiState.copy(shadeClockTimeLine = it)) },
+                )
+                ShadeClockLinePicker(
+                    title = stringResource(R.string.status_shade_clock_line_date),
+                    selectedValue = uiState.shadeClockDateLine,
+                    enabled = enabled && uiState.shadeClockLayoutStyle == 1 && uiState.shadeClockDateEnabled,
+                    onSelected = { onChange(uiState.copy(shadeClockDateLine = it)) },
+                )
+                ShadeClockLinePicker(
+                    title = stringResource(R.string.status_shade_clock_line_week),
+                    selectedValue = uiState.shadeClockWeekLine,
+                    enabled = enabled && uiState.shadeClockLayoutStyle == 1 && uiState.shadeClockWeekEnabled,
+                    onSelected = { onChange(uiState.copy(shadeClockWeekLine = it)) },
+                )
+                ShadeClockLinePicker(
+                    title = stringResource(R.string.status_shade_clock_line_lunar),
+                    selectedValue = uiState.shadeClockLunarLine,
+                    enabled = enabled && uiState.shadeClockLayoutStyle == 1 && uiState.shadeClockLunarEnabled,
+                    onSelected = { onChange(uiState.copy(shadeClockLunarLine = it)) },
+                )
+                ShadeClockLinePicker(
+                    title = stringResource(R.string.status_shade_clock_line_detail),
+                    selectedValue = uiState.shadeClockDetailLine,
+                    enabled = enabled && uiState.shadeClockLayoutStyle == 1 && uiState.shadeClockDetailStyle != 0,
+                    onSelected = { onChange(uiState.copy(shadeClockDetailLine = it)) },
+                )
+                ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_detail_style))
+                ShadeClockChoiceGrid(
+                    choices = listOf(
+                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_disabled), 0),
+                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_period), 1),
+                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_chinese_hour), 2),
+                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_season), 3),
+                    ),
+                    selectedValue = uiState.shadeClockDetailStyle,
+                    enabled = enabled,
+                    onSelected = { onChange(uiState.copy(shadeClockDetailStyle = it)) },
+                )
+            }
+        }
+    }
+
+    val previewItem: @Composable () -> Unit = {
+        StatusThemeChildItem {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                when (LocalUiMode.current) {
+                    UiMode.Material -> MaterialText(
+                        text = stringResource(R.string.status_shade_clock_group_preview),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    UiMode.Miuix -> MiuixText(
+                        text = stringResource(R.string.status_shade_clock_group_preview),
+                        color = MiuixTheme.colorScheme.onBackground,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+                when (LocalUiMode.current) {
+                    UiMode.Material -> MaterialText(
+                        text = ShadeClockFormatter.format(uiState, showSeconds = showSeconds),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(top = 10.dp),
+                    )
+                    UiMode.Miuix -> MiuixText(
+                        text = ShadeClockFormatter.format(uiState, showSeconds = showSeconds),
+                        color = MiuixTheme.colorScheme.primary,
+                        modifier = Modifier.padding(top = 10.dp),
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                AlohaOneUIActionButton(
+                    text = stringResource(R.string.status_shade_clock_apply),
+                    onClick = onApply,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    fillWidth = true,
+                )
+            }
+        }
+    }
+
+    val enableItem: @Composable () -> Unit = {
+        StatusThemeChildItem {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                ShadeClockSwitchRow(
+                    title = stringResource(R.string.status_shade_clock_enable),
+                    checked = enabled,
+                    enabled = true,
+                    onCheckedChange = {
+                        onChange(uiState.copy(shadeClockCustomEnabled = it))
+                    },
+                )
+                ShadeClockStatusText(enabled = enabled)
+            }
+        }
+    }
+
     ResponsiveCardGrid(
         modifier = Modifier
             .fillMaxWidth()
@@ -74,233 +283,71 @@ fun ShadeClockCategoryControls(
                 horizontal = if (LocalUiMode.current == UiMode.Material) 16.dp else 12.dp,
             ),
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            StatusThemeGroup(
-                compact = true,
-                horizontalPadding = 0.dp,
-                items = listOf(
-                    {
-                        StatusThemeChildItem {
-                            Column(modifier = Modifier.fillMaxWidth()) {
-                                ShadeClockSwitchRow(
-                                    title = stringResource(R.string.status_shade_clock_enable),
-                                    checked = enabled,
-                                    enabled = true,
-                                    onCheckedChange = {
-                                        onChange(uiState.copy(shadeClockCustomEnabled = it))
-                                    },
-                                )
-                                ShadeClockStatusText(enabled = enabled)
-                            }
-                        }
-                    },
-                ),
-            )
+        if (useSplitColumns) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .responsiveGridColumn(0),
+            ) {
+                StatusThemeGroup(
+                    miuixInsideMargin = PaddingValues(10.dp),
+                    compact = true,
+                    horizontalPadding = 0.dp,
+                    items = listOf(enableItem) + displayOptionItems,
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .responsiveGridColumn(1),
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    StatusThemeGroup(
+                        miuixInsideMargin = PaddingValues(10.dp),
+                        compact = true,
+                        horizontalPadding = 0.dp,
+                        items = listOf(previewItem),
+                    )
+                    StatusThemeGroup(
+                        miuixInsideMargin = PaddingValues(10.dp),
+                        compact = true,
+                        horizontalPadding = 0.dp,
+                        items = listOf(displayModeItem),
+                    )
+                }
+            }
+        } else {
+            Box(modifier = Modifier.fillMaxWidth()) {
+                StatusThemeGroup(
+                    miuixInsideMargin = PaddingValues(10.dp),
+                    compact = true,
+                    horizontalPadding = 0.dp,
+                    items = listOf(enableItem),
+                )
+            }
+            Box(modifier = Modifier.fillMaxWidth()) {
+                StatusThemeGroup(
+                    miuixInsideMargin = PaddingValues(10.dp),
+                    compact = true,
+                    horizontalPadding = 0.dp,
+                    items = displayOptionItems + displayModeItem,
+                )
+            }
+            Box(modifier = Modifier.fillMaxWidth()) {
+                StatusThemeGroup(
+                    miuixInsideMargin = PaddingValues(10.dp),
+                    compact = true,
+                    horizontalPadding = 0.dp,
+                    items = listOf(previewItem),
+                )
+            }
         }
-
-        Box(modifier = Modifier.fillMaxWidth()) {
-            StatusThemeGroup(
-                compact = true,
-                horizontalPadding = 0.dp,
-                items = listOf(
-                    {
-                        StatusThemeChildItem {
-                            ShadeClockSwitchRow(
-                                title = stringResource(R.string.status_shade_clock_time),
-                                checked = uiState.shadeClockTimeEnabled,
-                                enabled = enabled,
-                                onCheckedChange = { onChange(uiState.copy(shadeClockTimeEnabled = it)) },
-                            )
-                        }
-                    },
-                    {
-                        StatusThemeChildItem {
-                            Column(modifier = Modifier.fillMaxWidth()) {
-                                ShadeClockSwitchRow(
-                                    title = stringResource(R.string.status_shade_clock_week),
-                                    checked = uiState.shadeClockWeekEnabled,
-                                    enabled = enabled,
-                                    onCheckedChange = { onChange(uiState.copy(shadeClockWeekEnabled = it)) },
-                                )
-                                ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_week_format), topPadding = 8.dp)
-                                ShadeClockChoiceRow(
-                                    choices = listOf(
-                                        ShadeClockChoice(weekSample(0), 0),
-                                        ShadeClockChoice(weekSample(1), 1),
-                                        ShadeClockChoice(weekSample(2), 2),
-                                    ),
-                                    selectedValue = uiState.shadeClockWeekFormat,
-                                    enabled = enabled && uiState.shadeClockWeekEnabled,
-                                    onSelected = { onChange(uiState.copy(shadeClockWeekFormat = it)) },
-                                )
-                            }
-                        }
-                    },
-                    {
-                        StatusThemeChildItem {
-                            Column(modifier = Modifier.fillMaxWidth()) {
-                                ShadeClockSwitchRow(
-                                    title = stringResource(R.string.status_shade_clock_date),
-                                    checked = uiState.shadeClockDateEnabled,
-                                    enabled = enabled,
-                                    onCheckedChange = { onChange(uiState.copy(shadeClockDateEnabled = it)) },
-                                )
-                                ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_date_format), topPadding = 8.dp)
-                                ShadeClockChoiceGrid(
-                                    choices = listOf(
-                                        ShadeClockChoice(dateSample(0), 0),
-                                        ShadeClockChoice(dateSample(1), 1),
-                                        ShadeClockChoice(dateSample(2), 2),
-                                    ),
-                                    selectedValue = uiState.shadeClockDateFormat,
-                                    enabled = enabled && uiState.shadeClockDateEnabled,
-                                    onSelected = { onChange(uiState.copy(shadeClockDateFormat = it)) },
-                                )
-                            }
-                        }
-                    },
-                    {
-                        StatusThemeChildItem {
-                            Column(modifier = Modifier.fillMaxWidth()) {
-                                ShadeClockSwitchRow(
-                                    title = stringResource(R.string.status_shade_clock_lunar),
-                                    checked = uiState.shadeClockLunarEnabled,
-                                    enabled = enabled,
-                                    onCheckedChange = { onChange(uiState.copy(shadeClockLunarEnabled = it)) },
-                                )
-                                ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_lunar_format), topPadding = 8.dp)
-                                ShadeClockChoiceGrid(
-                                    choices = listOf(
-                                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_lunar_special), 0),
-                                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_animal_lunar_special), 1),
-                                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_lunar_animal), 2),
-                                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_detail_year_lunar_special), 3),
-                                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_lunar_only), 4),
-                                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_animal_lunar), 5),
-                                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_detail_year_lunar), 6),
-                                    ),
-                                    selectedValue = uiState.shadeClockLunarFormat,
-                                    enabled = enabled && uiState.shadeClockLunarEnabled,
-                                    onSelected = { onChange(uiState.copy(shadeClockLunarFormat = it)) },
-                                )
-                            }
-                        }
-                    },
-                    {
-                        StatusThemeChildItem {
-                            Column(modifier = Modifier.fillMaxWidth()) {
-                                ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_layout), topPadding = 0.dp)
-                                ShadeClockChoiceRow(
-                                    choices = listOf(
-                                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_single_line), 0),
-                                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_double_line), 1),
-                                    ),
-                                    selectedValue = uiState.shadeClockLayoutStyle,
-                                    enabled = enabled,
-                                    onSelected = { onChange(uiState.copy(shadeClockLayoutStyle = it)) },
-                                )
-                                ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_group_lines))
-                                ShadeClockLinePicker(
-                                    title = stringResource(R.string.status_shade_clock_line_time),
-                                    selectedValue = uiState.shadeClockTimeLine,
-                                    enabled = enabled && uiState.shadeClockLayoutStyle == 1,
-                                    onSelected = { onChange(uiState.copy(shadeClockTimeLine = it)) },
-                                )
-                                ShadeClockLinePicker(
-                                    title = stringResource(R.string.status_shade_clock_line_date),
-                                    selectedValue = uiState.shadeClockDateLine,
-                                    enabled = enabled && uiState.shadeClockLayoutStyle == 1 && uiState.shadeClockDateEnabled,
-                                    onSelected = { onChange(uiState.copy(shadeClockDateLine = it)) },
-                                )
-                                ShadeClockLinePicker(
-                                    title = stringResource(R.string.status_shade_clock_line_week),
-                                    selectedValue = uiState.shadeClockWeekLine,
-                                    enabled = enabled && uiState.shadeClockLayoutStyle == 1 && uiState.shadeClockWeekEnabled,
-                                    onSelected = { onChange(uiState.copy(shadeClockWeekLine = it)) },
-                                )
-                                ShadeClockLinePicker(
-                                    title = stringResource(R.string.status_shade_clock_line_lunar),
-                                    selectedValue = uiState.shadeClockLunarLine,
-                                    enabled = enabled && uiState.shadeClockLayoutStyle == 1 && uiState.shadeClockLunarEnabled,
-                                    onSelected = { onChange(uiState.copy(shadeClockLunarLine = it)) },
-                                )
-                                ShadeClockLinePicker(
-                                    title = stringResource(R.string.status_shade_clock_line_detail),
-                                    selectedValue = uiState.shadeClockDetailLine,
-                                    enabled = enabled && uiState.shadeClockLayoutStyle == 1 && uiState.shadeClockDetailStyle != 0,
-                                    onSelected = { onChange(uiState.copy(shadeClockDetailLine = it)) },
-                                )
-                                ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_detail_style))
-                                ShadeClockChoiceGrid(
-                                    choices = listOf(
-                                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_disabled), 0),
-                                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_period), 1),
-                                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_chinese_hour), 2),
-                                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_season), 3),
-                                    ),
-                                    selectedValue = uiState.shadeClockDetailStyle,
-                                    enabled = enabled,
-                                    onSelected = { onChange(uiState.copy(shadeClockDetailStyle = it)) },
-                                )
-                            }
-                        }
-                    },
-                ),
-            )
-        }
-
-        Box(modifier = Modifier.fillMaxWidth()) {
-            StatusThemeGroup(
-                compact = true,
-                horizontalPadding = 0.dp,
-                items = listOf(
-                    {
-                        StatusThemeChildItem {
-                            Column(modifier = Modifier.fillMaxWidth()) {
-                                when (LocalUiMode.current) {
-                                    UiMode.Material -> MaterialText(
-                                        text = stringResource(R.string.status_shade_clock_group_preview),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                    )
-                                    UiMode.Miuix -> MiuixText(
-                                        text = stringResource(R.string.status_shade_clock_group_preview),
-                                        color = MiuixTheme.colorScheme.onBackground,
-                                        fontSize = 17.sp,
-                                        fontWeight = FontWeight.Bold,
-                                    )
-                                }
-                                when (LocalUiMode.current) {
-                                    UiMode.Material -> MaterialText(
-                                        text = ShadeClockFormatter.format(uiState, showSeconds = showSeconds),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.padding(top = 10.dp),
-                                    )
-                                    UiMode.Miuix -> MiuixText(
-                                        text = ShadeClockFormatter.format(uiState, showSeconds = showSeconds),
-                                        color = MiuixTheme.colorScheme.primary,
-                                        modifier = Modifier.padding(top = 10.dp),
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(16.dp))
-                                AlohaOneUIActionButton(
-                                    text = stringResource(R.string.status_shade_clock_apply),
-                                    onClick = onApply,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(48.dp),
-                                    fillWidth = true,
-                                )
-                            }
-                        }
-                    },
-                ),
-            )
-        }
-
     }
 }
+
 
 @Composable
 private fun ShadeClockSwitchRow(
@@ -309,34 +356,40 @@ private fun ShadeClockSwitchRow(
     enabled: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    val alpha = if (enabled) 1f else 0.46f
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .alpha(alpha)
-            .padding(vertical = 5.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        when (LocalUiMode.current) {
-            UiMode.Material -> MaterialText(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.weight(1f).padding(end = 12.dp),
-            )
-            UiMode.Miuix -> MiuixText(
-                text = title,
-                color = MiuixTheme.colorScheme.onBackground,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f).padding(end = 12.dp),
+    when (LocalUiMode.current) {
+        UiMode.Material -> {
+            val alpha = if (enabled) 1f else 0.46f
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .alpha(alpha)
+                    .padding(vertical = 5.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                MaterialText(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f).padding(end = 12.dp),
+                )
+                AlohaOneUISwitch(
+                    checked = checked,
+                    enabled = enabled,
+                    onCheckedChange = onCheckedChange,
+                )
+            }
+        }
+        UiMode.Miuix -> {
+            // Match the other Miuix status pages: use the shared preference row
+            // so BasicComponent / SwitchPreference owns spacing and switch layout.
+            // StatusThemeGroup supplies the grouped scope, so no nested Card is added.
+            SwitchItem(
+                title = title,
+                checked = checked,
+                enabled = enabled,
+                onCheckedChange = onCheckedChange,
             )
         }
-        AlohaOneUISwitch(
-            checked = checked,
-            enabled = enabled,
-            onCheckedChange = onCheckedChange,
-        )
     }
 }
 
@@ -447,7 +500,8 @@ private fun ShadeClockLinePicker(
                 selected = selectedValue == choice.value,
                 enabled = enabled,
                 modifier = Modifier.padding(start = 8.dp),
-                fixedWidth = 72.dp,
+                fixedWidth = if (LocalUiMode.current == UiMode.Material) 72.dp else null,
+                fillWidth = false,
                 onClick = { onSelected(choice.value) },
             )
         }
@@ -461,12 +515,16 @@ private fun ShadeClockChoiceButton(
     enabled: Boolean,
     modifier: Modifier = Modifier,
     fixedWidth: androidx.compose.ui.unit.Dp? = null,
+    fillWidth: Boolean = fixedWidth == null,
     onClick: () -> Unit,
 ) {
-    val buttonModifier = if (fixedWidth != null) {
-        modifier.width(fixedWidth).height(36.dp)
+    val widthModifier = if (fixedWidth != null) modifier.width(fixedWidth) else modifier
+    // Miuix Button controls its own minimum height and content insets.
+    // Fixed 36/40dp heights clip its native typography and touch target.
+    val buttonModifier = if (LocalUiMode.current == UiMode.Material) {
+        widthModifier.height(if (fixedWidth != null) 36.dp else 40.dp)
     } else {
-        modifier.height(40.dp)
+        widthModifier
     }
     val containerColor = if (LocalUiMode.current == UiMode.Material) {
         if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest
@@ -480,7 +538,7 @@ private fun ShadeClockChoiceButton(
         modifier = buttonModifier,
         enabled = enabled,
         primary = selected,
-        fillWidth = fixedWidth == null,
+        fillWidth = fillWidth,
         containerColor = containerColor,
         contentColor = contentColor,
         contentPadding = if (fixedWidth != null) PaddingValues(horizontal = 4.dp, vertical = 0.dp) else null,
