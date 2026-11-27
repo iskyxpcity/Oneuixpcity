@@ -140,8 +140,10 @@ object ShadeClockFormatter {
         val hour = dateTime.hour
         return when (style) {
             1 -> when (hour) {
-                in 0..4 -> "凌晨"; in 5..7 -> "早晨"; in 8..10 -> "上午"; in 11..12 -> "中午"
-                in 13..17 -> "下午"; in 18..20 -> "傍晚"; in 21..22 -> "晚上"; else -> "深夜"
+                in 0..3 -> "凌晨"; in 4..5 -> "黎明"; 6 -> "拂晓"; 7 -> "早晨"
+                in 8..10 -> "上午"; in 11..13 -> "中午"; in 14..15 -> "下午"
+                in 16..17 -> "黄昏"; in 18..19 -> "傍晚"; in 20..21 -> "晚上"
+                in 22..23 -> "午夜"; else -> ""
             }
             2 -> {
                 val branch = when (hour) {
@@ -152,7 +154,7 @@ object ShadeClockFormatter {
                 "${branch}时"
             }
             3 -> when (dateTime.monthValue) {
-                3, 4, 5 -> "春"; 6, 7, 8 -> "夏"; 9, 10, 11 -> "秋"; else -> "冬"
+                3, 4, 5 -> "春季"; 6, 7, 8 -> "夏季"; 9, 10, 11 -> "秋季"; else -> "冬季"
             }
             else -> ""
         }
