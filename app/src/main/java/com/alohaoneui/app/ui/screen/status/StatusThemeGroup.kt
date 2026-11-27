@@ -21,9 +21,10 @@ import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
 import com.alohaoneui.app.ui.component.material.SegmentedListItem
 import com.alohaoneui.app.ui.component.material.alohaOneUISegmentedColors
-import com.alohaoneui.mod.ui.component.AlohaOneUIInfoItem
 import com.alohaoneui.mod.ui.component.LocalAlohaOneUIGroupedPreference
+import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 import com.alohaoneui.app.ui.theme.LocalMaterialShadowContainers
@@ -241,17 +242,20 @@ fun StatusThemeChildItem(
             )
         }
 
-        UiMode.Miuix -> {
-            Column(modifier = modifier.fillMaxWidth()) {
-                if (!title.isNullOrBlank() || summary != null || icon != null) {
-                    AlohaOneUIInfoItem(
-                        title = title.orEmpty(),
-                        summary = summary,
-                        icon = icon,
+        UiMode.Miuix -> BasicComponent(
+            modifier = modifier,
+            title = title?.takeIf { it.isNotBlank() },
+            summary = summary,
+            startAction = icon?.let { imageVector ->
+                {
+                    MiuixIcon(
+                        imageVector = imageVector,
+                        contentDescription = title,
+                        tint = colorScheme.onSurface,
                     )
                 }
-                content()
-            }
-        }
+            },
+            bottomAction = content,
+        )
     }
 }

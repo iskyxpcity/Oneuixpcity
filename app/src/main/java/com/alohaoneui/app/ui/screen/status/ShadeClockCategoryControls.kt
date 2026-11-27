@@ -289,7 +289,10 @@ fun ShadeClockCategoryControls(
                                     onClick = onApply,
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(48.dp),
+                                        .then(
+                                            if (LocalUiMode.current == UiMode.Material) Modifier.height(48.dp)
+                                            else Modifier,
+                                        ),
                                     fillWidth = true,
                                 )
                             }
@@ -447,7 +450,8 @@ private fun ShadeClockLinePicker(
                 selected = selectedValue == choice.value,
                 enabled = enabled,
                 modifier = Modifier.padding(start = 8.dp),
-                fixedWidth = 72.dp,
+                fixedWidth = if (LocalUiMode.current == UiMode.Material) 72.dp else null,
+                fillWidth = false,
                 onClick = { onSelected(choice.value) },
             )
         }
@@ -461,12 +465,14 @@ private fun ShadeClockChoiceButton(
     enabled: Boolean,
     modifier: Modifier = Modifier,
     fixedWidth: androidx.compose.ui.unit.Dp? = null,
+    fillWidth: Boolean = fixedWidth == null,
     onClick: () -> Unit,
 ) {
-    val buttonModifier = if (fixedWidth != null) {
-        modifier.width(fixedWidth).height(36.dp)
-    } else {
-        modifier.height(40.dp)
+    // Miuix Button owns its minimum dimensions and inside margins; only Material uses compact fixed sizing.
+    val widthModifier = if (fixedWidth != null) modifier.width(fixedWidth) else modifier
+    val buttonModifier = when (LocalUiMode.current) {
+        UiMode.Material -> widthModifier.height(if (fixedWidth != null) 36.dp else 40.dp)
+        UiMode.Miuix -> widthModifier
     }
     val containerColor = if (LocalUiMode.current == UiMode.Material) {
         if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest
@@ -480,10 +486,14 @@ private fun ShadeClockChoiceButton(
         modifier = buttonModifier,
         enabled = enabled,
         primary = selected,
-        fillWidth = fixedWidth == null,
+        fillWidth = fillWidth,
         containerColor = containerColor,
         contentColor = contentColor,
-        contentPadding = if (fixedWidth != null) PaddingValues(horizontal = 4.dp, vertical = 0.dp) else null,
+        contentPadding = if (LocalUiMode.current == UiMode.Material && fixedWidth != null) {
+            PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+        } else {
+            null
+        },
     )
 }
 
