@@ -288,10 +288,18 @@ fun ShadeClockCategoryControls(
                     .fillMaxWidth()
                     .responsiveGridColumn(0),
             ) {
+                // Keep the enable card in its own native theme frame.
+                // Miuix must retain a separate Miuix Card; Material retains its own
+                // independent SegmentedColumn through StatusThemeGroup.
                 StatusThemeGroup(
                     compact = true,
                     horizontalPadding = 0.dp,
-                    items = listOf(enableItem) + displayOptionItems,
+                    items = listOf(enableItem),
+                )
+                StatusThemeGroup(
+                    compact = true,
+                    horizontalPadding = 0.dp,
+                    items = displayOptionItems,
                 )
             }
             Box(
