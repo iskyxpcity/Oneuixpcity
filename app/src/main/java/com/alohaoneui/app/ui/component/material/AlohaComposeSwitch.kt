@@ -149,6 +149,7 @@ fun AlohaComposeSwitch(
         borderColor = if (enabled) { if (checked) colors.checkedBorderColor else colors.uncheckedBorderColor } else { if (checked) colors.disabledCheckedBorderColor else colors.disabledUncheckedBorderColor },
         interactionSource = interactionSource,
         showThumbIcon = showThumbIcon,
+        thumbShadow = thumbShadow,
     )
 }
 
@@ -168,6 +169,7 @@ private fun ComposeSwitchImpl(
     borderColor: Color,
     interactionSource: MutableInteractionSource?,
     showThumbIcon: Boolean,
+    thumbShadow: Boolean,
 ) {
     @Suppress("NAME_SHADOWING")
     val interactionSource = interactionSource ?: remember { MutableInteractionSource() }
