@@ -63,6 +63,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.compositeOver
@@ -85,6 +86,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import com.alohaoneui.app.ui.theme.LocalMaterialShadowSwitches
 
 /**
  * [Material Design switch](https://m3.material.io/components/switch)
@@ -296,6 +298,8 @@ private fun SwitchImpl(
             .then(dragModifier)
             .wrapContentSize(Alignment.Center)
             .requiredSize(SwitchWidth, SwitchHeight)
+            // Cast the optional shadow on the physical track, not the expanded touch target.
+            .then(if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, trackShape) else Modifier)
             .border(2.dp, borderColor, trackShape)
             .background(trackColor, trackShape)
             .then(focusRingModifier)
