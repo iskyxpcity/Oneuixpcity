@@ -202,7 +202,11 @@ fun AlohaOneUIActionButton(
             onClick = onClick,
             modifier = modifier,
             enabled = enabled,
-            colors = MiuixButtonDefaults.buttonColorsPrimary(),
+            colors = if (primary) {
+                MiuixButtonDefaults.buttonColorsPrimary()
+            } else {
+                MiuixButtonDefaults.buttonColors()
+            },
         ) {
             Box(
                 modifier = if (fillWidth) Modifier.fillMaxWidth() else Modifier,
