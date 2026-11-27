@@ -189,10 +189,7 @@ fun ExpressiveSwitch(
         AlohaMaterialYouSwitch(
             checked = checked,
             onCheckedChange = onCheckedChange,
-            modifier = modifier.then(
-                if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, materialYouTrackShape)
-                else Modifier,
-            ),
+            modifier = modifier,
             thumbContent = thumbContent,
             enabled = enabled,
             colors = colors,
@@ -212,10 +209,7 @@ fun ExpressiveSwitch(
         AlohaComposeSwitch(
             checked = checked,
             onCheckedChange = onCheckedChange,
-            modifier = modifier.then(
-                if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, composeTrackShape)
-                else Modifier,
-            ),
+            modifier = modifier,
             thumbContent = thumbContent,
             enabled = enabled,
             colors = colors,
