@@ -466,6 +466,7 @@ private fun ShadeClockChoiceButton(
     fixedWidth: androidx.compose.ui.unit.Dp? = null,
     onClick: () -> Unit,
 ) {
+    // Miuix Button owns its minimum dimensions and inside margins; only Material uses compact fixed sizing.
     val widthModifier = if (fixedWidth != null) modifier.width(fixedWidth) else modifier
     val buttonModifier = when (LocalUiMode.current) {
         UiMode.Material -> widthModifier.height(if (fixedWidth != null) 36.dp else 40.dp)
