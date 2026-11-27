@@ -173,9 +173,9 @@ fun AlohaOneUIActionButton(
     enabled: Boolean = true,
     primary: Boolean = true,
     fillWidth: Boolean = false,
-    contentPadding: PaddingValues? = null,
     containerColor: Color? = null,
     contentColor: Color? = null,
+    contentPadding: PaddingValues? = null,
 ) {
     when (LocalUiMode.current) {
         UiMode.Material -> ExpressiveButton(
