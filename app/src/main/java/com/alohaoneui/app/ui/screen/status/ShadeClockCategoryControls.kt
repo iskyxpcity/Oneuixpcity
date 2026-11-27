@@ -24,7 +24,6 @@ import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.util.ResponsiveCardGrid
-import com.alohaoneui.app.ui.util.responsiveGridFullSpan
 import com.alohaoneui.common.Preference
 import com.alohaoneui.hook.util.ShadeClockFormatter
 import com.alohaoneui.mod.ui.component.AlohaOneUIActionButton
@@ -278,6 +277,15 @@ fun ShadeClockCategoryControls(
                                         modifier = Modifier.padding(top = 10.dp),
                                     )
                                 }
+                                Spacer(modifier = Modifier.height(16.dp))
+                                AlohaOneUIActionButton(
+                                    text = stringResource(R.string.status_shade_clock_apply),
+                                    onClick = onApply,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(48.dp),
+                                    fillWidth = true,
+                                )
                             }
                         }
                     },
@@ -285,21 +293,6 @@ fun ShadeClockCategoryControls(
             )
         }
 
-        Box(modifier = Modifier.responsiveGridFullSpan().fillMaxWidth()) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Spacer(modifier = Modifier.height(16.dp))
-                AlohaOneUIActionButton(
-                    text = stringResource(R.string.status_shade_clock_apply),
-                    onClick = onApply,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .height(48.dp),
-                    fillWidth = true,
-                )
-                Spacer(modifier = Modifier.height(18.dp))
-            }
-        }
     }
 }
 
@@ -440,8 +433,8 @@ private fun ShadeClockLinePicker(
             )
         }
         listOf(
-            ShadeClockChoice(stringResource(R.string.status_shade_clock_option_top), 0),
-            ShadeClockChoice(stringResource(R.string.status_shade_clock_option_bottom), 1),
+            ShadeClockChoice("上行", 0),
+            ShadeClockChoice("下行", 1),
         ).forEach { choice ->
             ShadeClockChoiceButton(
                 choice = choice,
