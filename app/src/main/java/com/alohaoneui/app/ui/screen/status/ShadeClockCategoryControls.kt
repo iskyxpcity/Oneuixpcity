@@ -15,6 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text as MaterialText
 import com.alohaoneui.app.R
@@ -89,7 +91,7 @@ fun ShadeClockCategoryControls(
                                 onChange(uiState.copy(shadeClockWeekEnabled = it))
                             },
                         )
-                        ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_week_format))
+                        ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_week_format), topPadding = 8.dp)
                         ShadeClockChoiceRow(
                             choices = listOf(
                                 ShadeClockChoice(weekSample(0), 0),
@@ -109,7 +111,7 @@ fun ShadeClockCategoryControls(
                                 onChange(uiState.copy(shadeClockDateEnabled = it))
                             },
                         )
-                        ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_date_format))
+                        ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_date_format), topPadding = 8.dp)
                         ShadeClockChoiceGrid(
                             choices = listOf(
                                 ShadeClockChoice(dateSample(0), 0),
@@ -129,7 +131,7 @@ fun ShadeClockCategoryControls(
                                 onChange(uiState.copy(shadeClockLunarEnabled = it))
                             },
                         )
-                        ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_lunar_format))
+                        ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_lunar_format), topPadding = 8.dp)
                         ShadeClockChoiceGrid(
                             choices = listOf(
                                 ShadeClockChoice(stringResource(R.string.status_shade_clock_option_lunar_special), 0),
@@ -262,13 +264,15 @@ private fun ShadeClockSwitchRow(
         when (LocalUiMode.current) {
             UiMode.Material -> MaterialText(
                 text = title,
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f).padding(end = 12.dp),
             )
             UiMode.Miuix -> MiuixText(
                 text = title,
                 color = MiuixTheme.colorScheme.onBackground,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f).padding(end = 12.dp),
             )
         }
@@ -281,18 +285,20 @@ private fun ShadeClockSwitchRow(
 }
 
 @Composable
-private fun ShadeClockSectionTitle(text: String) {
+private fun ShadeClockSectionTitle(text: String, topPadding: androidx.compose.ui.unit.Dp = 12.dp) {
     when (LocalUiMode.current) {
         UiMode.Material -> MaterialText(
             text = text,
-            style = MaterialTheme.typography.titleSmall,
+            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = topPadding),
         )
         UiMode.Miuix -> MiuixText(
             text = text,
             color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-            modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.fillMaxWidth().padding(top = topPadding),
         )
     }
 }
@@ -435,15 +441,7 @@ private fun weekSample(format: Int): String {
     val calendar = Calendar.getInstance()
     val day = calendar.get(Calendar.DAY_OF_WEEK)
     return when (format) {
-        1 -> when (day) {
-            Calendar.SUNDAY -> "星期日"
-            Calendar.MONDAY -> "星期一"
-            Calendar.TUESDAY -> "星期二"
-            Calendar.WEDNESDAY -> "星期三"
-            Calendar.THURSDAY -> "星期四"
-            Calendar.FRIDAY -> "星期五"
-            else -> "星期六"
-        }
+        1 -> SimpleDateFormat("EEEE", Locale.getDefault()).format(Date())
         2 -> when (day) {
             Calendar.SUNDAY -> "日"
             Calendar.MONDAY -> "一"
