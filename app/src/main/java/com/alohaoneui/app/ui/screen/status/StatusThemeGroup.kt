@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.component.material.SegmentedColumn
@@ -42,6 +43,7 @@ fun StatusThemeGroup(
     items: List<@Composable () -> Unit>,
     compact: Boolean = false,
     titleAlignedToContent: Boolean = false,
+    horizontalPadding: Dp? = null,
 ) {
     if (items.isEmpty()) return
 
@@ -71,7 +73,7 @@ fun StatusThemeGroup(
         when (LocalUiMode.current) {
         UiMode.Material -> {
             SegmentedColumn(
-                modifier = modifier.padding(horizontal = 16.dp, vertical = groupVerticalPadding),
+                modifier = modifier.padding(horizontal = horizontalPadding ?: 16.dp, vertical = groupVerticalPadding),
                 content = items.map { item ->
                     {
                         CompositionLocalProvider(
@@ -86,7 +88,7 @@ fun StatusThemeGroup(
 
         UiMode.Miuix -> {
             Card(
-                modifier = modifier.padding(horizontal = 12.dp, vertical = groupVerticalPadding),
+                modifier = modifier.padding(horizontal = horizontalPadding ?: 12.dp, vertical = groupVerticalPadding),
             ) {
                 CompositionLocalProvider(
                     LocalAlohaOneUIGroupedPreference provides true,
