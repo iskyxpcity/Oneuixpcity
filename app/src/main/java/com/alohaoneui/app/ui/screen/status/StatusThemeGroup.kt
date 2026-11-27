@@ -44,6 +44,7 @@ fun StatusThemeGroup(
     compact: Boolean = false,
     titleAlignedToContent: Boolean = false,
     horizontalPadding: Dp? = null,
+    miuixContentPadding: Dp = 0.dp,
 ) {
     if (items.isEmpty()) return
 
@@ -93,7 +94,11 @@ fun StatusThemeGroup(
                 CompositionLocalProvider(
                     LocalAlohaOneUIGroupedPreference provides true,
                 ) {
-                    Column {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(miuixContentPadding),
+                    ) {
                         items.forEach { item -> item() }
                     }
                 }
