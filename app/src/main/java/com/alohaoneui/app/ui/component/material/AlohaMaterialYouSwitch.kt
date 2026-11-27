@@ -63,6 +63,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.compositeOver
@@ -126,6 +127,7 @@ fun AlohaMaterialYouSwitch(
     colors: SwitchColors = SwitchDefaults.colors(),
     thumbShape: Shape,
     trackShape: Shape,
+    thumbShadow: Boolean = false,
     interactionSource: MutableInteractionSource? = null,
 ) {
     SwitchImpl(
@@ -314,6 +316,7 @@ private fun SwitchImpl(
                     // Clip the transient press/drag indication to the active
                     // thumb silhouette. An unbounded circular ripple visually
                     // replaces the selected Aloha shape with a circle while toggling.
+                    .then(if (thumbShadow) Modifier.shadow(2.dp, thumbShape) else Modifier)
                     .clip(thumbShape)
                     .indication(
                         interactionSource = interactionSource,
