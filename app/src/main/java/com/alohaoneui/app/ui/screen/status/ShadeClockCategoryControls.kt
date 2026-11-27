@@ -49,6 +49,22 @@ fun ShadeClockCategoryControls(
         "icon_blacklist",
     ).orEmpty().split(",").any { it.trim() == "slimindicator_show_seconds" }
 
+    // Preserve the source screen's explanatory line below its page title.
+    when (LocalUiMode.current) {
+        UiMode.Material -> MaterialText(
+            text = stringResource(R.string.status_shade_clock_summary),
+            style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 16.dp),
+        )
+        UiMode.Miuix -> MiuixText(
+            text = stringResource(R.string.status_shade_clock_summary),
+            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+            fontSize = 13.sp,
+            modifier = Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 6.dp, bottom = 16.dp),
+        )
+    }
+
     // Preserve the source screen's enable/options/preview cards and apply
     // action. The project-wide ResponsiveCardGrid supplies the existing
     // expanded-screen two-column rule; the apply action remains full-width.
