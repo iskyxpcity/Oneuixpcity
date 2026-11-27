@@ -86,7 +86,7 @@
     <string name="status_category_padding">状态栏边距</string>
 
     <string name="status_category_shade_clock">下拉时间日期</string>
-    <string name="status_shade_clock_enable">自定义下拉时间日期</string>
+    <string name="status_shade_clock_enable">启用下拉时间日期自定义</string>
     <string name="status_shade_clock_group_basic">基本设置</string>
     <string name="status_shade_clock_group_content">显示内容</string>
     <string name="status_shade_clock_group_format">内容格式</string>
