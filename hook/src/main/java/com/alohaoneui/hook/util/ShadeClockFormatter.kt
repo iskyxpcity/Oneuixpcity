@@ -76,7 +76,7 @@ object ShadeClockFormatter {
         val lunar = (if (info.isLeapMonth) "闰" else "") + lunarMonths[info.month - 1] + "月" + lunarDay(info.day)
         val offset = info.year - 4
         val zodiacYear = animals[offset.floorMod(12)] + "年"
-        val cyclicalYear = "${stems[offset.floorMod(10)]}${branches[offset.floorMod(12)]}(${animals[offset.floorMod(12)]})年
+        val cyclicalYear = "${stems[offset.floorMod(10)]}${branches[offset.floorMod(12)]}(${animals[offset.floorMod(12)]})年"
         val specialParts = buildList {
             if (!info.isLeapMonth) lunarFestival(info.month, info.day, date)?.let(::add)
             solarFestival(date)?.let(::add)
