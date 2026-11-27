@@ -940,7 +940,8 @@ object QS {
             val nativeResult = chain.proceed()
             val dateTextView = chain.thisObject as? TextView
             if (shadeClockRuntime.shadeClockCustomEnabled) {
-                dateTextView?.let { applyShadeClock(it, it.text) }
+                // The dedicated shade-clock hook now owns the combined clock view
+                // and clears this native date view; do not apply the legacy layout here.
                 return@intercept nativeResult
             }
             val shortDateText = chain.args[0]?.reflect?.get("ShortDateText") as? String ?: ""
