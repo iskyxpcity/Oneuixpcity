@@ -4,6 +4,7 @@ import android.provider.Settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -104,25 +105,22 @@ fun ShadeClockCategoryControls(
                 items = listOf(
                     {
                         StatusThemeChildItem {
-                            Column(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalArrangement = Arrangement.spacedBy(0.dp),
-                            ) {
-                                ShadeClockSwitchRow(
-                                    title = stringResource(R.string.status_shade_clock_time),
-                                    checked = uiState.shadeClockTimeEnabled,
-                                    enabled = enabled,
-                                    onCheckedChange = {
-                                        onChange(uiState.copy(shadeClockTimeEnabled = it))
-                                    },
-                                )
+                            ShadeClockSwitchRow(
+                                title = stringResource(R.string.status_shade_clock_time),
+                                checked = uiState.shadeClockTimeEnabled,
+                                enabled = enabled,
+                                onCheckedChange = { onChange(uiState.copy(shadeClockTimeEnabled = it)) },
+                            )
+                        }
+                    },
+                    {
+                        StatusThemeChildItem {
+                            Column(modifier = Modifier.fillMaxWidth()) {
                                 ShadeClockSwitchRow(
                                     title = stringResource(R.string.status_shade_clock_week),
                                     checked = uiState.shadeClockWeekEnabled,
                                     enabled = enabled,
-                                    onCheckedChange = {
-                                        onChange(uiState.copy(shadeClockWeekEnabled = it))
-                                    },
+                                    onCheckedChange = { onChange(uiState.copy(shadeClockWeekEnabled = it)) },
                                 )
                                 ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_week_format), topPadding = 8.dp)
                                 ShadeClockChoiceRow(
@@ -135,14 +133,17 @@ fun ShadeClockCategoryControls(
                                     enabled = enabled && uiState.shadeClockWeekEnabled,
                                     onSelected = { onChange(uiState.copy(shadeClockWeekFormat = it)) },
                                 )
-
+                            }
+                        }
+                    },
+                    {
+                        StatusThemeChildItem {
+                            Column(modifier = Modifier.fillMaxWidth()) {
                                 ShadeClockSwitchRow(
                                     title = stringResource(R.string.status_shade_clock_date),
                                     checked = uiState.shadeClockDateEnabled,
                                     enabled = enabled,
-                                    onCheckedChange = {
-                                        onChange(uiState.copy(shadeClockDateEnabled = it))
-                                    },
+                                    onCheckedChange = { onChange(uiState.copy(shadeClockDateEnabled = it)) },
                                 )
                                 ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_date_format), topPadding = 8.dp)
                                 ShadeClockChoiceGrid(
@@ -155,14 +156,17 @@ fun ShadeClockCategoryControls(
                                     enabled = enabled && uiState.shadeClockDateEnabled,
                                     onSelected = { onChange(uiState.copy(shadeClockDateFormat = it)) },
                                 )
-
+                            }
+                        }
+                    },
+                    {
+                        StatusThemeChildItem {
+                            Column(modifier = Modifier.fillMaxWidth()) {
                                 ShadeClockSwitchRow(
                                     title = stringResource(R.string.status_shade_clock_lunar),
                                     checked = uiState.shadeClockLunarEnabled,
                                     enabled = enabled,
-                                    onCheckedChange = {
-                                        onChange(uiState.copy(shadeClockLunarEnabled = it))
-                                    },
+                                    onCheckedChange = { onChange(uiState.copy(shadeClockLunarEnabled = it)) },
                                 )
                                 ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_lunar_format), topPadding = 8.dp)
                                 ShadeClockChoiceGrid(
@@ -179,8 +183,13 @@ fun ShadeClockCategoryControls(
                                     enabled = enabled && uiState.shadeClockLunarEnabled,
                                     onSelected = { onChange(uiState.copy(shadeClockLunarFormat = it)) },
                                 )
-
-                                ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_layout))
+                            }
+                        }
+                    },
+                    {
+                        StatusThemeChildItem {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_layout), topPadding = 0.dp)
                                 ShadeClockChoiceRow(
                                     choices = listOf(
                                         ShadeClockChoice(stringResource(R.string.status_shade_clock_option_single_line), 0),
@@ -190,8 +199,6 @@ fun ShadeClockCategoryControls(
                                     enabled = enabled,
                                     onSelected = { onChange(uiState.copy(shadeClockLayoutStyle = it)) },
                                 )
-
-                                // The five line selectors stay visible as in the source.
                                 ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_group_lines))
                                 ShadeClockLinePicker(
                                     title = stringResource(R.string.status_shade_clock_line_time),
@@ -223,7 +230,6 @@ fun ShadeClockCategoryControls(
                                     enabled = enabled && uiState.shadeClockLayoutStyle == 1 && uiState.shadeClockDetailStyle != 0,
                                     onSelected = { onChange(uiState.copy(shadeClockDetailLine = it)) },
                                 )
-
                                 ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_detail_style))
                                 ShadeClockChoiceGrid(
                                     choices = listOf(
@@ -477,6 +483,7 @@ private fun ShadeClockChoiceButton(
         fillWidth = fixedWidth == null,
         containerColor = containerColor,
         contentColor = contentColor,
+        contentPadding = if (fixedWidth != null) PaddingValues(horizontal = 4.dp, vertical = 0.dp) else null,
     )
 }
 
