@@ -171,7 +171,7 @@ fun AlohaOneUIActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    primary: Boolean = false,
+    primary: Boolean = true,
     fillWidth: Boolean = false,
     containerColor: Color? = null,
     contentColor: Color? = null,
