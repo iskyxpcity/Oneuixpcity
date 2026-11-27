@@ -25,6 +25,7 @@ import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.util.ResponsiveCardGrid
+import com.alohaoneui.app.ui.util.responsiveGridFullSpan
 import com.alohaoneui.common.Preference
 import com.alohaoneui.hook.util.ShadeClockFormatter
 import com.alohaoneui.mod.ui.component.AlohaOneUIActionButton
@@ -76,6 +77,7 @@ fun ShadeClockCategoryControls(
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             StatusThemeGroup(
+                modifier = Modifier.fillMaxWidth(),
                 compact = true,
                 horizontalPadding = 0.dp,
                 items = listOf(
@@ -100,6 +102,7 @@ fun ShadeClockCategoryControls(
 
         Box(modifier = Modifier.fillMaxWidth()) {
             StatusThemeGroup(
+                modifier = Modifier.fillMaxWidth(),
                 compact = true,
                 horizontalPadding = 0.dp,
                 items = listOf(
@@ -249,8 +252,13 @@ fun ShadeClockCategoryControls(
             )
         }
 
-        Box(modifier = Modifier.fillMaxWidth()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(if (LocalUiMode.current == UiMode.Miuix) Modifier.responsiveGridFullSpan() else Modifier),
+        ) {
             StatusThemeGroup(
+                modifier = Modifier.fillMaxWidth(),
                 compact = true,
                 horizontalPadding = 0.dp,
                 items = listOf(
