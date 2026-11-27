@@ -290,6 +290,7 @@ fun ShadeClockCategoryControls(
                     .responsiveGridColumn(0),
             ) {
                 StatusThemeGroup(
+                    miuixInsideMargin = PaddingValues(10.dp),
                     compact = true,
                     horizontalPadding = 0.dp,
                     items = listOf(enableItem) + displayOptionItems,
@@ -305,11 +306,13 @@ fun ShadeClockCategoryControls(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     StatusThemeGroup(
+                        miuixInsideMargin = PaddingValues(10.dp),
                         compact = true,
                         horizontalPadding = 0.dp,
                         items = listOf(previewItem),
                     )
                     StatusThemeGroup(
+                        miuixInsideMargin = PaddingValues(10.dp),
                         compact = true,
                         horizontalPadding = 0.dp,
                         items = listOf(displayModeItem),
@@ -319,6 +322,7 @@ fun ShadeClockCategoryControls(
         } else {
             Box(modifier = Modifier.fillMaxWidth()) {
                 StatusThemeGroup(
+                    miuixInsideMargin = PaddingValues(10.dp),
                     compact = true,
                     horizontalPadding = 0.dp,
                     items = listOf(enableItem),
@@ -326,6 +330,7 @@ fun ShadeClockCategoryControls(
             }
             Box(modifier = Modifier.fillMaxWidth()) {
                 StatusThemeGroup(
+                    miuixInsideMargin = PaddingValues(10.dp),
                     compact = true,
                     horizontalPadding = 0.dp,
                     items = displayOptionItems + displayModeItem,
@@ -333,6 +338,7 @@ fun ShadeClockCategoryControls(
             }
             Box(modifier = Modifier.fillMaxWidth()) {
                 StatusThemeGroup(
+                    miuixInsideMargin = PaddingValues(10.dp),
                     compact = true,
                     horizontalPadding = 0.dp,
                     items = listOf(previewItem),
@@ -494,7 +500,8 @@ private fun ShadeClockLinePicker(
                 selected = selectedValue == choice.value,
                 enabled = enabled,
                 modifier = Modifier.padding(start = 8.dp),
-                fixedWidth = 72.dp,
+                fixedWidth = if (LocalUiMode.current == UiMode.Material) 72.dp else null,
+                fillWidth = false,
                 onClick = { onSelected(choice.value) },
             )
         }
@@ -510,10 +517,13 @@ private fun ShadeClockChoiceButton(
     fixedWidth: androidx.compose.ui.unit.Dp? = null,
     onClick: () -> Unit,
 ) {
-    val buttonModifier = if (fixedWidth != null) {
-        modifier.width(fixedWidth).height(36.dp)
+    val widthModifier = if (fixedWidth != null) modifier.width(fixedWidth) else modifier
+    // Miuix Button controls its own minimum height and content insets.
+    // Fixed 36/40dp heights clip its native typography and touch target.
+    val buttonModifier = if (LocalUiMode.current == UiMode.Material) {
+        widthModifier.height(if (fixedWidth != null) 36.dp else 40.dp)
     } else {
-        modifier.height(40.dp)
+        widthModifier
     }
     val containerColor = if (LocalUiMode.current == UiMode.Material) {
         if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest
