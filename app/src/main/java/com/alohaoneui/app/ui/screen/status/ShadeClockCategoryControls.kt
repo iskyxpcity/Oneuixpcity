@@ -4,8 +4,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import android.provider.Settings
 import com.alohaoneui.app.R
 import com.alohaoneui.common.Preference
 import com.alohaoneui.hook.util.ShadeClockFormatter
@@ -21,6 +23,11 @@ fun ShadeClockCategoryControls(
     onApply: () -> Unit,
 ) {
     val enabled = uiState.shadeClockCustomEnabled
+    val context = LocalContext.current
+    val showSeconds = Settings.Secure.getString(
+        context.contentResolver,
+        "icon_blacklist",
+    ).orEmpty().split(",").any { it.trim() == "slimindicator_show_seconds" }
 
     // Keep the source screen's three-part structure: enable card, option card,
     // and live preview card. The rows themselves use the active AlohaOneUI theme.
@@ -204,7 +211,7 @@ fun ShadeClockCategoryControls(
         items = listOf(
             {
                 AlohaOneUIInfoItem(
-                    title = ShadeClockFormatter.format(uiState),
+                    title = ShadeClockFormatter.format(uiState, showSeconds = showSeconds),
                 )
             },
         ),
