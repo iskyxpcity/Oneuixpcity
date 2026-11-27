@@ -86,6 +86,7 @@
     <string name="status_category_padding">Status bar padding</string>
 
     <string name="status_category_shade_clock">Quick panel clock and date</string>
+    <string name="status_shade_clock_summary">Customize the time and date shown in the quick panel.</string>
     <string name="status_shade_clock_enable">Enable quick panel clock and date customization</string>
     <string name="status_shade_clock_group_basic">Basic settings</string>
     <string name="status_shade_clock_group_content">Display content</string>
