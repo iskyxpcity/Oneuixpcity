@@ -451,6 +451,7 @@ private fun ShadeClockLinePicker(
                 enabled = enabled,
                 modifier = Modifier.padding(start = 8.dp),
                 fixedWidth = if (LocalUiMode.current == UiMode.Material) 72.dp else null,
+                fillWidth = false,
                 onClick = { onSelected(choice.value) },
             )
         }
@@ -464,6 +465,7 @@ private fun ShadeClockChoiceButton(
     enabled: Boolean,
     modifier: Modifier = Modifier,
     fixedWidth: androidx.compose.ui.unit.Dp? = null,
+    fillWidth: Boolean = fixedWidth == null,
     onClick: () -> Unit,
 ) {
     // Miuix Button owns its minimum dimensions and inside margins; only Material uses compact fixed sizing.
@@ -484,7 +486,7 @@ private fun ShadeClockChoiceButton(
         modifier = buttonModifier,
         enabled = enabled,
         primary = selected,
-        fillWidth = fixedWidth == null,
+        fillWidth = fillWidth,
         containerColor = containerColor,
         contentColor = contentColor,
         contentPadding = if (LocalUiMode.current == UiMode.Material && fixedWidth != null) {
