@@ -66,9 +66,9 @@ fun ShadeClockCategoryControls(
         )
     }
 
-    // Preserve the source screen's enable/options/preview cards and apply
-    // action. The project-wide ResponsiveCardGrid supplies the existing
-    // expanded-screen two-column rule; the apply action remains full-width.
+    // Use the shared StatusThemeGroup adapter for every frame: Material stays on
+    // SegmentedColumn and Miuix stays on the project's native Miuix Card path.
+    // Keep the responsive two-column placement and full-width apply action.
     val useSplitColumns = shouldShowSplitPane()
 
     val displayOptionItems: List<@Composable () -> Unit> = listOf(
