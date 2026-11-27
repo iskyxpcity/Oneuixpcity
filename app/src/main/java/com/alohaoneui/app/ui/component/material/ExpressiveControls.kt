@@ -170,11 +170,11 @@ fun ExpressiveButton(
     enabled: Boolean = true,
     shape: Shape? = null,
     colors: ButtonColors = ButtonDefaults.buttonColors(),
-    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
     interactionSource: MutableInteractionSource? = null,
     pressMotionEnabled: Boolean = true,
     shapeIndex: Int = -1,
     shapeCount: Int = 1,
+    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
     content: @Composable RowScope.() -> Unit,
 ) {
     val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
