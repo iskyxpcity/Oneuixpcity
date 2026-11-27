@@ -32,8 +32,9 @@ object ShadeClockFormatter {
         showSeconds: Boolean = false,
     ): String {
         val timePattern = if (showSeconds) "HH:mm:ss" else "HH:mm"
-        val time = if (config.shadeClockTimeEnabled) DateTimeFormatter.ofPattern(timePattern, Locale.getDefault()).format(dateTime) else ""
-        if (!config.shadeClockCustomEnabled) return time
+        val clockTime = DateTimeFormatter.ofPattern(timePattern, Locale.getDefault()).format(dateTime)
+        if (!config.shadeClockCustomEnabled) return clockTime
+        val time = if (config.shadeClockTimeEnabled) clockTime else ""
         val date = if (config.shadeClockDateEnabled) dateText(dateTime.toLocalDate(), config.shadeClockDateFormat) else ""
         val lunar = if (config.shadeClockLunarEnabled) lunarText(dateTime.toLocalDate(), config.shadeClockLunarFormat) else ""
         val week = if (config.shadeClockWeekEnabled) weekText(dateTime, config.shadeClockWeekFormat) else ""
