@@ -528,7 +528,8 @@ fun ExpressiveSwitch(
                     Modifier.size(width = trackSize.width, height = trackSize.height)
                 }
             )
-            .then(if (LocalMaterialShadowSwitches.current && style != 5 && style != 7) Modifier.shadow(2.dp, trackShape) else Modifier)
+            // One UI keeps its thumb shadow-free, but its track still follows the global switch-shadow preference.
+            .then(if (LocalMaterialShadowSwitches.current && style != 5) Modifier.shadow(2.dp, trackShape) else Modifier)
             .then(
                 if (style == 5) {
                     // Match AndroidLiquidGlass: touch gestures belong to the
