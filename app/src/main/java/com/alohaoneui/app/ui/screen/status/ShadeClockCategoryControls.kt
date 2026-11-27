@@ -260,6 +260,22 @@ fun ShadeClockCategoryControls(
         }
     }
 
+    val enableItem: @Composable () -> Unit = {
+        StatusThemeChildItem {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                ShadeClockSwitchRow(
+                    title = stringResource(R.string.status_shade_clock_enable),
+                    checked = enabled,
+                    enabled = true,
+                    onCheckedChange = {
+                        onChange(uiState.copy(shadeClockCustomEnabled = it))
+                    },
+                )
+                ShadeClockStatusText(enabled = enabled)
+            }
+        }
+    }
+
     ResponsiveCardGrid(
         modifier = Modifier
             .fillMaxWidth()
@@ -267,34 +283,6 @@ fun ShadeClockCategoryControls(
                 horizontal = if (LocalUiMode.current == UiMode.Material) 16.dp else 12.dp,
             ),
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .responsiveGridFullSpan(),
-        ) {
-            StatusThemeGroup(
-                compact = true,
-                horizontalPadding = 0.dp,
-                items = listOf(
-                    {
-                        StatusThemeChildItem {
-                            Column(modifier = Modifier.fillMaxWidth()) {
-                                ShadeClockSwitchRow(
-                                    title = stringResource(R.string.status_shade_clock_enable),
-                                    checked = enabled,
-                                    enabled = true,
-                                    onCheckedChange = {
-                                        onChange(uiState.copy(shadeClockCustomEnabled = it))
-                                    },
-                                )
-                                ShadeClockStatusText(enabled = enabled)
-                            }
-                        }
-                    },
-                ),
-            )
-        }
-
         if (useSplitColumns) {
             Box(
                 modifier = Modifier
@@ -304,7 +292,7 @@ fun ShadeClockCategoryControls(
                 StatusThemeGroup(
                     compact = true,
                     horizontalPadding = 0.dp,
-                    items = displayOptionItems,
+                    items = listOf(enableItem) + displayOptionItems,
                 )
             }
             Box(
@@ -329,6 +317,13 @@ fun ShadeClockCategoryControls(
                 }
             }
         } else {
+            Box(modifier = Modifier.fillMaxWidth()) {
+                StatusThemeGroup(
+                    compact = true,
+                    horizontalPadding = 0.dp,
+                    items = listOf(enableItem),
+                )
+            }
             Box(modifier = Modifier.fillMaxWidth()) {
                 StatusThemeGroup(
                     compact = true,
