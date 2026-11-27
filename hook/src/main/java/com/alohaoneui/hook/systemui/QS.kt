@@ -339,7 +339,10 @@ object QS {
                         xposedModule.hook(notifyMethod).intercept { chain ->
                             val result = chain.proceed()
                             val view = chain.thisObject as? TextView
-                            if (view != null) {
+                            if (
+                                view != null &&
+                                (if (datePart) isShadeClockDateView(view) else isShadeClockTimeView(view))
+                            ) {
                                 if (datePart) {
                                     registerShadeClockDateView(view)
                                     applyShadeClockDate(view)
@@ -353,13 +356,20 @@ object QS {
                     }.onFailure { xlog(it) }
                 }
 
-                val attachedMethod = findShadeClockMethod(clazz, "onAttachedToWindow")
+                // Only hook an override declared by this clock/date class. Falling
+                // back to View.onAttachedToWindow would affect every TextView in SystemUI.
+                val attachedMethod = runCatching {
+                    clazz.getDeclaredMethod("onAttachedToWindow")
+                }.getOrNull()
                 if (attachedMethod != null) {
                     runCatching {
                         xposedModule.hook(attachedMethod).intercept { chain ->
                             val result = chain.proceed()
                             val view = chain.thisObject as? TextView
-                            if (view != null) {
+                            if (
+                                view != null &&
+                                (if (datePart) isShadeClockDateView(view) else isShadeClockTimeView(view))
+                            ) {
                                 if (datePart) {
                                     registerShadeClockDateView(view)
                                     applyShadeClockDate(view)
