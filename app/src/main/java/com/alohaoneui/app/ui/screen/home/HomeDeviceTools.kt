@@ -168,22 +168,49 @@ fun HomeDeviceToolsCard() {
 
     DeviceToolsSurface {
         Column(modifier = Modifier.fillMaxWidth()) {
-            SegmentedListItem(
-                onClick = { expanded = !expanded },
-                modifier = Modifier.semantics {
-                    stateDescription = if (expanded) "已展开，点击收起" else "已收起，点击展开"
-                },
-                leadingContent = { DeviceToolsIcon(Icons.Outlined.Devices, null, Modifier.size(26.dp)) },
-                headlineContent = { DeviceToolsText("设备状态信息", DeviceTextKind.Title) },
-                supportingContent = { DeviceToolsText("系统监视器 · 屏幕信息 · 设备信息", DeviceTextKind.Caption) },
-                trailingContent = {
+            // Keep each theme's header implementation independent.
+            when (LocalUiMode.current) {
+                UiMode.Material -> SegmentedListItem(
+                    onClick = { expanded = !expanded },
+                    modifier = Modifier.semantics {
+                        stateDescription = if (expanded) "已展开，点击收起" else "已收起，点击展开"
+                    },
+                    leadingContent = { DeviceToolsIcon(Icons.Outlined.Devices, null, Modifier.size(26.dp)) },
+                    headlineContent = { DeviceToolsText("设备状态信息", DeviceTextKind.Title) },
+                    supportingContent = { DeviceToolsText("系统监视器 · 屏幕信息 · 设备信息", DeviceTextKind.Caption) },
+                    trailingContent = {
+                        DeviceToolsIcon(
+                            if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                            if (expanded) "收起" else "展开",
+                            Modifier.size(24.dp),
+                        )
+                    },
+                )
+                UiMode.Miuix -> Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(role = Role.Button) { expanded = !expanded }
+                        .semantics {
+                            stateDescription = if (expanded) "已展开，点击收起" else "已收起，点击展开"
+                        }
+                        .padding(horizontal = 18.dp, vertical = 18.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    DeviceToolsIcon(Icons.Outlined.Devices, null, Modifier.size(26.dp))
+                    Column(
+                        modifier = Modifier.weight(1f).padding(start = 12.dp, end = 10.dp),
+                        verticalArrangement = Arrangement.spacedBy(3.dp),
+                    ) {
+                        DeviceToolsText("设备状态信息", DeviceTextKind.Title)
+                        DeviceToolsText("系统监视器 · 屏幕信息 · 设备信息", DeviceTextKind.Caption)
+                    }
                     DeviceToolsIcon(
                         if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
                         if (expanded) "收起" else "展开",
                         Modifier.size(24.dp),
                     )
-                },
-            )
+                }
+            }
 
             AnimatedVisibility(
                 visible = expanded,
