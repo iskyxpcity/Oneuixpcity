@@ -127,8 +127,8 @@ fun AlohaMaterialYouSwitch(
     colors: SwitchColors = SwitchDefaults.colors(),
     thumbShape: Shape,
     trackShape: Shape,
-    thumbShadow: Boolean = false,
     interactionSource: MutableInteractionSource? = null,
+    thumbShadow: Boolean = false,
 ) {
     SwitchImpl(
         modifier = modifier,
