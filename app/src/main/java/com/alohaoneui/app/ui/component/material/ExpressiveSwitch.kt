@@ -189,8 +189,10 @@ fun ExpressiveSwitch(
         AlohaMaterialYouSwitch(
             checked = checked,
             onCheckedChange = onCheckedChange,
-            modifier = modifier,
-            thumbShadow = LocalMaterialShadowSwitches.current,
+            modifier = modifier.then(
+                if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, materialYouTrackShape)
+                else Modifier,
+            ),
             thumbContent = thumbContent,
             enabled = enabled,
             colors = colors,
@@ -210,8 +212,10 @@ fun ExpressiveSwitch(
         AlohaComposeSwitch(
             checked = checked,
             onCheckedChange = onCheckedChange,
-            modifier = modifier,
-            thumbShadow = LocalMaterialShadowSwitches.current,
+            modifier = modifier.then(
+                if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, composeTrackShape)
+                else Modifier,
+            ),
             thumbContent = thumbContent,
             enabled = enabled,
             colors = colors,
@@ -524,6 +528,7 @@ fun ExpressiveSwitch(
                     Modifier.size(width = trackSize.width, height = trackSize.height)
                 }
             )
+            .then(if (LocalMaterialShadowSwitches.current && style != 5 && style != 7) Modifier.shadow(2.dp, trackShape) else Modifier)
             .then(
                 if (style == 5) {
                     // Match AndroidLiquidGlass: touch gestures belong to the
@@ -688,19 +693,6 @@ fun ExpressiveSwitch(
             }
 
         }
-        // The Material theme shadow preference applies to the moving thumb,
-        // not the stationary track. This transparent Aloha-shaped surface casts
-        // the shadow at the same animated position as the Canvas-drawn handle.
-        if (LocalMaterialShadowSwitches.current && style != 5) {
-            val thumbTravel = trackSize.width - thumbWidth - thumbEdgeInset * 2
-            Box(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .offset(x = thumbTravel * travel - thumbTravel / 2f)
-                    .size(width = thumbWidth, height = thumbHeight)
-                    .shadow(2.dp, thumbShape),
-            )
-        }
         // Cupertino OFF thumb is rendered as its own elevated surface so its
         // shadow follows the moving handle instead of being applied to the rail.
         if (style == 4 && !checked) {
@@ -710,6 +702,7 @@ fun ExpressiveSwitch(
                     .align(Alignment.Center)
                     .offset(x = thumbTravel * displayedTravel - thumbTravel / 2f)
                     .size(width = thumbWidth, height = thumbHeight)
+                    .shadow(2.dp, thumbShape)
                     .background(thumbColor, thumbShape),
             )
         }
@@ -767,7 +760,6 @@ fun ExpressiveSwitch(
                     // The glass capsule is intentionally switch-sized; its deformation,
                     // drag velocity and return spring come from the same bottom-bar engine.
                     .requiredSize(width = glassThumbWidth, height = glassThumbHeight)
-                    .then(if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, latestThumbShape) else Modifier)
                     .then(if (enabled && onCheckedChange != null) glassDragAnimation.modifier else Modifier)
                     .drawBackdrop(
                         backdrop = glassBackdrop,

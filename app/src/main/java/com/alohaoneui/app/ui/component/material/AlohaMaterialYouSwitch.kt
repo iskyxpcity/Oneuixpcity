@@ -63,7 +63,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.compositeOver
@@ -128,7 +127,6 @@ fun AlohaMaterialYouSwitch(
     thumbShape: Shape,
     trackShape: Shape,
     interactionSource: MutableInteractionSource? = null,
-    thumbShadow: Boolean = false,
 ) {
     SwitchImpl(
         modifier = modifier,
@@ -143,7 +141,6 @@ fun AlohaMaterialYouSwitch(
         trackColor = if (enabled) { if (checked) colors.checkedTrackColor else colors.uncheckedTrackColor } else { if (checked) colors.disabledCheckedTrackColor else colors.disabledUncheckedTrackColor },
         borderColor = if (enabled) { if (checked) colors.checkedBorderColor else colors.uncheckedBorderColor } else { if (checked) colors.disabledCheckedBorderColor else colors.disabledUncheckedBorderColor },
         interactionSource = interactionSource,
-        thumbShadow = thumbShadow,
     )
 }
 
@@ -162,7 +159,6 @@ private fun SwitchImpl(
     trackColor: Color,
     borderColor: Color,
     interactionSource: MutableInteractionSource?,
-    thumbShadow: Boolean,
 ) {
     @Suppress("NAME_SHADOWING")
     val interactionSource = interactionSource ?: remember { MutableInteractionSource() }
@@ -318,7 +314,6 @@ private fun SwitchImpl(
                     // Clip the transient press/drag indication to the active
                     // thumb silhouette. An unbounded circular ripple visually
                     // replaces the selected Aloha shape with a circle while toggling.
-                    .then(if (thumbShadow) Modifier.shadow(2.dp, thumbShape) else Modifier)
                     .clip(thumbShape)
                     .indication(
                         interactionSource = interactionSource,
