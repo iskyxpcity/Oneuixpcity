@@ -528,7 +528,8 @@ fun ExpressiveSwitch(
                     Modifier.size(width = trackSize.width, height = trackSize.height)
                 }
             )
-            // One UI keeps its thumb shadow-free, but its track still follows the global switch-shadow preference.
+            // Liquid Glass retains its dedicated glass surface; every other family, including One UI, follows the global track-shadow preference.
+            // One UI's thumb remains shadow-free; only its track receives the optional theme shadow.
             .then(if (LocalMaterialShadowSwitches.current && style != 5) Modifier.shadow(2.dp, trackShape) else Modifier)
             .then(
                 if (style == 5) {
