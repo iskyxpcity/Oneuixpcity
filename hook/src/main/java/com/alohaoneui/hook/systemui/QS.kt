@@ -76,7 +76,7 @@ object QS {
             }
             synchronized(shadeClockNativeTexts) { shadeClockNativeTexts[dateView] }?.let { dateView.text = it }
             synchronized(shadeClockOriginalStyles) { shadeClockOriginalStyles[dateView] }?.let {
-                dateView.maxLines = it.maxLines
+                dateView.maxLines = it.maxLines.coerceAtLeast(1)
                 dateView.isSingleLine = it.singleLine
                 dateView.setTextSize(TypedValue.COMPLEX_UNIT_PX, it.textSizePx)
                 dateView.typeface = it.typeface
