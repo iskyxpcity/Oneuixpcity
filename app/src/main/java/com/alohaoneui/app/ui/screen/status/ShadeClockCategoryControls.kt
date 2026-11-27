@@ -450,7 +450,7 @@ private fun ShadeClockLinePicker(
                 selected = selectedValue == choice.value,
                 enabled = enabled,
                 modifier = Modifier.padding(start = 8.dp),
-                fixedWidth = 72.dp,
+                fixedWidth = if (LocalUiMode.current == UiMode.Material) 72.dp else null,
                 onClick = { onSelected(choice.value) },
             )
         }
