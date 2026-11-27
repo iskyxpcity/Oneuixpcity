@@ -2,6 +2,7 @@ package com.alohaoneui.app.ui.screen.status
 
 import android.provider.Settings
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -23,6 +24,8 @@ import androidx.compose.material3.Text as MaterialText
 import com.alohaoneui.app.R
 import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
+import com.alohaoneui.app.ui.util.ResponsiveCardGrid
+import com.alohaoneui.app.ui.util.responsiveGridFullSpan
 import com.alohaoneui.common.Preference
 import com.alohaoneui.hook.util.ShadeClockFormatter
 import com.alohaoneui.mod.ui.component.AlohaOneUIActionButton
@@ -46,219 +49,241 @@ fun ShadeClockCategoryControls(
         "icon_blacklist",
     ).orEmpty().split(",").any { it.trim() == "slimindicator_show_seconds" }
 
-    // The source screen has four distinct surfaces: enable, the complete
-    // options card, preview, and the apply action. Keep those boundaries.
-    StatusThemeGroup(
-        items = listOf(
-            {
-                StatusThemeChildItem {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        ShadeClockSwitchRow(
-                            title = stringResource(R.string.status_shade_clock_enable),
-                            checked = enabled,
-                            enabled = true,
-                            onCheckedChange = {
-                                onChange(uiState.copy(shadeClockCustomEnabled = it))
-                            },
-                        )
-                        ShadeClockStatusText(enabled = enabled)
-                    }
-                }
-            },
-        ),
-    )
-
-    StatusThemeGroup(
-        items = listOf(
-            {
-                StatusThemeChildItem {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(0.dp),
-                    ) {
-                        ShadeClockSwitchRow(
-                            title = stringResource(R.string.status_shade_clock_time),
-                            checked = uiState.shadeClockTimeEnabled,
-                            enabled = enabled,
-                            onCheckedChange = {
-                                onChange(uiState.copy(shadeClockTimeEnabled = it))
-                            },
-                        )
-                        ShadeClockSwitchRow(
-                            title = stringResource(R.string.status_shade_clock_week),
-                            checked = uiState.shadeClockWeekEnabled,
-                            enabled = enabled,
-                            onCheckedChange = {
-                                onChange(uiState.copy(shadeClockWeekEnabled = it))
-                            },
-                        )
-                        ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_week_format), topPadding = 8.dp)
-                        ShadeClockChoiceRow(
-                            choices = listOf(
-                                ShadeClockChoice(weekSample(0), 0),
-                                ShadeClockChoice(weekSample(1), 1),
-                                ShadeClockChoice(weekSample(2), 2),
-                            ),
-                            selectedValue = uiState.shadeClockWeekFormat,
-                            enabled = enabled && uiState.shadeClockWeekEnabled,
-                            onSelected = { onChange(uiState.copy(shadeClockWeekFormat = it)) },
-                        )
-
-                        ShadeClockSwitchRow(
-                            title = stringResource(R.string.status_shade_clock_date),
-                            checked = uiState.shadeClockDateEnabled,
-                            enabled = enabled,
-                            onCheckedChange = {
-                                onChange(uiState.copy(shadeClockDateEnabled = it))
-                            },
-                        )
-                        ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_date_format), topPadding = 8.dp)
-                        ShadeClockChoiceGrid(
-                            choices = listOf(
-                                ShadeClockChoice(dateSample(0), 0),
-                                ShadeClockChoice(dateSample(1), 1),
-                                ShadeClockChoice(dateSample(2), 2),
-                            ),
-                            selectedValue = uiState.shadeClockDateFormat,
-                            enabled = enabled && uiState.shadeClockDateEnabled,
-                            onSelected = { onChange(uiState.copy(shadeClockDateFormat = it)) },
-                        )
-
-                        ShadeClockSwitchRow(
-                            title = stringResource(R.string.status_shade_clock_lunar),
-                            checked = uiState.shadeClockLunarEnabled,
-                            enabled = enabled,
-                            onCheckedChange = {
-                                onChange(uiState.copy(shadeClockLunarEnabled = it))
-                            },
-                        )
-                        ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_lunar_format), topPadding = 8.dp)
-                        ShadeClockChoiceGrid(
-                            choices = listOf(
-                                ShadeClockChoice(stringResource(R.string.status_shade_clock_option_lunar_special), 0),
-                                ShadeClockChoice(stringResource(R.string.status_shade_clock_option_animal_lunar_special), 1),
-                                ShadeClockChoice(stringResource(R.string.status_shade_clock_option_lunar_animal), 2),
-                                ShadeClockChoice(stringResource(R.string.status_shade_clock_option_detail_year_lunar_special), 3),
-                                ShadeClockChoice(stringResource(R.string.status_shade_clock_option_lunar_only), 4),
-                                ShadeClockChoice(stringResource(R.string.status_shade_clock_option_animal_lunar), 5),
-                                ShadeClockChoice(stringResource(R.string.status_shade_clock_option_detail_year_lunar), 6),
-                            ),
-                            selectedValue = uiState.shadeClockLunarFormat,
-                            enabled = enabled && uiState.shadeClockLunarEnabled,
-                            onSelected = { onChange(uiState.copy(shadeClockLunarFormat = it)) },
-                        )
-
-                        ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_layout))
-                        ShadeClockChoiceRow(
-                            choices = listOf(
-                                ShadeClockChoice(stringResource(R.string.status_shade_clock_option_single_line), 0),
-                                ShadeClockChoice(stringResource(R.string.status_shade_clock_option_double_line), 1),
-                            ),
-                            selectedValue = uiState.shadeClockLayoutStyle,
-                            enabled = enabled,
-                            onSelected = { onChange(uiState.copy(shadeClockLayoutStyle = it)) },
-                        )
-
-                        // Keep all five source line selectors visible. They become
-                        // enabled only for double-line mode and their corresponding data.
-                        ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_group_lines))
-                        ShadeClockLinePicker(
-                            title = stringResource(R.string.status_shade_clock_line_time),
-                            selectedValue = uiState.shadeClockTimeLine,
-                            enabled = enabled && uiState.shadeClockLayoutStyle == 1,
-                            onSelected = { onChange(uiState.copy(shadeClockTimeLine = it)) },
-                        )
-                        ShadeClockLinePicker(
-                            title = stringResource(R.string.status_shade_clock_line_date),
-                            selectedValue = uiState.shadeClockDateLine,
-                            enabled = enabled && uiState.shadeClockLayoutStyle == 1 && uiState.shadeClockDateEnabled,
-                            onSelected = { onChange(uiState.copy(shadeClockDateLine = it)) },
-                        )
-                        ShadeClockLinePicker(
-                            title = stringResource(R.string.status_shade_clock_line_week),
-                            selectedValue = uiState.shadeClockWeekLine,
-                            enabled = enabled && uiState.shadeClockLayoutStyle == 1 && uiState.shadeClockWeekEnabled,
-                            onSelected = { onChange(uiState.copy(shadeClockWeekLine = it)) },
-                        )
-                        ShadeClockLinePicker(
-                            title = stringResource(R.string.status_shade_clock_line_lunar),
-                            selectedValue = uiState.shadeClockLunarLine,
-                            enabled = enabled && uiState.shadeClockLayoutStyle == 1 && uiState.shadeClockLunarEnabled,
-                            onSelected = { onChange(uiState.copy(shadeClockLunarLine = it)) },
-                        )
-                        ShadeClockLinePicker(
-                            title = stringResource(R.string.status_shade_clock_line_detail),
-                            selectedValue = uiState.shadeClockDetailLine,
-                            enabled = enabled && uiState.shadeClockLayoutStyle == 1 && uiState.shadeClockDetailStyle != 0,
-                            onSelected = { onChange(uiState.copy(shadeClockDetailLine = it)) },
-                        )
-
-                        ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_detail_style))
-                        ShadeClockChoiceGrid(
-                            choices = listOf(
-                                ShadeClockChoice(stringResource(R.string.status_shade_clock_option_disabled), 0),
-                                ShadeClockChoice(stringResource(R.string.status_shade_clock_option_period), 1),
-                                ShadeClockChoice(stringResource(R.string.status_shade_clock_option_chinese_hour), 2),
-                                ShadeClockChoice(stringResource(R.string.status_shade_clock_option_season), 3),
-                            ),
-                            selectedValue = uiState.shadeClockDetailStyle,
-                            enabled = enabled,
-                            onSelected = { onChange(uiState.copy(shadeClockDetailStyle = it)) },
-                        )
-                    }
-                }
-            },
-        ),
-    )
-
-    StatusThemeGroup(
-        items = listOf(
-            {
-                StatusThemeChildItem {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        when (LocalUiMode.current) {
-                            UiMode.Material -> MaterialText(
-                                text = stringResource(R.string.status_shade_clock_group_preview),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
-                            UiMode.Miuix -> MiuixText(
-                                text = stringResource(R.string.status_shade_clock_group_preview),
-                                color = MiuixTheme.colorScheme.onBackground,
-                                fontSize = 17.sp,
-                                fontWeight = FontWeight.Bold,
-                            )
-                        }
-                        when (LocalUiMode.current) {
-                            UiMode.Material -> MaterialText(
-                                text = ShadeClockFormatter.format(uiState, showSeconds = showSeconds),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(top = 10.dp),
-                            )
-                            UiMode.Miuix -> MiuixText(
-                                text = ShadeClockFormatter.format(uiState, showSeconds = showSeconds),
-                                color = MiuixTheme.colorScheme.primary,
-                                modifier = Modifier.padding(top = 10.dp),
-                            )
-                        }
-                    }
-                }
-            },
-        ),
-    )
-
-    Spacer(modifier = Modifier.height(16.dp))
-    AlohaOneUIActionButton(
-        text = stringResource(R.string.status_shade_clock_apply),
-        onClick = onApply,
+    // Preserve the source screen's enable/options/preview cards and apply
+    // action. The project-wide ResponsiveCardGrid supplies the existing
+    // expanded-screen two-column rule; the apply action remains full-width.
+    ResponsiveCardGrid(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .height(48.dp),
-        fillWidth = true,
-    )
-    Spacer(modifier = Modifier.height(18.dp))
+            .padding(
+                horizontal = if (LocalUiMode.current == UiMode.Material) 16.dp else 12.dp,
+            ),
+    ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            StatusThemeGroup(
+                compact = true,
+                horizontalPadding = 0.dp,
+                items = listOf(
+                    {
+                        StatusThemeChildItem {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                ShadeClockSwitchRow(
+                                    title = stringResource(R.string.status_shade_clock_enable),
+                                    checked = enabled,
+                                    enabled = true,
+                                    onCheckedChange = {
+                                        onChange(uiState.copy(shadeClockCustomEnabled = it))
+                                    },
+                                )
+                                ShadeClockStatusText(enabled = enabled)
+                            }
+                        }
+                    },
+                ),
+            )
+        }
+
+        Box(modifier = Modifier.fillMaxWidth()) {
+            StatusThemeGroup(
+                compact = true,
+                horizontalPadding = 0.dp,
+                items = listOf(
+                    {
+                        StatusThemeChildItem {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(0.dp),
+                            ) {
+                                ShadeClockSwitchRow(
+                                    title = stringResource(R.string.status_shade_clock_time),
+                                    checked = uiState.shadeClockTimeEnabled,
+                                    enabled = enabled,
+                                    onCheckedChange = {
+                                        onChange(uiState.copy(shadeClockTimeEnabled = it))
+                                    },
+                                )
+                                ShadeClockSwitchRow(
+                                    title = stringResource(R.string.status_shade_clock_week),
+                                    checked = uiState.shadeClockWeekEnabled,
+                                    enabled = enabled,
+                                    onCheckedChange = {
+                                        onChange(uiState.copy(shadeClockWeekEnabled = it))
+                                    },
+                                )
+                                ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_week_format), topPadding = 8.dp)
+                                ShadeClockChoiceRow(
+                                    choices = listOf(
+                                        ShadeClockChoice(weekSample(0), 0),
+                                        ShadeClockChoice(weekSample(1), 1),
+                                        ShadeClockChoice(weekSample(2), 2),
+                                    ),
+                                    selectedValue = uiState.shadeClockWeekFormat,
+                                    enabled = enabled && uiState.shadeClockWeekEnabled,
+                                    onSelected = { onChange(uiState.copy(shadeClockWeekFormat = it)) },
+                                )
+
+                                ShadeClockSwitchRow(
+                                    title = stringResource(R.string.status_shade_clock_date),
+                                    checked = uiState.shadeClockDateEnabled,
+                                    enabled = enabled,
+                                    onCheckedChange = {
+                                        onChange(uiState.copy(shadeClockDateEnabled = it))
+                                    },
+                                )
+                                ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_date_format), topPadding = 8.dp)
+                                ShadeClockChoiceGrid(
+                                    choices = listOf(
+                                        ShadeClockChoice(dateSample(0), 0),
+                                        ShadeClockChoice(dateSample(1), 1),
+                                        ShadeClockChoice(dateSample(2), 2),
+                                    ),
+                                    selectedValue = uiState.shadeClockDateFormat,
+                                    enabled = enabled && uiState.shadeClockDateEnabled,
+                                    onSelected = { onChange(uiState.copy(shadeClockDateFormat = it)) },
+                                )
+
+                                ShadeClockSwitchRow(
+                                    title = stringResource(R.string.status_shade_clock_lunar),
+                                    checked = uiState.shadeClockLunarEnabled,
+                                    enabled = enabled,
+                                    onCheckedChange = {
+                                        onChange(uiState.copy(shadeClockLunarEnabled = it))
+                                    },
+                                )
+                                ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_lunar_format), topPadding = 8.dp)
+                                ShadeClockChoiceGrid(
+                                    choices = listOf(
+                                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_lunar_special), 0),
+                                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_animal_lunar_special), 1),
+                                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_lunar_animal), 2),
+                                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_detail_year_lunar_special), 3),
+                                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_lunar_only), 4),
+                                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_animal_lunar), 5),
+                                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_detail_year_lunar), 6),
+                                    ),
+                                    selectedValue = uiState.shadeClockLunarFormat,
+                                    enabled = enabled && uiState.shadeClockLunarEnabled,
+                                    onSelected = { onChange(uiState.copy(shadeClockLunarFormat = it)) },
+                                )
+
+                                ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_layout))
+                                ShadeClockChoiceRow(
+                                    choices = listOf(
+                                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_single_line), 0),
+                                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_double_line), 1),
+                                    ),
+                                    selectedValue = uiState.shadeClockLayoutStyle,
+                                    enabled = enabled,
+                                    onSelected = { onChange(uiState.copy(shadeClockLayoutStyle = it)) },
+                                )
+
+                                // The five line selectors stay visible as in the source.
+                                ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_group_lines))
+                                ShadeClockLinePicker(
+                                    title = stringResource(R.string.status_shade_clock_line_time),
+                                    selectedValue = uiState.shadeClockTimeLine,
+                                    enabled = enabled && uiState.shadeClockLayoutStyle == 1,
+                                    onSelected = { onChange(uiState.copy(shadeClockTimeLine = it)) },
+                                )
+                                ShadeClockLinePicker(
+                                    title = stringResource(R.string.status_shade_clock_line_date),
+                                    selectedValue = uiState.shadeClockDateLine,
+                                    enabled = enabled && uiState.shadeClockLayoutStyle == 1 && uiState.shadeClockDateEnabled,
+                                    onSelected = { onChange(uiState.copy(shadeClockDateLine = it)) },
+                                )
+                                ShadeClockLinePicker(
+                                    title = stringResource(R.string.status_shade_clock_line_week),
+                                    selectedValue = uiState.shadeClockWeekLine,
+                                    enabled = enabled && uiState.shadeClockLayoutStyle == 1 && uiState.shadeClockWeekEnabled,
+                                    onSelected = { onChange(uiState.copy(shadeClockWeekLine = it)) },
+                                )
+                                ShadeClockLinePicker(
+                                    title = stringResource(R.string.status_shade_clock_line_lunar),
+                                    selectedValue = uiState.shadeClockLunarLine,
+                                    enabled = enabled && uiState.shadeClockLayoutStyle == 1 && uiState.shadeClockLunarEnabled,
+                                    onSelected = { onChange(uiState.copy(shadeClockLunarLine = it)) },
+                                )
+                                ShadeClockLinePicker(
+                                    title = stringResource(R.string.status_shade_clock_line_detail),
+                                    selectedValue = uiState.shadeClockDetailLine,
+                                    enabled = enabled && uiState.shadeClockLayoutStyle == 1 && uiState.shadeClockDetailStyle != 0,
+                                    onSelected = { onChange(uiState.copy(shadeClockDetailLine = it)) },
+                                )
+
+                                ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_detail_style))
+                                ShadeClockChoiceGrid(
+                                    choices = listOf(
+                                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_disabled), 0),
+                                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_period), 1),
+                                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_chinese_hour), 2),
+                                        ShadeClockChoice(stringResource(R.string.status_shade_clock_option_season), 3),
+                                    ),
+                                    selectedValue = uiState.shadeClockDetailStyle,
+                                    enabled = enabled,
+                                    onSelected = { onChange(uiState.copy(shadeClockDetailStyle = it)) },
+                                )
+                            }
+                        }
+                    },
+                ),
+            )
+        }
+
+        Box(modifier = Modifier.fillMaxWidth()) {
+            StatusThemeGroup(
+                compact = true,
+                horizontalPadding = 0.dp,
+                items = listOf(
+                    {
+                        StatusThemeChildItem {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                when (LocalUiMode.current) {
+                                    UiMode.Material -> MaterialText(
+                                        text = stringResource(R.string.status_shade_clock_group_preview),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                    )
+                                    UiMode.Miuix -> MiuixText(
+                                        text = stringResource(R.string.status_shade_clock_group_preview),
+                                        color = MiuixTheme.colorScheme.onBackground,
+                                        fontSize = 17.sp,
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                }
+                                when (LocalUiMode.current) {
+                                    UiMode.Material -> MaterialText(
+                                        text = ShadeClockFormatter.format(uiState, showSeconds = showSeconds),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.padding(top = 10.dp),
+                                    )
+                                    UiMode.Miuix -> MiuixText(
+                                        text = ShadeClockFormatter.format(uiState, showSeconds = showSeconds),
+                                        color = MiuixTheme.colorScheme.primary,
+                                        modifier = Modifier.padding(top = 10.dp),
+                                    )
+                                }
+                            }
+                        }
+                    },
+                ),
+            )
+        }
+
+        Box(modifier = Modifier.responsiveGridFullSpan().fillMaxWidth()) {
+            Spacer(modifier = Modifier.height(16.dp))
+            AlohaOneUIActionButton(
+                text = stringResource(R.string.status_shade_clock_apply),
+                onClick = onApply,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .height(48.dp),
+                fillWidth = true,
+            )
+            Spacer(modifier = Modifier.height(18.dp))
+        }
+    }
 }
 
 @Composable
