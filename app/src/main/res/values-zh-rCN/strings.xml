@@ -93,6 +93,10 @@
     <string name="status_shade_clock_group_layout">显示方式</string>
     <string name="status_shade_clock_group_lines">双行编排</string>
     <string name="status_shade_clock_group_detail">时间详情</string>
+    <string name="status_shade_clock_group_preview">预览</string>
+    <string name="status_shade_clock_apply">立即应用</string>
+    <string name="status_shade_clock_state_enabled">已启用</string>
+    <string name="status_shade_clock_state_disabled">未启用</string>
     <string name="status_shade_clock_time">显示时间</string>
     <string name="status_shade_clock_date">显示日期</string>
     <string name="status_shade_clock_week">显示星期</string>
