@@ -8,6 +8,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import android.provider.Settings
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 import com.alohaoneui.app.R
 import com.alohaoneui.common.Preference
 import com.alohaoneui.hook.util.ShadeClockFormatter
@@ -71,11 +75,7 @@ fun ShadeClockCategoryControls(
                 SelectItem(
                     title = stringResource(R.string.status_shade_clock_date_format),
                     enabled = enabled && uiState.shadeClockDateEnabled,
-                    entries = listOf(
-                        stringResource(R.string.status_shade_clock_option_month_day),
-                        stringResource(R.string.status_shade_clock_option_full_date),
-                        stringResource(R.string.status_shade_clock_option_short_date),
-                    ),
+                    entries = shadeClockDateSamples(),
                     selectedIndex = uiState.shadeClockDateFormat.coerceIn(0, 2),
                     onSelectedIndexChange = { onChange(uiState.copy(shadeClockDateFormat = it)) },
                 )
@@ -92,11 +92,7 @@ fun ShadeClockCategoryControls(
                 SelectItem(
                     title = stringResource(R.string.status_shade_clock_week_format),
                     enabled = enabled && uiState.shadeClockWeekEnabled,
-                    entries = listOf(
-                        stringResource(R.string.status_shade_clock_option_week_short),
-                        stringResource(R.string.status_shade_clock_option_week_full),
-                        stringResource(R.string.status_shade_clock_option_week_day),
-                    ),
+                    entries = shadeClockWeekSamples(),
                     selectedIndex = uiState.shadeClockWeekFormat.coerceIn(0, 2),
                     onSelectedIndexChange = { onChange(uiState.copy(shadeClockWeekFormat = it)) },
                 )
@@ -225,4 +221,39 @@ fun ShadeClockCategoryControls(
             .padding(horizontal = 16.dp, vertical = 8.dp),
         fillWidth = true,
     )
+}
+
+private fun shadeClockDateSamples(): List<String> {
+    val now = Date()
+    return listOf(
+        SimpleDateFormat("M月d日", Locale.getDefault()).format(now),
+        SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(now),
+        SimpleDateFormat("MM/dd", Locale.getDefault()).format(now),
+    )
+}
+
+private fun shadeClockWeekSamples(): List<String> {
+    val day = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
+    val full = when (day) {
+        Calendar.SUNDAY -> "星期日"
+        Calendar.MONDAY -> "星期一"
+        Calendar.TUESDAY -> "星期二"
+        Calendar.WEDNESDAY -> "星期三"
+        Calendar.THURSDAY -> "星期四"
+        Calendar.FRIDAY -> "星期五"
+        Calendar.SATURDAY -> "星期六"
+        else -> ""
+    }
+    val dayOnly = when (day) {
+        Calendar.SUNDAY -> "日"
+        Calendar.MONDAY -> "一"
+        Calendar.TUESDAY -> "二"
+        Calendar.WEDNESDAY -> "三"
+        Calendar.THURSDAY -> "四"
+        Calendar.FRIDAY -> "五"
+        Calendar.SATURDAY -> "六"
+        else -> ""
+    }
+    val short = SimpleDateFormat("EEE", Locale.getDefault()).format(Date())
+    return listOf(short, full, dayOnly)
 }
