@@ -138,6 +138,10 @@ private fun StatusCategoryContent(
                             )
                         }
                     },
+                    onApply = {
+                        // Re-publish the saved status-bar preferences to SystemUI.
+                        toolsViewModel.previewData { it }
+                    },
                 )
             }
         }
