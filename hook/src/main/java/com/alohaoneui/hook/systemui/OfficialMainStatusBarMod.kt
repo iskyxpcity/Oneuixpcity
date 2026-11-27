@@ -906,6 +906,7 @@ object OfficialMainStatusBarMod {
             )
         }
         StatusBar.updateStatusBarClockRuntime(current)
+        QS.updateShadeClockRuntime(current)
         StatusBar.setStatusBarClockSecondRuntimeEnabled(
             current.updateStatusBarClockEverySecond
         )

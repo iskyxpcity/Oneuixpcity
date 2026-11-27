@@ -121,6 +121,26 @@ private fun StatusCategoryContent(
                 )
             }
         }
+        StatusCategory.ShadeClock -> {
+            val toolsViewModel = viewModel<AlohaOneUIToolsViewModel>()
+            val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .statusCategoryScroll(rememberScrollState()),
+            ) {
+                ShadeClockCategoryControls(
+                    uiState = preference.systemUI.statusBar,
+                    onChange = { updated ->
+                        toolsViewModel.updateData { current ->
+                            current.copy(
+                                systemUI = current.systemUI.copy(statusBar = updated),
+                            )
+                        }
+                    },
+                )
+            }
+        }
         StatusCategory.Notification -> {
             val toolsViewModel = viewModel<AlohaOneUIToolsViewModel>()
             val preference = toolsViewModel.preference.collectAsStateWithLifecycle().value

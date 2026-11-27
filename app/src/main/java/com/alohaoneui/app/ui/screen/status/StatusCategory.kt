@@ -19,6 +19,11 @@ enum class StatusCategory(
         R.drawable.flux_status_time,
         0xFF4C8DFF.toInt(),
     ),
+    ShadeClock(
+        R.string.status_category_shade_clock,
+        R.drawable.flux_status_time,
+        0xFF5B83D7.toInt(),
+    ),
     Notification(
         R.string.status_category_notification,
         R.drawable.flux_status_notification,

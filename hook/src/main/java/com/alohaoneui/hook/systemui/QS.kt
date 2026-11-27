@@ -17,14 +17,119 @@ import io.github.libxposed.api.XposedInterface
 import io.github.libxposed.api.XposedModule
 import com.alohaoneui.common.ONE_UI_VERSION
 import com.alohaoneui.common.Package
+import com.alohaoneui.common.Preference
 import com.alohaoneui.hook.util.TraditionalChineseCalendar
+import com.alohaoneui.hook.util.ShadeClockFormatter
 import com.alohaoneui.hook.util.afterAttachTry
 import com.alohaoneui.hook.util.reflect
 import com.alohaoneui.hook.util.xlog
 import kotlin.math.roundToInt
+import java.util.WeakHashMap
 
 @SuppressLint("PrivateApi")
 object QS {
+    private data class ShadeClockOriginalStyle(
+        val maxLines: Int, val singleLine: Boolean, val textSizePx: Float,
+        val typeface: android.graphics.Typeface?, val textColor: Int, val gravity: Int,
+    )
+    @Volatile private var shadeClockRuntime = Preference.SystemUI.StatusBar()
+    private val shadeClockDateViews = WeakHashMap<TextView, Unit>()
+    private val shadeClockNativeTexts = WeakHashMap<TextView, CharSequence>()
+    private val shadeClockClockVisibilities = WeakHashMap<TextView, Int>()
+    private val shadeClockOriginalStyles = WeakHashMap<TextView, ShadeClockOriginalStyle>()
+
+    fun updateShadeClockRuntime(current: Preference.SystemUI.StatusBar) {
+        shadeClockRuntime = current
+        val views = synchronized(shadeClockDateViews) { shadeClockDateViews.keys.toList() }
+        views.forEach { view -> view.post { applyShadeClock(view) } }
+    }
+
+    private fun registerShadeClockDateView(view: TextView) {
+        synchronized(shadeClockDateViews) {
+            shadeClockDateViews[view] = Unit
+            shadeClockOriginalStyles.getOrPut(view) {
+                ShadeClockOriginalStyle(view.maxLines, view.isSingleLine, view.textSize, view.typeface, view.currentTextColor, view.gravity)
+            }
+            shadeClockNativeTexts.putIfAbsent(view, view.text ?: "")
+        }
+    }
+
+    private fun findShadeClockView(dateView: TextView): TextView? {
+        var current: View? = dateView
+        while (current != null) {
+            if (current.javaClass.name == "com.android.systemui.qs.SecQuickStatusBarHeader") {
+                return current.reflect["mClockView"] as? TextView
+            }
+            current = current.parent as? View
+        }
+        return null
+    }
+
+    private fun applyShadeClock(dateView: TextView, nativeText: CharSequence? = null) {
+        if (nativeText != null) synchronized(shadeClockNativeTexts) { shadeClockNativeTexts[dateView] = nativeText }
+        val config = shadeClockRuntime
+        val clockView = findShadeClockView(dateView)
+        if (!config.shadeClockCustomEnabled) {
+            if (clockView != null) {
+                val oldVisibility = synchronized(shadeClockClockVisibilities) { shadeClockClockVisibilities[clockView] }
+                if (oldVisibility != null) clockView.visibility = oldVisibility
+            }
+            synchronized(shadeClockNativeTexts) { shadeClockNativeTexts[dateView] }?.let { dateView.text = it }
+            synchronized(shadeClockOriginalStyles) { shadeClockOriginalStyles[dateView] }?.let {
+                dateView.maxLines = it.maxLines
+                dateView.isSingleLine = it.singleLine
+                dateView.setTextSize(TypedValue.COMPLEX_UNIT_PX, it.textSizePx)
+                dateView.typeface = it.typeface
+                dateView.setTextColor(it.textColor)
+                dateView.gravity = it.gravity
+            }
+            dateView.requestLayout()
+            return
+        }
+        if (clockView != null && clockView !== dateView) {
+            synchronized(shadeClockClockVisibilities) { shadeClockClockVisibilities.putIfAbsent(clockView, clockView.visibility) }
+            clockView.visibility = View.GONE
+        }
+        val original = synchronized(shadeClockOriginalStyles) { shadeClockOriginalStyles[dateView] }
+        dateView.text = ShadeClockFormatter.format(config)
+        dateView.isSingleLine = false
+        dateView.maxLines = if (config.shadeClockLayoutStyle == 1) 2 else 1
+        if (clockView != null) {
+            dateView.setTextSize(TypedValue.COMPLEX_UNIT_PX, clockView.textSize)
+            dateView.typeface = clockView.typeface
+            dateView.setTextColor(clockView.currentTextColor)
+            dateView.gravity = clockView.gravity
+        } else if (original != null) {
+            dateView.setTextSize(TypedValue.COMPLEX_UNIT_PX, original.textSizePx)
+        }
+        dateView.requestLayout()
+    }
+
+    context(xposedModule: XposedModule)
+    fun installShadeClockCustomization(current: Preference.SystemUI.StatusBar) =
+        afterAttachTry(Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            shadeClockRuntime = current
+            val dateClass = classLoader.loadClass("com.android.systemui.statusbar.policy.QSShortenDate")
+            dateClass.declaredConstructors.forEach { constructor ->
+                xposedModule.hook(constructor).intercept { chain ->
+                    val result = chain.proceed()
+                    (chain.thisObject as? TextView)?.let(::registerShadeClockDateView)
+                    result
+                }
+            }
+            val bellClass = classLoader.loadClass("com.android.systemui.statusbar.policy.QSClockBellSound")
+            val method = dateClass.getDeclaredMethod("notifyTimeChanged", bellClass)
+            xposedModule.hook(method).intercept { chain ->
+                val result = chain.proceed()
+                (chain.thisObject as? TextView)?.let { view ->
+                    registerShadeClockDateView(view)
+                    applyShadeClock(view, view.text)
+                }
+                result
+            }
+        }
+    
+    
     enum class QsBar {
         MediaPlayer,
         NearbyDevicesAndDeviceControl,
@@ -543,12 +648,17 @@ object QS {
         var previousDate = ""
         var result = ""
         xposedModule.hook(notifyTimeChangedMethod).intercept { chain ->
+            val nativeResult = chain.proceed()
+            val dateTextView = chain.thisObject as? TextView
+            if (shadeClockRuntime.shadeClockCustomEnabled) {
+                dateTextView?.let { applyShadeClock(it, it.text) }
+                return@intercept nativeResult
+            }
             val shortDateText = chain.args[0]?.reflect?.get("ShortDateText") as? String ?: ""
             if (shortDateText != previousDate) {
                 previousDate = shortDateText
                 result = "$shortDateText\n${TraditionalChineseCalendar.getMonthAndDay()}"
             }
-            val dateTextView = chain.thisObject as? TextView
             if (dateTextView?.text != result) {
                 dateTextView?.text = result
             }
