@@ -190,7 +190,7 @@ fun ExpressiveSwitch(
             checked = checked,
             onCheckedChange = onCheckedChange,
             modifier = modifier.then(
-                if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, composeTrackShape)
+                if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, materialYouTrackShape)
                 else Modifier,
             ),
             thumbContent = thumbContent,
