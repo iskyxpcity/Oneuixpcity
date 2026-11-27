@@ -93,6 +93,10 @@
     <string name="status_shade_clock_group_layout">Display layout</string>
     <string name="status_shade_clock_group_lines">Two-line arrangement</string>
     <string name="status_shade_clock_group_detail">Time details</string>
+    <string name="status_shade_clock_group_preview">Preview</string>
+    <string name="status_shade_clock_apply">Apply now</string>
+    <string name="status_shade_clock_state_enabled">Enabled</string>
+    <string name="status_shade_clock_state_disabled">Disabled</string>
     <string name="status_shade_clock_time">Show time</string>
     <string name="status_shade_clock_date">Show date</string>
     <string name="status_shade_clock_week">Show weekday</string>
