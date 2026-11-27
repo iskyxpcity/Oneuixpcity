@@ -289,7 +289,10 @@ fun ShadeClockCategoryControls(
                                     onClick = onApply,
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(48.dp),
+                                        .then(
+                                            if (LocalUiMode.current == UiMode.Material) Modifier.height(48.dp)
+                                            else Modifier,
+                                        ),
                                     fillWidth = true,
                                 )
                             }
@@ -463,10 +466,10 @@ private fun ShadeClockChoiceButton(
     fixedWidth: androidx.compose.ui.unit.Dp? = null,
     onClick: () -> Unit,
 ) {
-    val buttonModifier = if (fixedWidth != null) {
-        modifier.width(fixedWidth).height(36.dp)
-    } else {
-        modifier.height(40.dp)
+    val widthModifier = if (fixedWidth != null) modifier.width(fixedWidth) else modifier
+    val buttonModifier = when (LocalUiMode.current) {
+        UiMode.Material -> widthModifier.height(if (fixedWidth != null) 36.dp else 40.dp)
+        UiMode.Miuix -> widthModifier
     }
     val containerColor = if (LocalUiMode.current == UiMode.Material) {
         if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest
@@ -483,7 +486,11 @@ private fun ShadeClockChoiceButton(
         fillWidth = fixedWidth == null,
         containerColor = containerColor,
         contentColor = contentColor,
-        contentPadding = if (fixedWidth != null) PaddingValues(horizontal = 4.dp, vertical = 0.dp) else null,
+        contentPadding = if (LocalUiMode.current == UiMode.Material && fixedWidth != null) {
+            PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+        } else {
+            null
+        },
     )
 }
 
