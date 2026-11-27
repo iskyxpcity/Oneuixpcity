@@ -66,6 +66,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.Shape
@@ -132,6 +133,7 @@ fun AlohaComposeSwitch(
     trackShape: Shape,
     interactionSource: MutableInteractionSource? = null,
     showThumbIcon: Boolean = true,
+    thumbShadow: Boolean = false,
 ) {
     ComposeSwitchImpl(
         modifier = modifier,
@@ -147,6 +149,7 @@ fun AlohaComposeSwitch(
         borderColor = if (enabled) { if (checked) colors.checkedBorderColor else colors.uncheckedBorderColor } else { if (checked) colors.disabledCheckedBorderColor else colors.disabledUncheckedBorderColor },
         interactionSource = interactionSource,
         showThumbIcon = showThumbIcon,
+        thumbShadow = thumbShadow,
     )
 }
 
@@ -166,6 +169,7 @@ private fun ComposeSwitchImpl(
     borderColor: Color,
     interactionSource: MutableInteractionSource?,
     showThumbIcon: Boolean,
+    thumbShadow: Boolean,
 ) {
     @Suppress("NAME_SHADOWING")
     val interactionSource = interactionSource ?: remember { MutableInteractionSource() }
@@ -321,6 +325,7 @@ private fun ComposeSwitchImpl(
                     // Clip the transient press/drag indication to the active
                     // thumb silhouette. An unbounded circular ripple visually
                     // replaces the selected Aloha shape with a circle while toggling.
+                    .then(if (thumbShadow) Modifier.shadow(2.dp, thumbShape) else Modifier)
                     .clip(thumbShape)
                     .indication(
                         interactionSource = interactionSource,

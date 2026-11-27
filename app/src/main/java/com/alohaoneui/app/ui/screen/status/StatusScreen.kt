@@ -97,6 +97,7 @@ private fun StatusCategoryIcon(
         kind = when (category) {
             StatusCategory.Padding -> OneUiFeatureIconKind.StatusPadding
             StatusCategory.Time -> OneUiFeatureIconKind.StatusTime
+            StatusCategory.ShadeClock -> OneUiFeatureIconKind.StatusTime
             StatusCategory.Notification -> OneUiFeatureIconKind.StatusNotification
             StatusCategory.NetworkSpeed -> OneUiFeatureIconKind.StatusNetworkSpeed
             StatusCategory.Power -> OneUiFeatureIconKind.StatusPower

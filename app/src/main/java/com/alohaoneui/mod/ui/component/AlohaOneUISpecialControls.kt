@@ -171,16 +171,18 @@ fun AlohaOneUIActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    primary: Boolean = false,
+    primary: Boolean = true,
     fillWidth: Boolean = false,
     containerColor: Color? = null,
     contentColor: Color? = null,
+    contentPadding: PaddingValues? = null,
 ) {
     when (LocalUiMode.current) {
         UiMode.Material -> ExpressiveButton(
             onClick = onClick,
             modifier = modifier,
             enabled = enabled,
+            contentPadding = contentPadding ?: ButtonDefaults.ContentPadding,
             colors = if (containerColor != null || contentColor != null) {
                 ButtonDefaults.buttonColors(
                     containerColor = containerColor ?: MaterialTheme.colorScheme.primary,
@@ -202,7 +204,11 @@ fun AlohaOneUIActionButton(
             onClick = onClick,
             modifier = modifier,
             enabled = enabled,
-            colors = MiuixButtonDefaults.buttonColorsPrimary(),
+            colors = if (primary) {
+                MiuixButtonDefaults.buttonColorsPrimary()
+            } else {
+                MiuixButtonDefaults.buttonColors()
+            },
         ) {
             Box(
                 modifier = if (fillWidth) Modifier.fillMaxWidth() else Modifier,

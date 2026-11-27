@@ -394,6 +394,8 @@ class Main : XposedModule() {
                     QS.supportOutdoorMode()
                 }
 
+                QS.installShadeClockCustomization(preference.systemUI.statusBar)
+
                 run {
                     val monospaced = preference.systemUI.qs.setQsClockMonospaced
                     val modifyTextSize = preference.systemUI.qs.modifyQSClockTextSize

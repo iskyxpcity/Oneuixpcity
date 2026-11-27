@@ -12,6 +12,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -173,6 +174,7 @@ fun ExpressiveButton(
     pressMotionEnabled: Boolean = true,
     shapeIndex: Int = -1,
     shapeCount: Int = 1,
+    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
     content: @Composable RowScope.() -> Unit,
 ) {
     val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
@@ -201,6 +203,7 @@ fun ExpressiveButton(
         interactionSource = actualInteractionSource,
         shape = actualShape,
         colors = colors,
+        contentPadding = contentPadding,
         elevation = ButtonDefaults.buttonElevation(
             defaultElevation = shadowElevation,
             pressedElevation = shadowElevation,
