@@ -271,17 +271,19 @@ fun ShadeClockCategoryControls(
         }
 
         Box(modifier = Modifier.responsiveGridFullSpan().fillMaxWidth()) {
-            Spacer(modifier = Modifier.height(16.dp))
-            AlohaOneUIActionButton(
-                text = stringResource(R.string.status_shade_clock_apply),
-                onClick = onApply,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .height(48.dp),
-                fillWidth = true,
-            )
-            Spacer(modifier = Modifier.height(18.dp))
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                AlohaOneUIActionButton(
+                    text = stringResource(R.string.status_shade_clock_apply),
+                    onClick = onApply,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .height(48.dp),
+                    fillWidth = true,
+                )
+                Spacer(modifier = Modifier.height(18.dp))
+            }
         }
     }
 }
