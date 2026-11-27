@@ -343,7 +343,7 @@ fun ShadeClockCategoryControls(
 
 
 @Composable
-private fun eClockSwitchRow(
+private fun ShadeClockSwitchRow(
     title: String,
     checked: Boolean,
     enabled: Boolean,
