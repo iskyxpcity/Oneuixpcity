@@ -515,6 +515,7 @@ private fun ShadeClockChoiceButton(
     enabled: Boolean,
     modifier: Modifier = Modifier,
     fixedWidth: androidx.compose.ui.unit.Dp? = null,
+    fillWidth: Boolean = fixedWidth == null,
     onClick: () -> Unit,
 ) {
     val widthModifier = if (fixedWidth != null) modifier.width(fixedWidth) else modifier
@@ -537,7 +538,7 @@ private fun ShadeClockChoiceButton(
         modifier = buttonModifier,
         enabled = enabled,
         primary = selected,
-        fillWidth = fixedWidth == null,
+        fillWidth = fillWidth,
         containerColor = containerColor,
         contentColor = contentColor,
         contentPadding = if (fixedWidth != null) PaddingValues(horizontal = 4.dp, vertical = 0.dp) else null,
