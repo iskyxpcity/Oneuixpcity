@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.weight
+import androidx.compose.ui.draw.alpha
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -157,7 +158,7 @@ fun ShadeClockCategoryControls(
 
                         // Keep all five source line selectors visible. They become
                         // enabled only for double-line mode and their corresponding data.
-                        ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_group_line_order))
+                        ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_group_lines))
                         ShadeClockLinePicker(
                             title = stringResource(R.string.status_shade_clock_line_time),
                             selectedValue = uiState.shadeClockTimeLine,
@@ -254,6 +255,7 @@ private fun ShadeClockSwitchRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .alpha(alpha)
             .padding(vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -270,7 +272,6 @@ private fun ShadeClockSwitchRow(
                 modifier = Modifier.weight(1f).padding(end = 12.dp),
             )
         }
-        androidx.compose.ui.Modifier
         AlohaOneUISwitch(
             checked = checked,
             enabled = enabled,
@@ -381,7 +382,7 @@ private fun ShadeClockLinePicker(
                 choice = choice,
                 selected = selectedValue == choice.value,
                 enabled = enabled,
-                modifier = Modifier.padding(start = 8.dp).height(36.dp).weight(0.0f, fill = false),
+                modifier = Modifier.padding(start = 8.dp),
                 fixedWidth = 72.dp,
                 onClick = { onSelected(choice.value) },
             )
@@ -403,8 +404,12 @@ private fun ShadeClockChoiceButton(
     } else {
         modifier.height(40.dp)
     }
-    val containerColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest
-    val contentColor = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+    val containerColor = if (LocalUiMode.current == UiMode.Material) {
+        if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest
+    } else null
+    val contentColor = if (LocalUiMode.current == UiMode.Material) {
+        if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+    } else null
     AlohaOneUIActionButton(
         text = choice.label,
         onClick = onClick,
