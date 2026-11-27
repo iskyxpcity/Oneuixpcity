@@ -26,7 +26,6 @@ import com.alohaoneui.app.ui.LocalUiMode
 import com.alohaoneui.app.ui.UiMode
 import com.alohaoneui.app.ui.util.ResponsiveCardGrid
 import com.alohaoneui.app.ui.util.responsiveGridColumn
-import com.alohaoneui.app.ui.util.responsiveGridFullSpan
 import com.alohaoneui.app.ui.util.shouldShowSplitPane
 import com.alohaoneui.common.Preference
 import com.alohaoneui.hook.util.ShadeClockFormatter
