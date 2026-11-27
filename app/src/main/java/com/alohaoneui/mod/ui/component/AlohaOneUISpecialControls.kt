@@ -209,6 +209,7 @@ fun AlohaOneUIActionButton(
             } else {
                 MiuixButtonDefaults.buttonColors()
             },
+            insideMargin = contentPadding ?: MiuixButtonDefaults.InsideMargin,
         ) {
             Box(
                 modifier = if (fillWidth) Modifier.fillMaxWidth() else Modifier,
