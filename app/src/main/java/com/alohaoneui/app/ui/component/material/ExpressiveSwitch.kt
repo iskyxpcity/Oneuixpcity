@@ -212,8 +212,10 @@ fun ExpressiveSwitch(
         AlohaComposeSwitch(
             checked = checked,
             onCheckedChange = onCheckedChange,
-            modifier = modifier,
-            thumbShadow = LocalMaterialShadowSwitches.current,
+            modifier = modifier.then(
+                if (LocalMaterialShadowSwitches.current) Modifier.shadow(2.dp, composeTrackShape)
+                else Modifier,
+            ),
             thumbContent = thumbContent,
             enabled = enabled,
             colors = colors,
