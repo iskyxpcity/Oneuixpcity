@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.draw.alpha
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -31,6 +32,8 @@ import com.alohaoneui.common.Preference
 import com.alohaoneui.hook.util.ShadeClockFormatter
 import com.alohaoneui.mod.ui.component.AlohaOneUIActionButton
 import com.alohaoneui.mod.ui.component.AlohaOneUISwitch
+import com.alohaoneui.mod.ui.component.LocalAlohaOneUIGroupedPreference
+import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import java.text.SimpleDateFormat
@@ -288,7 +291,7 @@ fun ShadeClockCategoryControls(
                     .fillMaxWidth()
                     .responsiveGridColumn(0),
             ) {
-                StatusThemeGroup(
+                ShadeClockThemeGroup(
                     compact = true,
                     horizontalPadding = 0.dp,
                     items = listOf(enableItem) + displayOptionItems,
@@ -303,12 +306,12 @@ fun ShadeClockCategoryControls(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    StatusThemeGroup(
+                    ShadeClockThemeGroup(
                         compact = true,
                         horizontalPadding = 0.dp,
                         items = listOf(previewItem),
                     )
-                    StatusThemeGroup(
+                    ShadeClockThemeGroup(
                         compact = true,
                         horizontalPadding = 0.dp,
                         items = listOf(displayModeItem),
@@ -317,25 +320,57 @@ fun ShadeClockCategoryControls(
             }
         } else {
             Box(modifier = Modifier.fillMaxWidth()) {
-                StatusThemeGroup(
+                ShadeClockThemeGroup(
                     compact = true,
                     horizontalPadding = 0.dp,
                     items = listOf(enableItem),
                 )
             }
             Box(modifier = Modifier.fillMaxWidth()) {
-                StatusThemeGroup(
+                ShadeClockThemeGroup(
                     compact = true,
                     horizontalPadding = 0.dp,
                     items = displayOptionItems + displayModeItem,
                 )
             }
             Box(modifier = Modifier.fillMaxWidth()) {
-                StatusThemeGroup(
+                ShadeClockThemeGroup(
                     compact = true,
                     horizontalPadding = 0.dp,
                     items = listOf(previewItem),
                 )
+            }
+        }
+    }
+}
+
+
+@Composable
+private fun ShadeClockThemeGroup(
+    items: List<@Composable () -> Unit>,
+    compact: Boolean = false,
+    horizontalPadding: androidx.compose.ui.unit.Dp? = null,
+) {
+    when (LocalUiMode.current) {
+        UiMode.Material -> StatusThemeGroup(
+            compact = compact,
+            horizontalPadding = horizontalPadding,
+            items = items,
+        )
+        UiMode.Miuix -> Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = horizontalPadding ?: 12.dp,
+                    vertical = if (compact) 2.dp else 8.dp,
+                ),
+        ) {
+            CompositionLocalProvider(
+                LocalAlohaOneUIGroupedPreference provides true,
+            ) {
+                Column {
+                    items.forEach { item -> item() }
+                }
             }
         }
     }
