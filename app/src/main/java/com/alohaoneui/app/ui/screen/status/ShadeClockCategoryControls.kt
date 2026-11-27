@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.weight
+import androidx.compose.foundation.layout.width
 import androidx.compose.ui.draw.alpha
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -215,7 +216,19 @@ fun ShadeClockCategoryControls(
             {
                 StatusThemeChildItem {
                     Column(modifier = Modifier.fillMaxWidth()) {
-                        ShadeClockSectionTitle(stringResource(R.string.status_shade_clock_group_preview))
+                        when (LocalUiMode.current) {
+                            UiMode.Material -> MaterialText(
+                                text = stringResource(R.string.status_shade_clock_group_preview),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                            UiMode.Miuix -> MiuixText(
+                                text = stringResource(R.string.status_shade_clock_group_preview),
+                                color = MiuixTheme.colorScheme.onBackground,
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
                         when (LocalUiMode.current) {
                             UiMode.Material -> MaterialText(
                                 text = ShadeClockFormatter.format(uiState, showSeconds = showSeconds),
@@ -235,15 +248,17 @@ fun ShadeClockCategoryControls(
         ),
     )
 
+    Spacer(modifier = Modifier.height(16.dp))
     AlohaOneUIActionButton(
         text = stringResource(R.string.status_shade_clock_apply),
         onClick = onApply,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 16.dp)
             .height(48.dp),
         fillWidth = true,
     )
+    Spacer(modifier = Modifier.height(18.dp))
 }
 
 @Composable
@@ -370,13 +385,15 @@ private fun ShadeClockLinePicker(
         when (LocalUiMode.current) {
             UiMode.Material -> MaterialText(
                 text = title,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f),
             )
             UiMode.Miuix -> MiuixText(
                 text = title,
                 color = MiuixTheme.colorScheme.onBackground,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f),
             )
         }
@@ -463,7 +480,7 @@ private fun ShadeClockStatusText(enabled: Boolean) {
                 if (enabled) R.string.status_shade_clock_state_enabled
                 else R.string.status_shade_clock_state_disabled,
             ),
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
             color = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 6.dp),
         )
@@ -473,6 +490,7 @@ private fun ShadeClockStatusText(enabled: Boolean) {
                 else R.string.status_shade_clock_state_disabled,
             ),
             color = if (enabled) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurfaceVariantSummary,
+            fontSize = 13.sp,
             modifier = Modifier.padding(top = 6.dp),
         )
     }
