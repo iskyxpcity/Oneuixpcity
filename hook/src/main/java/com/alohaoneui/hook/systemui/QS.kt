@@ -345,10 +345,22 @@ object QS {
                             ) {
                                 if (datePart) {
                                     registerShadeClockDateView(view)
-                                    applyShadeClockDate(view)
+                                    if (shadeClockRuntime.shadeClockCustomEnabled) {
+                                        applyShadeClockDate(view)
+                                    } else {
+                                        synchronized(shadeClockNativeTexts) {
+                                            shadeClockNativeTexts[view] = view.text ?: ""
+                                        }
+                                    }
                                 } else {
                                     registerShadeClockClockView(view)
-                                    applyShadeClockClock(view)
+                                    if (shadeClockRuntime.shadeClockCustomEnabled) {
+                                        applyShadeClockClock(view)
+                                    } else {
+                                        synchronized(shadeClockNativeTexts) {
+                                            shadeClockNativeTexts[view] = view.text ?: ""
+                                        }
+                                    }
                                 }
                             }
                             result
@@ -372,10 +384,22 @@ object QS {
                             ) {
                                 if (datePart) {
                                     registerShadeClockDateView(view)
-                                    applyShadeClockDate(view)
+                                    if (shadeClockRuntime.shadeClockCustomEnabled) {
+                                        applyShadeClockDate(view)
+                                    } else {
+                                        synchronized(shadeClockNativeTexts) {
+                                            shadeClockNativeTexts[view] = view.text ?: ""
+                                        }
+                                    }
                                 } else {
                                     registerShadeClockClockView(view)
-                                    applyShadeClockClock(view)
+                                    if (shadeClockRuntime.shadeClockCustomEnabled) {
+                                        applyShadeClockClock(view)
+                                    } else {
+                                        synchronized(shadeClockNativeTexts) {
+                                            shadeClockNativeTexts[view] = view.text ?: ""
+                                        }
+                                    }
                                 }
                             }
                             result
