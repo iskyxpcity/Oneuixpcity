@@ -63,9 +63,12 @@ object ShadeClockFormatter {
     }
 
     private fun weekText(dateTime: LocalDateTime, format: Int): String {
-        if (format == 2) return arrayOf("一", "二", "三", "四", "五", "六", "日")[dateTime.dayOfWeek.value - 1]
-        val pattern = if (format == 1) "EEEE" else "EEE"
-        return DateTimeFormatter.ofPattern(pattern, Locale.getDefault()).format(dateTime)
+        val day = dateTime.dayOfWeek.value - 1
+        return when (format) {
+            1 -> arrayOf("星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日")[day]
+            2 -> arrayOf("一", "二", "三", "四", "五", "六", "日")[day]
+            else -> DateTimeFormatter.ofPattern("EEE", Locale.getDefault()).format(dateTime)
+        }
     }
 
     private fun lunarText(date: LocalDate, format: Int): String {
@@ -73,7 +76,7 @@ object ShadeClockFormatter {
         val lunar = (if (info.isLeapMonth) "闰" else "") + lunarMonths[info.month - 1] + "月" + lunarDay(info.day)
         val offset = info.year - 4
         val zodiacYear = animals[offset.floorMod(12)] + "年"
-        val cyclicalYear = "${stems[offset.floorMod(10)]}${branches[offset.floorMod(12)]}年"
+        val cyclicalYear = "${stems[offset.floorMod(10)]}${branches[offset.floorMod(12)]}(${animals[offset.floorMod(12)]})年
         val specialParts = buildList {
             if (!info.isLeapMonth) lunarFestival(info.month, info.day, date)?.let(::add)
             solarFestival(date)?.let(::add)
