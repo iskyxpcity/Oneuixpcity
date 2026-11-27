@@ -31,6 +31,7 @@ import com.alohaoneui.common.Preference
 import com.alohaoneui.hook.util.ShadeClockFormatter
 import com.alohaoneui.mod.ui.component.AlohaOneUIActionButton
 import com.alohaoneui.mod.ui.component.AlohaOneUISwitch
+import com.alohaoneui.mod.ui.component.SwitchItem
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import java.text.SimpleDateFormat
@@ -349,34 +350,40 @@ private fun ShadeClockSwitchRow(
     enabled: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    val alpha = if (enabled) 1f else 0.46f
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .alpha(alpha)
-            .padding(vertical = 5.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        when (LocalUiMode.current) {
-            UiMode.Material -> MaterialText(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.weight(1f).padding(end = 12.dp),
-            )
-            UiMode.Miuix -> MiuixText(
-                text = title,
-                color = MiuixTheme.colorScheme.onBackground,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f).padding(end = 12.dp),
+    when (LocalUiMode.current) {
+        UiMode.Material -> {
+            val alpha = if (enabled) 1f else 0.46f
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .alpha(alpha)
+                    .padding(vertical = 5.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                MaterialText(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f).padding(end = 12.dp),
+                )
+                AlohaOneUISwitch(
+                    checked = checked,
+                    enabled = enabled,
+                    onCheckedChange = onCheckedChange,
+                )
+            }
+        }
+        UiMode.Miuix -> {
+            // Match the other Miuix status pages: use the shared preference row
+            // so BasicComponent / SwitchPreference owns spacing and switch layout.
+            // StatusThemeGroup supplies the grouped scope, so no nested Card is added.
+            SwitchItem(
+                title = title,
+                checked = checked,
+                enabled = enabled,
+                onCheckedChange = onCheckedChange,
             )
         }
-        AlohaOneUISwitch(
-            checked = checked,
-            enabled = enabled,
-            onCheckedChange = onCheckedChange,
-        )
     }
 }
 
