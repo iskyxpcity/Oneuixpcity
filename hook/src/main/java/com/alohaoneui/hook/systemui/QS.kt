@@ -91,7 +91,11 @@ object QS {
             clockView.visibility = View.GONE
         }
         val original = synchronized(shadeClockOriginalStyles) { shadeClockOriginalStyles[dateView] }
-        dateView.text = ShadeClockFormatter.format(config)
+        val showSeconds = android.provider.Settings.Secure.getString(
+            dateView.context.contentResolver,
+            "icon_blacklist",
+        ).orEmpty().split(",").any { it.trim() == "slimindicator_show_seconds" }
+        dateView.text = ShadeClockFormatter.format(config, showSeconds = showSeconds)
         dateView.isSingleLine = false
         dateView.maxLines = if (config.shadeClockLayoutStyle == 1) 2 else 1
         if (clockView != null) {
