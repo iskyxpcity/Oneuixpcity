@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
@@ -39,7 +41,6 @@ import com.alohaoneui.app.ui.util.responsiveGridFullSpan
 import com.alohaoneui.common.Preference
 import com.alohaoneui.mod.ui.component.AlohaOneUIActionButton
 import com.alohaoneui.mod.ui.component.AlohaOneUISlider
-import com.alohaoneui.mod.ui.component.SelectItem
 import com.alohaoneui.mod.ui.component.SwitchItem
 import org.json.JSONArray
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -182,16 +183,17 @@ private fun BatteryIconStyleCards(
                 {
                     SwitchItem(
                         title = "电量百分比",
-                        summary = if (config.batteryEnabled) {
-                            if (config.batteryPercentEnabled) {
-                                val side = if (config.batteryPercentPosition == 1) "右侧" else "左侧"
-                                "已开启，自定义百分比显示在图标" + side + "。"
-                            } else "已关闭，自定义电池仅显示图标。"
-                        } else if (config.batteryPercentEnabled) {
-                            "已开启，使用系统原版电量百分比。"
-                        } else if (config.batteryBackgroundEnabled) {
-                            "电池背景开启时由系统胶囊样式接管。"
-                        } else "已关闭，仅显示电池图标。",
+                        summary = if (config.batteryEnabled || !config.batteryBackgroundEnabled) {
+                            if (config.batteryEnabled) {
+                                if (config.batteryPercentEnabled) {
+                                    val side = if (config.batteryPercentPosition == 1) "右侧" else "左侧"
+                                    "已开启，自定义百分比显示在图标" + side + "。"
+                                } else "已关闭，自定义电池仅显示图标。"
+                            } else {
+                                if (config.batteryPercentEnabled) "已开启，使用系统原版电量百分比。"
+                                else "已关闭，仅显示电池图标。"
+                            }
+                        } else "电池背景开启时由系统胶囊样式接管。",
                         enabled = config.batteryEnabled || !config.batteryBackgroundEnabled,
                         checked = config.batteryPercentEnabled,
                         onCheckedChange = { onChange(config.copy(batteryPercentEnabled = it)) },
@@ -220,13 +222,10 @@ private fun BatteryIconStyleCards(
                     )
                 },
                 {
-                    SelectItem(
-                        title = "百分比位置",
-                        summary = "仅启用自定义电池并开启电量百分比后生效。",
-                        entries = listOf("左侧", "右侧"),
-                        selectedIndex = config.batteryPercentPosition.coerceIn(0, 1),
+                    BatteryPercentPositionSelector(
+                        selectedPosition = config.batteryPercentPosition,
                         enabled = config.batteryEnabled && config.batteryPercentEnabled,
-                        onSelectedIndexChange = { onChange(config.copy(batteryPercentPosition = it)) },
+                        onSelected = { onChange(config.copy(batteryPercentPosition = it)) },
                     )
                 },
                 {
@@ -239,12 +238,17 @@ private fun BatteryIconStyleCards(
                     )
                 },
                 {
-                    StatusThemeChildItem(title = "图标大小", summary = size.roundToInt().toString() + "%") {
+                    StatusThemeChildItem(
+                        title = "图标大小",
+                        summary = size.roundToInt().toString() + "%",
+                        modifier = Modifier.alpha(if (config.batteryEnabled) 1f else 0.42f),
+                    ) {
                         AlohaOneUISlider(
                             value = size,
                             onValueChange = { size = it.roundToInt().toFloat() },
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
                             valueRange = 80f..180f,
+                            enabled = config.batteryEnabled,
                             onValueChangeFinished = { onChange(config.copy(batterySizePercent = size.roundToInt())) },
                         )
                     }
@@ -364,6 +368,134 @@ private fun SignalIconStyleCards(
 }
 
 @Composable
+private fun BatteryPercentPositionSelector(
+    selectedPosition: Int,
+    enabled: Boolean,
+    onSelected: (Int) -> Unit,
+) {
+    StatusThemeChildItem(
+        title = "百分比位置",
+        summary = "仅启用自定义电池并开启电量百分比后生效。",
+        modifier = Modifier.alpha(if (enabled) 1f else 0.42f),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            PercentPositionButton(
+                label = "左侧",
+                selected = selectedPosition == 0,
+                enabled = enabled,
+                modifier = Modifier.weight(1f),
+                onClick = { onSelected(0) },
+            )
+            PercentPositionButton(
+                label = "右侧",
+                selected = selectedPosition == 1,
+                enabled = enabled,
+                modifier = Modifier.weight(1f),
+                onClick = { onSelected(1) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun PercentPositionButton(
+    label: String,
+    selected: Boolean,
+    enabled: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    val material = LocalUiMode.current == UiMode.Material
+    val background = when {
+        selected && material -> MaterialTheme.colorScheme.primary
+        selected -> MiuixTheme.colorScheme.primary
+        material -> MaterialTheme.colorScheme.surfaceVariant
+        else -> MiuixTheme.colorScheme.surface
+    }
+    val foreground = when {
+        selected && material -> MaterialTheme.colorScheme.onPrimary
+        selected -> MiuixTheme.colorScheme.onPrimary
+        material -> MaterialTheme.colorScheme.primary
+        else -> MiuixTheme.colorScheme.primary
+    }
+    val outline = when {
+        selected && material -> MaterialTheme.colorScheme.primary
+        selected -> MiuixTheme.colorScheme.primary
+        material -> MaterialTheme.colorScheme.outlineVariant
+        else -> MiuixTheme.colorScheme.onSurface.copy(alpha = 0.16f)
+    }
+    Box(
+        modifier = modifier
+            .height(42.dp)
+            .clip(RoundedCornerShape(999.dp))
+            .background(background)
+            .border(1.dp, outline, RoundedCornerShape(999.dp))
+            .clickable(enabled = enabled, onClick = onClick)
+            .alpha(if (enabled) 1f else 0.55f),
+        contentAlignment = Alignment.Center,
+    ) {
+        when (LocalUiMode.current) {
+            UiMode.Material -> Text(
+                text = label,
+                style = MaterialTheme.typography.labelLarge,
+                color = foreground,
+            )
+            UiMode.Miuix -> top.yukonga.miuix.kmp.basic.Text(
+                text = label,
+                color = foreground,
+            )
+        }
+    }
+}
+
+@Composable
+private fun IconStyleSelectionBadge(selected: Boolean) {
+    val material = LocalUiMode.current == UiMode.Material
+    val background = when {
+        selected && material -> MaterialTheme.colorScheme.primary
+        selected -> MiuixTheme.colorScheme.primary
+        material -> MaterialTheme.colorScheme.surfaceVariant
+        else -> MiuixTheme.colorScheme.surface
+    }
+    val foreground = when {
+        selected && material -> MaterialTheme.colorScheme.onPrimary
+        selected -> MiuixTheme.colorScheme.onPrimary
+        material -> MaterialTheme.colorScheme.primary
+        else -> MiuixTheme.colorScheme.primary
+    }
+    val outline = when {
+        selected && material -> MaterialTheme.colorScheme.primary
+        selected -> MiuixTheme.colorScheme.primary
+        material -> MaterialTheme.colorScheme.outlineVariant
+        else -> MiuixTheme.colorScheme.onSurface.copy(alpha = 0.16f)
+    }
+    Box(
+        modifier = Modifier
+            .size(58.dp, 34.dp)
+            .clip(RoundedCornerShape(999.dp))
+            .background(background)
+            .border(1.dp, outline, RoundedCornerShape(999.dp)),
+        contentAlignment = Alignment.Center,
+    ) {
+        when (LocalUiMode.current) {
+            UiMode.Material -> Text(
+                text = if (selected) "已选" else "选择",
+                style = MaterialTheme.typography.labelMedium,
+                color = foreground,
+            )
+            UiMode.Miuix -> top.yukonga.miuix.kmp.basic.Text(
+                text = if (selected) "已选" else "选择",
+                color = foreground,
+            )
+        }
+    }
+}
+
+@Composable
 private fun ApplyIconStyleButton(onApply: () -> Unit) {
     StatusThemeChildItem {
         AlohaOneUIActionButton(
@@ -383,7 +515,7 @@ private fun styleRows(
     onSelected: (String) -> Unit,
 ) {
     styles.forEach { style ->
-        Box {
+        Box(Modifier.alpha(if (enabled) 1f else 0.42f)) {
             StatusThemeGroup(
                 modifier = Modifier.border(
                     width = if (selectedId == style.id) 1.dp else 0.5.dp,
@@ -413,16 +545,7 @@ private fun styleRows(
                                 color = if (LocalUiMode.current == UiMode.Material) MaterialTheme.colorScheme.onSurface
                                 else MiuixTheme.colorScheme.onSurface,
                             )
-                            Text(
-                                text = if (selectedId == style.id) "已选" else "选择",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = if (selectedId == style.id) {
-                                    if (LocalUiMode.current == UiMode.Material) MaterialTheme.colorScheme.primary
-                                    else MiuixTheme.colorScheme.primary
-                                } else if (LocalUiMode.current == UiMode.Material) {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                } else MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                            )
+                            IconStyleSelectionBadge(selected = selectedId == style.id)
                         }
                     }
                 }),
@@ -442,7 +565,7 @@ private fun IconAssetPreview(style: IconPackStyle) {
     }
     if (bitmap == null) {
         Box(
-            Modifier.size(if (style.batteryPreview) 38.dp else 78.dp, 38.dp),
+            Modifier.size(if (style.batteryPreview) 34.dp else 78.dp, if (style.batteryPreview) 34.dp else 38.dp),
             contentAlignment = Alignment.Center,
         ) { Text("—") }
         return
