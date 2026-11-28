@@ -58,8 +58,8 @@ private data class IconPackStyle(
 @Composable
 fun StatusBarIconStylesCategoryControls(
     target: StatusIconStyleTarget,
-    uiState: Preference.SystemUI.StatusBar,
-    onChange: (Preference.SystemUI.StatusBar) -> Unit,
+    iconStyles: Preference.SystemUI.StatusBarIconStyles,
+    onChange: (Preference.SystemUI.StatusBarIconStyles) -> Unit,
     onApply: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -72,7 +72,7 @@ fun StatusBarIconStylesCategoryControls(
             StatusIconStyleTarget.Vpn -> loadSignalIconStyles(context, target)
         }
     }
-    val config = uiState.iconStyles
+    val config = iconStyles
 
     ResponsiveCardGrid {
         Box(Modifier.responsiveGridFullSpan()) {
@@ -95,7 +95,7 @@ fun StatusBarIconStylesCategoryControls(
             StatusIconStyleTarget.Battery -> BatteryIconStyleCards(
                 config = config,
                 styles = styles,
-                onChange = { onChange(uiState.copy(iconStyles = it)) },
+                onChange = { onChange(it) },
                 onApply = onApply,
             )
             StatusIconStyleTarget.Wifi -> SignalIconStyleCards(
@@ -104,8 +104,8 @@ fun StatusBarIconStylesCategoryControls(
                 selectedStyleId = config.wifiStyleId,
                 hideAuxiliary = config.hideWifiActivityArrows,
                 styles = styles,
-                onEnabledChange = { onChange(uiState.copy(iconStyles = config.copy(wifiEnabled = it, wifiStyleId = config.wifiStyleId.ifBlank { styles.firstOrNull()?.id.orEmpty() }))) },
-                onAuxiliaryChange = { onChange(uiState.copy(iconStyles = config.copy(hideWifiActivityArrows = it))) },
+                onEnabledChange = { onChange(config.copy(wifiEnabled = it, wifiStyleId = config.wifiStyleId.ifBlank { styles.firstOrNull()?.id.orEmpty() })) },
+                onAuxiliaryChange = { onChange(config.copy(hideWifiActivityArrows = it))) },
                 onStyleChange = { onChange(uiState.copy(iconStyles = config.copy(wifiEnabled = true, wifiStyleId = it))) },
                 onApply = onApply,
             )
