@@ -989,7 +989,7 @@ object StatusBarComboStyleOneRuntime {
         systemUiClassLoader = param.classLoader
         runCatching {
             with(module) { PreferenceProvider.loadPreference() }
-                ?.systemUI?.statusBar?.comboStyleOneRuntime?.let { config = sanitize(it) }
+                ?.systemUI?.statusBar?.let { config = effectiveConfig(it) }
         }.onFailure { Log.w(TAG, "Cannot read Style One settings", it) }
 
         hookNativeMobileState(module, param.classLoader)
@@ -1677,10 +1677,10 @@ object StatusBarComboStyleOneRuntime {
         if (preferenceReceiverReady) return
         val module = moduleForPreferenceReload ?: return
         val latest = runCatching {
-            with(module) { PreferenceProvider.loadPreference() }?.systemUI?.statusBar?.comboStyleOneRuntime
+            with(module) { PreferenceProvider.loadPreference() }?.systemUI?.statusBar
         }.onFailure { Log.w(TAG, "Cannot reload Style One settings before receiver setup", it) }
             .getOrNull() ?: return
-        config = sanitize(latest)
+        config = effectiveConfig(latest)
     }
 
     private fun requiresHostRefresh(
@@ -4213,7 +4213,7 @@ object StatusBarComboStyleOneRuntime {
                         runCatching {
                             val status = IgnoreUnknownKeysJson.decodeFromString(Preference.SystemUI.StatusBar.serializer(), payload)
                             val previous = config
-                            val next = sanitize(status.comboStyleOneRuntime)
+                            val next = effectiveConfig(status)
                             config = next
                             val effectiveOverlay = config.overlayGlyph && INDEPENDENT_OVERLAY_RENDERING_ENABLED
                             diagnostic(
@@ -5896,6 +5896,19 @@ object StatusBarComboStyleOneRuntime {
         TelephonyManager.NETWORK_TYPE_GPRS, TelephonyManager.NETWORK_TYPE_EDGE,
         TelephonyManager.NETWORK_TYPE_CDMA, TelephonyManager.NETWORK_TYPE_1xRTT -> "2G"
         else -> state.networkType.ifBlank { "4G" }
+    }
+
+    private fun effectiveConfig(statusBar: Preference.SystemUI.StatusBar): Preference.SystemUI.StatusBarComboStyleOneRuntime {
+        val raw = statusBar.comboStyleOneRuntime
+        val iconStyles = statusBar.iconStyles
+        val customBatteryOwnsSlot = iconStyles.batteryEnabled && iconStyles.batteryStyleId.isNotBlank()
+        return sanitize(
+            raw.copy(
+                enabled = raw.enabled && !customBatteryOwnsSlot,
+                showWifi = raw.showWifi && !iconStyles.wifiEnabled,
+                showMobile = raw.showMobile && !iconStyles.mobileEnabled,
+            ),
+        )
     }
 
     private fun sanitize(v: Preference.SystemUI.StatusBarComboStyleOneRuntime) = v.copy(
