@@ -46,6 +46,44 @@ jobs:
         with:
           ref: ${{ github.ref == 'refs/heads/migration/alohaoneui-rename-20261020' && github.ref_name || github.sha }}
           fetch-depth: 0
+      - name: Import original status icon resources from App20261018Aloha
+        env:
+          UPSTREAM_REPO_TOKEN: ${{ secrets.UPSTREAM_REPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${UPSTREAM_REPO_TOKEN:-}" ]; then
+            echo "::error::Missing repository Actions secret UPSTREAM_REPO_TOKEN; the original icon resources cannot be imported."
+            exit 1
+          fi
+          SOURCE_DIR="$(mktemp -d)"
+          git clone --depth 1 --filter=blob:none --sparse --branch main \
+            "https://x-access-token:${UPSTREAM_REPO_TOKEN}@github.com/iskyxpcity/App20261018Aloha.git" \
+            "$SOURCE_DIR"
+          git -C "$SOURCE_DIR" sparse-checkout set \
+            src/main/assets/battery_icons \
+            src/main/assets/wifi_signal_icons \
+            src/main/assets/mobile_signal_icons \
+            src/main/assets/bluetooth_status_icons \
+            src/main/assets/vpn_status_icons
+          mkdir -p app/src/main/assets
+          for asset_dir in battery_icons wifi_signal_icons mobile_signal_icons bluetooth_status_icons vpn_status_icons; do
+            cp -a "$SOURCE_DIR/src/main/assets/$asset_dir" app/src/main/assets/
+          done
+          test -f app/src/main/assets/battery_icons/manifest.json
+          test -d app/src/main/assets/wifi_signal_icons
+          test -d app/src/main/assets/mobile_signal_icons
+          test -d app/src/main/assets/bluetooth_status_icons
+          test -d app/src/main/assets/vpn_status_icons
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/src/main/assets/battery_icons app/src/main/assets/wifi_signal_icons app/src/main/assets/mobile_signal_icons app/src/main/assets/bluetooth_status_icons app/src/main/assets/vpn_status_icons
+          if ! git diff --cached --quiet; then
+            git commit -m "assets: import original status icon style resources"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          else
+            echo "Original status icon resources are already up to date."
+          fi
+
       - name: Enforce fixed app version on test branches
         if: startsWith(github.ref, 'refs/heads/test/')
         run: |
