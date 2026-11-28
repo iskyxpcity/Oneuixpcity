@@ -25,6 +25,8 @@ import kotlin.math.roundToInt
 fun StatusNotificationCategoryControls(
     uiState: Preference.SystemUI.StatusBar,
     onEvent: (SystemUIEvent) -> Unit,
+    onChange: (Preference.SystemUI.StatusBar) -> Unit,
+    onApply: () -> Unit,
 ) {
     var max by remember(uiState.statusBarMaxNotificationIcons) {
         mutableIntStateOf(uiState.statusBarMaxNotificationIcons)
@@ -70,5 +72,14 @@ fun StatusNotificationCategoryControls(
                 }
             }
         },
+    )
+
+    // The upstream "图标样式" section is hosted on this page. Each control
+    // uses StatusThemeGroup/SwitchItem so Material and Miuix keep separate
+    // native components while sharing only the persisted preference model.
+    StatusBarIconStylesCategoryControls(
+        uiState = uiState,
+        onChange = onChange,
+        onApply = onApply,
     )
 }
