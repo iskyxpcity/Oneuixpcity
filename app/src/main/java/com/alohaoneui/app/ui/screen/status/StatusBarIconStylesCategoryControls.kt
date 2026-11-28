@@ -211,7 +211,6 @@ private fun BatteryIconStyleCards(
                     SwitchItem(
                         title = "启用电池图标替换",
                         summary = if (config.batteryEnabled) "已启用：" + (selected?.label ?: "未选择") else "未启用",
-                        icon = ImageVector.vectorResource(id = R.drawable.battery),
                         checked = config.batteryEnabled,
                         onCheckedChange = {
                             onChange(config.copy(
@@ -299,7 +298,6 @@ private fun SignalIconStyleCards(
                     SwitchItem(
                         title = "启用" + target.title + "替换",
                         summary = if (enabled) "已启用：" + (selected?.label ?: "未选择") else "未启用",
-                        icon = ImageVector.vectorResource(id = target.iconRes),
                         checked = enabled,
                         onCheckedChange = onEnabledChange,
                     )
