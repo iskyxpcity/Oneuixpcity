@@ -1,0 +1,55 @@
+name: Import upstream status icon assets
+
+on:
+  push:
+    branches:
+      - feature/status-notification-icon-styles-full-port-20261127
+    paths:
+      - ".github/workflows/import-status-icon-assets.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  import-assets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout target branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/status-notification-icon-styles-full-port-20261127
+          fetch-depth: 1
+
+      - name: Fetch only upstream icon assets
+        shell: bash
+        run: |
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/iskyxpcity/App20261018Aloha.git upstream
+          git -C upstream sparse-checkout set \
+            app/src/main/assets/battery_icons \
+            app/src/main/assets/wifi_signal_icons \
+            app/src/main/assets/mobile_signal_icons \
+            app/src/main/assets/bluetooth_status_icons \
+            app/src/main/assets/vpn_status_icons
+
+      - name: Copy complete upstream asset catalogs
+        shell: bash
+        run: |
+          mkdir -p app/src/main/assets
+          for folder in battery_icons wifi_signal_icons mobile_signal_icons bluetooth_status_icons vpn_status_icons; do
+            test -d "upstream/app/src/main/assets/$folder"
+            rm -rf "app/src/main/assets/$folder"
+            cp -a "upstream/app/src/main/assets/$folder" "app/src/main/assets/$folder"
+          done
+
+      - name: Commit imported assets
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/src/main/assets/battery_icons app/src/main/assets/wifi_signal_icons app/src/main/assets/mobile_signal_icons app/src/main/assets/bluetooth_status_icons app/src/main/assets/vpn_status_icons
+          if git diff --cached --quiet; then
+            echo "Upstream icon assets are already synchronized."
+            exit 0
+          fi
+          git commit -m "[skip ci] chore: import complete upstream status icon assets"
+          git push origin HEAD:feature/status-notification-icon-styles-full-port-20261127
