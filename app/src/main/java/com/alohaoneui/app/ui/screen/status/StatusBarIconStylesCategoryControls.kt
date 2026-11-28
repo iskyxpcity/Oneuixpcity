@@ -249,7 +249,7 @@ private fun BatteryIconStyleCards(
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
                             valueRange = 80f..180f,
                             enabled = config.batteryEnabled,
-                            onValueChangeFinished = { onChange(config.copy(batterySizePercent = size.roundToInt()) },
+                            onValueChangeFinished = { onChange(config.copy(batterySizePercent = size.roundToInt())) },
                         )
                     }
                 },
