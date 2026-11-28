@@ -129,6 +129,7 @@ internal object StatusBarIconStylesRuntime {
     private var batteryReceiver: BroadcastReceiver? = null
 
     fun install(module: XposedModule, param: XposedModuleInterface.PackageReadyParam) {
+        // Main.onPackageReady filters the SystemUI process before dispatching here.
         if (param.packageName != Package.SYSTEMUI) return
         if (!installed.compareAndSet(false, true)) return
         moduleRef = module
