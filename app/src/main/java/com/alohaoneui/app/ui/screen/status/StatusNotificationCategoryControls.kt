@@ -98,6 +98,7 @@ fun StatusNotificationCategoryControls(
             {
                 Box {
                     StatusThemeGroup(
+                        miuixInsideMargin = androidx.compose.foundation.layout.PaddingValues(10.dp),
                         items = listOf({
                             StatusThemeChildItem(
                                 title = target.title,
