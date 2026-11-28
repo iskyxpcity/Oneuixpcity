@@ -583,7 +583,7 @@ private fun IconAssetPreview(style: IconPackStyle) {
     }
     Box(
         modifier = Modifier
-            .size(if (style.batteryPreview) 38.dp else 78.dp, 38.dp)
+            .size(if (style.batteryPreview) 34.dp else 78.dp, if (style.batteryPreview) 34.dp else 38.dp)
             .background(surface, RoundedCornerShape(12.dp))
             .padding(5.dp),
         contentAlignment = Alignment.Center,
