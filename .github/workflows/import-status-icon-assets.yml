@@ -1,0 +1,56 @@
+name: Import upstream status bar icon assets
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import-assets:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout target branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+
+      - name: Checkout upstream icon resources
+        uses: actions/checkout@v4
+        with:
+          repository: iskyxpcity/App20261018Aloha
+          ref: main
+          token: ${{ secrets.UPSTREAM_REPO_TOKEN }}
+          path: upstream
+
+      - name: Copy complete icon resource sets
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p app/src/main/assets
+          for dir in battery_icons wifi_signal_icons mobile_signal_icons bluetooth_status_icons vpn_status_icons; do
+            test -d "upstream/app/src/main/assets/$dir"
+            rm -rf "app/src/main/assets/$dir"
+            cp -a "upstream/app/src/main/assets/$dir" "app/src/main/assets/$dir"
+          done
+          echo "Imported resource counts:"
+          find app/src/main/assets/battery_icons -type f | wc -l
+          find app/src/main/assets/wifi_signal_icons -type f | wc -l
+          find app/src/main/assets/mobile_signal_icons -type f | wc -l
+          find app/src/main/assets/bluetooth_status_icons -type f | wc -l
+          find app/src/main/assets/vpn_status_icons -type f | wc -l
+
+      - name: Commit imported resources to selected branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/src/main/assets/battery_icons app/src/main/assets/wifi_signal_icons app/src/main/assets/mobile_signal_icons app/src/main/assets/bluetooth_status_icons app/src/main/assets/vpn_status_icons
+          if git diff --cached --quiet; then
+            echo "No asset changes to commit."
+            exit 0
+          fi
+          git commit -m "Import complete upstream status bar icon assets"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
