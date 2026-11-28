@@ -17,6 +17,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.text.font.FontWeight
 import com.alohaoneui.app.R
 import com.alohaoneui.common.Preference
@@ -30,6 +32,7 @@ import com.alohaoneui.app.ui.navigation3.Route
 import com.alohaoneui.app.ui.util.ResponsiveCardGrid
 import top.yukonga.miuix.kmp.basic.Text as MiuixText
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import org.json.JSONArray
 
 @Composable
 fun StatusNotificationCategoryControls(
@@ -78,6 +81,21 @@ fun StatusNotificationCategoryControls(
     )
 
     val navigator = LocalNavigator.current
+    val context = LocalContext.current
+    val iconStyles = uiState.iconStyles
+    val batteryStyleLabels = remember(context) {
+        runCatching {
+            val raw = context.assets.open("battery_icons/manifest.json")
+                .bufferedReader(Charsets.UTF_8).use { it.readText() }
+            val array = JSONArray(raw)
+            buildMap {
+                for (index in 0 until array.length()) {
+                    val item = array.getJSONObject(index)
+                    put(item.optString("id"), item.optString("label"))
+                }
+            }
+        }.getOrDefault(emptyMap())
+    }
     when (LocalUiMode.current) {
         UiMode.Material -> Text(
             text = "图标样式",
@@ -96,9 +114,27 @@ fun StatusNotificationCategoryControls(
     ResponsiveCardGrid(
         content = StatusIconStyleTarget.entries.map { target ->
             {
+                val stateText = when (target) {
+                    StatusIconStyleTarget.Battery -> if (iconStyles.batteryEnabled && iconStyles.batteryStyleId.isNotBlank()) {
+                        "已启用：" + (batteryStyleLabels[iconStyles.batteryStyleId]?.takeIf { it.isNotBlank() } ?: "电池样式")
+                    } else "未启用"
+                    StatusIconStyleTarget.Wifi -> if (iconStyles.wifiEnabled && iconStyles.wifiStyleId.isNotBlank()) {
+                        "已启用：" + signalStyleLabel(iconStyles.wifiStyleId, "laobai.systemui.wifi_signal.", "WiFi 风格")
+                    } else if (iconStyles.hideWifiActivityArrows) "已隐藏 WiFi 箭头" else "未启用"
+                    StatusIconStyleTarget.Mobile -> if (iconStyles.mobileEnabled && iconStyles.mobileStyleId.isNotBlank()) {
+                        "已启用：" + signalStyleLabel(iconStyles.mobileStyleId, "laobai.systemui.mobile_signal.", "信号风格")
+                    } else if (iconStyles.hideMobileNetworkType) "已隐藏 4G / 5G 小标" else "未启用"
+                    StatusIconStyleTarget.Bluetooth -> if (iconStyles.bluetoothEnabled && iconStyles.bluetoothStyleId.isNotBlank()) {
+                        "已启用：" + signalStyleLabel(iconStyles.bluetoothStyleId, "laobai.systemui.bluetooth_icon.", "蓝牙风格")
+                    } else "未启用"
+                    StatusIconStyleTarget.Vpn -> if (iconStyles.vpnEnabled && iconStyles.vpnStyleId.isNotBlank()) {
+                        "已启用：" + signalStyleLabel(iconStyles.vpnStyleId, "laobai.systemui.vpn_icon.", "VPN 风格")
+                    } else "未启用"
+                }
+                val active = stateText != "未启用"
                 Box {
                     StatusThemeGroup(
-                        miuixInsideMargin = androidx.compose.foundation.layout.PaddingValues(10.dp),
+                        miuixInsideMargin = PaddingValues(10.dp),
                         items = listOf({
                             StatusThemeChildItem(
                                 title = target.title,
@@ -107,11 +143,32 @@ fun StatusNotificationCategoryControls(
                                 modifier = Modifier.fillMaxWidth().clickable {
                                     navigator.push(Route.StatusIconStyle(target.key))
                                 },
-                            ) {}
+                            ) {
+                                when (LocalUiMode.current) {
+                                    UiMode.Material -> Text(
+                                        text = stateText,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = if (active) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                    UiMode.Miuix -> MiuixText(
+                                        text = stateText,
+                                        color = if (active) MiuixTheme.colorScheme.primary
+                                        else MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                    )
+                                }
+                            }
                         }),
                     )
                 }
             }
         },
     )
+}
+
+
+private fun signalStyleLabel(styleId: String, prefix: String, label: String): String {
+    val dir = styleId.removePrefix(prefix)
+    val number = Regex("^style0*(\\d+)$").find(dir)?.groupValues?.getOrNull(1)
+    return if (number != null) label + " " + number else label
 }
