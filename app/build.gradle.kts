@@ -205,12 +205,12 @@ val prepareStatusBarIconAssets = tasks.register("prepareStatusBarIconAssets") {
         }
 
         runGit(
-            "sparse-checkout", "set",
-            "app/src/main/assets/battery_icons",
-            "app/src/main/assets/wifi_signal_icons",
-            "app/src/main/assets/mobile_signal_icons",
-            "app/src/main/assets/bluetooth_status_icons",
-            "app/src/main/assets/vpn_status_icons",
+            "sparse-checkout", "set", "--no-cone",
+            "app/src/main/assets/battery_icons/**",
+            "app/src/main/assets/wifi_signal_icons/**",
+            "app/src/main/assets/mobile_signal_icons/**",
+            "app/src/main/assets/bluetooth_status_icons/**",
+            "app/src/main/assets/vpn_status_icons/**",
             "app/src/main/assets/signal_import_style30_49_summary.json",
         )
         runGit("fetch", "--depth=1", "origin", statusBarIconAssetsCommit)
