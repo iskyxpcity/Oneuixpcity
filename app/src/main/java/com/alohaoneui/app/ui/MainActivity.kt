@@ -80,6 +80,7 @@ import com.alohaoneui.app.ui.screen.home.LocalLsposedHomeStatus
 import com.alohaoneui.app.ui.screen.home.rememberLsposedHomeStatus
 import com.alohaoneui.app.ui.screen.status.StatusPager
 import com.alohaoneui.app.ui.screen.status.StatusCategoryScreen
+import com.alohaoneui.app.ui.screen.status.StatusIconStyleCategoryScreen
 import com.alohaoneui.app.ui.screen.settings.SettingPager
 import com.alohaoneui.app.ui.screen.tools.ToolsPager
 import com.alohaoneui.app.ui.screen.tools.AlohaOneUICategoryScreen
@@ -220,6 +221,9 @@ class MainActivity : ComponentActivity() {
                             }
                             entry<Route.StatusCategory>(swipeDismiss = swipeDismiss) { key ->
                                 StatusCategoryScreen(key.category)
+                            }
+                            entry<Route.StatusIconStyle>(swipeDismiss = swipeDismiss) { key ->
+                                StatusIconStyleCategoryScreen(key.target)
                             }
                             entry<Route.OtherFunctions>(swipeDismiss = swipeDismiss) { OtherFunctionsScreen() }
                             entry<Route.CallReturnDelay>(swipeDismiss = swipeDismiss) { CallReturnDelayScreen() }
