@@ -181,30 +181,38 @@ val prepareStatusBarIconAssets = tasks.register("prepareStatusBarIconAssets") {
 
     doLast {
         val checkoutDir = layout.buildDirectory.dir("upstream-statusbar-icon-assets").get().asFile
-        if (!File(checkoutDir, ".git").isDirectory) {
-            checkoutDir.deleteRecursively()
-            val clone = ProcessBuilder(
-                "git", "clone", "--filter=blob:none", "--no-checkout", "--depth=1", "--sparse",
-                "https://github.com/iskyxpcity/App20261018Aloha.git",
-                checkoutDir.absolutePath,
-            ).directory(projectDir).redirectErrorStream(true).start()
-            val cloneOutput = clone.inputStream.bufferedReader().use { it.readText() }
-            check(clone.waitFor() == 0) {
-                "Unable to fetch upstream status-bar icon source: $cloneOutput"
-            }
-        }
+        val upstreamToken = System.getenv("UPSTREAM_REPO_TOKEN")?.takeIf { it.isNotBlank() }
+            ?: throw GradleException(
+                "App20261018Aloha is private. Add the UPSTREAM_REPO_TOKEN Actions secret with read-only Contents access to that repository.",
+            )
+        val authHeader = java.util.Base64.getEncoder()
+            .encodeToString(("x-access-token:" + upstreamToken).toByteArray(Charsets.UTF_8))
 
-        fun runGit(vararg arguments: String) {
-            val process = ProcessBuilder(
-                "git", "-C", checkoutDir.absolutePath, *arguments,
-            ).redirectErrorStream(true).start()
+        fun runGit(directory: File, vararg arguments: String) {
+            val command = mutableListOf("git", "-c", "http.extraheader=AUTHORIZATION: basic " + authHeader)
+            command.addAll(arguments)
+            val process = ProcessBuilder(command)
+                .directory(directory)
+                .redirectErrorStream(true)
+                .start()
             val output = process.inputStream.bufferedReader().use { it.readText() }
             check(process.waitFor() == 0) {
-                "Upstream status-bar icon asset checkout failed (git ${arguments.joinToString(" ")}): $output"
+                "Upstream icon asset checkout failed: " + output
             }
         }
 
+        if (!File(checkoutDir, ".git").isDirectory) {
+            checkoutDir.deleteRecursively()
+            checkoutDir.parentFile?.mkdirs()
+            runGit(
+                projectDir,
+                "clone", "--depth=1", "--filter=blob:none", "--sparse",
+                "https://github.com/iskyxpcity/App20261018Aloha.git",
+                checkoutDir.absolutePath,
+            )
+        }
         runGit(
+            checkoutDir,
             "sparse-checkout", "set", "--no-cone",
             "app/src/main/assets/battery_icons/**",
             "app/src/main/assets/wifi_signal_icons/**",
@@ -213,9 +221,8 @@ val prepareStatusBarIconAssets = tasks.register("prepareStatusBarIconAssets") {
             "app/src/main/assets/vpn_status_icons/**",
             "app/src/main/assets/signal_import_style30_49_summary.json",
         )
-        runGit("fetch", "--depth=1", "origin", statusBarIconAssetsCommit)
-        runGit("checkout", "--detach", "FETCH_HEAD")
-
+        runGit(checkoutDir, "fetch", "--depth=1", "origin", statusBarIconAssetsCommit)
+        runGit(checkoutDir, "checkout", "--detach", "FETCH_HEAD")
         val upstreamAssets = File(checkoutDir, "app/src/main/assets")
         val outputAssets = generatedStatusBarIconAssets.get().asFile
         outputAssets.deleteRecursively()
