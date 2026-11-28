@@ -169,6 +169,83 @@ val prepareAlohaLauncherIcon = tasks.register("prepareAlohaLauncherIcon") {
     }
 }
 
+
+// Complete upstream status-bar icon packs are intentionally fetched as a sparse checkout.
+// The upstream repository also contains large unrelated build outputs; blob filtering and
+// sparse paths keep those files out of the app build.
+val statusBarIconAssetsCommit = "6772cf55ad8d1c2b4276aa7988bc413d8bc6fade"
+val generatedStatusBarIconAssets = layout.buildDirectory.dir("generated/assets/statusBarIconStyles")
+val prepareStatusBarIconAssets = tasks.register("prepareStatusBarIconAssets") {
+    inputs.property("upstreamCommit", statusBarIconAssetsCommit)
+    outputs.dir(generatedStatusBarIconAssets)
+
+    doLast {
+        val checkoutDir = layout.buildDirectory.dir("upstream-statusbar-icon-assets").get().asFile
+        if (!File(checkoutDir, ".git").isDirectory) {
+            checkoutDir.deleteRecursively()
+            val clone = ProcessBuilder(
+                "git", "clone", "--filter=blob:none", "--no-checkout", "--depth=1", "--sparse",
+                "https://github.com/iskyxpcity/App20261018Aloha.git",
+                checkoutDir.absolutePath,
+            ).directory(projectDir).redirectErrorStream(true).start()
+            val cloneOutput = clone.inputStream.bufferedReader().use { it.readText() }
+            check(clone.waitFor() == 0) {
+                "Unable to fetch upstream status-bar icon source: $cloneOutput"
+            }
+        }
+
+        fun runGit(vararg arguments: String) {
+            val process = ProcessBuilder(
+                "git", "-C", checkoutDir.absolutePath, *arguments,
+            ).redirectErrorStream(true).start()
+            val output = process.inputStream.bufferedReader().use { it.readText() }
+            check(process.waitFor() == 0) {
+                "Upstream status-bar icon asset checkout failed (git ${arguments.joinToString(" ")}): $output"
+            }
+        }
+
+        runGit(
+            "sparse-checkout", "set",
+            "app/src/main/assets/battery_icons",
+            "app/src/main/assets/wifi_signal_icons",
+            "app/src/main/assets/mobile_signal_icons",
+            "app/src/main/assets/bluetooth_status_icons",
+            "app/src/main/assets/vpn_status_icons",
+            "app/src/main/assets/signal_import_style30_49_summary.json",
+        )
+        runGit("fetch", "--depth=1", "origin", statusBarIconAssetsCommit)
+        runGit("checkout", "--detach", "FETCH_HEAD")
+
+        val upstreamAssets = File(checkoutDir, "app/src/main/assets")
+        val outputAssets = generatedStatusBarIconAssets.get().asFile
+        outputAssets.deleteRecursively()
+        listOf(
+            "battery_icons",
+            "wifi_signal_icons",
+            "mobile_signal_icons",
+            "bluetooth_status_icons",
+            "vpn_status_icons",
+        ).forEach { directory ->
+            val source = File(upstreamAssets, directory)
+            check(source.isDirectory) { "Missing upstream icon resource directory: ${source.path}" }
+            copy {
+                from(source)
+                into(File(outputAssets, directory))
+            }
+        }
+        val importSummary = File(upstreamAssets, "signal_import_style30_49_summary.json")
+        if (importSummary.isFile) {
+            copy {
+                from(importSummary)
+                into(outputAssets)
+            }
+        }
+        check(File(outputAssets, "battery_icons/manifest.json").isFile) {
+            "Upstream battery icon manifest was not copied."
+        }
+    }
+}
+
 android {
     namespace = "com.alohaoneui.app"
 
@@ -279,6 +356,8 @@ android {
 
 // Register the generated resources and make every Android resource-processing task depend on their generation.
 android.sourceSets.getByName("main").res.srcDir(generatedLauncherResDir.get().asFile)
+android.sourceSets.getByName("main").assets.srcDir(generatedStatusBarIconAssets.get().asFile)
+tasks.named("preBuild").configure { dependsOn(prepareStatusBarIconAssets) }
 tasks.configureEach {
     if (name.contains("Resources") || name.endsWith("SourceSetPaths") || name.contains("SupportedLocales") || name.contains("DeepLinks")) {
         dependsOn(prepareAlohaLauncherIcon)
