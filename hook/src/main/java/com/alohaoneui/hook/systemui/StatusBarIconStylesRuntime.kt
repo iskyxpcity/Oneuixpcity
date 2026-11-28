@@ -129,7 +129,7 @@ internal object StatusBarIconStylesRuntime {
     private var batteryReceiver: BroadcastReceiver? = null
 
     fun install(module: XposedModule, param: XposedModuleInterface.PackageReadyParam) {
-        if (param.packageName != Package.SYSTEMUI || param.processName != Package.SYSTEMUI) return
+        if (param.packageName != Package.SYSTEMUI) return
         if (!installed.compareAndSet(false, true)) return
         moduleRef = module
         hookApplicationAttach(module)
