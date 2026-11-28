@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
@@ -105,8 +106,8 @@ fun StatusBarIconStylesCategoryControls(
                 hideAuxiliary = config.hideWifiActivityArrows,
                 styles = styles,
                 onEnabledChange = { onChange(config.copy(wifiEnabled = it, wifiStyleId = config.wifiStyleId.ifBlank { styles.firstOrNull()?.id.orEmpty() })) },
-                onAuxiliaryChange = { onChange(config.copy(hideWifiActivityArrows = it))) },
-                onStyleChange = { onChange(uiState.copy(iconStyles = config.copy(wifiEnabled = true, wifiStyleId = it))) },
+                onAuxiliaryChange = { onChange(config.copy(hideWifiActivityArrows = it)) },
+                onStyleChange = { onChange(config.copy(wifiEnabled = true, wifiStyleId = it)) },
                 onApply = onApply,
             )
             StatusIconStyleTarget.Mobile -> SignalIconStyleCards(
@@ -115,9 +116,9 @@ fun StatusBarIconStylesCategoryControls(
                 selectedStyleId = config.mobileStyleId,
                 hideAuxiliary = config.hideMobileNetworkType,
                 styles = styles,
-                onEnabledChange = { onChange(uiState.copy(iconStyles = config.copy(mobileEnabled = it, mobileStyleId = config.mobileStyleId.ifBlank { styles.firstOrNull()?.id.orEmpty() }))) },
-                onAuxiliaryChange = { onChange(uiState.copy(iconStyles = config.copy(hideMobileNetworkType = it))) },
-                onStyleChange = { onChange(uiState.copy(iconStyles = config.copy(mobileEnabled = true, mobileStyleId = it))) },
+                onEnabledChange = { onChange(config.copy(mobileEnabled = it, mobileStyleId = config.mobileStyleId.ifBlank { styles.firstOrNull()?.id.orEmpty() })) },
+                onAuxiliaryChange = { onChange(config.copy(hideMobileNetworkType = it)) },
+                onStyleChange = { onChange(config.copy(mobileEnabled = true, mobileStyleId = it)) },
                 onApply = onApply,
             )
             StatusIconStyleTarget.Bluetooth -> SignalIconStyleCards(
@@ -125,8 +126,8 @@ fun StatusBarIconStylesCategoryControls(
                 enabled = config.bluetoothEnabled,
                 selectedStyleId = config.bluetoothStyleId,
                 styles = styles,
-                onEnabledChange = { onChange(uiState.copy(iconStyles = config.copy(bluetoothEnabled = it, bluetoothStyleId = config.bluetoothStyleId.ifBlank { styles.firstOrNull()?.id.orEmpty() }))) },
-                onStyleChange = { onChange(uiState.copy(iconStyles = config.copy(bluetoothEnabled = true, bluetoothStyleId = it))) },
+                onEnabledChange = { onChange(config.copy(bluetoothEnabled = it, bluetoothStyleId = config.bluetoothStyleId.ifBlank { styles.firstOrNull()?.id.orEmpty() })) },
+                onStyleChange = { onChange(config.copy(bluetoothEnabled = true, bluetoothStyleId = it)) },
                 onApply = onApply,
             )
             StatusIconStyleTarget.Vpn -> SignalIconStyleCards(
@@ -134,8 +135,8 @@ fun StatusBarIconStylesCategoryControls(
                 enabled = config.vpnEnabled,
                 selectedStyleId = config.vpnStyleId,
                 styles = styles,
-                onEnabledChange = { onChange(uiState.copy(iconStyles = config.copy(vpnEnabled = it, vpnStyleId = config.vpnStyleId.ifBlank { styles.firstOrNull()?.id.orEmpty() }))) },
-                onStyleChange = { onChange(uiState.copy(iconStyles = config.copy(vpnEnabled = true, vpnStyleId = it))) },
+                onEnabledChange = { onChange(config.copy(vpnEnabled = it, vpnStyleId = config.vpnStyleId.ifBlank { styles.firstOrNull()?.id.orEmpty() })) },
+                onStyleChange = { onChange(config.copy(vpnEnabled = true, vpnStyleId = it)) },
                 onApply = onApply,
             )
         }
@@ -248,7 +249,7 @@ private fun BatteryIconStyleCards(
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
                             valueRange = 80f..180f,
                             enabled = config.batteryEnabled,
-                            onValueChangeFinished = { onChange(config.copy(batterySizePercent = size.roundToInt())) },
+                            onValueChangeFinished = { onChange(config.copy(batterySizePercent = size.roundToInt()) },
                         )
                     }
                 },
