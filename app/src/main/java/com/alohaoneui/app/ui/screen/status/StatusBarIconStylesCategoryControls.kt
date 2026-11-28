@@ -77,7 +77,7 @@ fun StatusBarIconStylesCategoryControls(
         Box(Modifier.responsiveGridFullSpan()) {
             when (LocalUiMode.current) {
                 UiMode.Material -> Text(
-                    text = target.description,
+                    text = target.detailDescription,
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
