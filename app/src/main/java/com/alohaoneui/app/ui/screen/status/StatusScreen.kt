@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
@@ -216,6 +217,47 @@ private fun StatusPagerMiuix(
                         }
                     }
                 }
+                StatusIconStyleTarget.entries.forEach { target ->
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 12.dp)
+                                .graphicsLayer { alpha = if (lsposedActive) 1f else 0.38f },
+                            onClick = {
+                                if (lsposedActive) navigator.push(Route.StatusIconStyle(target.key))
+                            },
+                            showIndication = lsposedActive,
+                            insideMargin = PaddingValues(
+                                start = 10.dp, end = 16.dp, top = 8.dp, bottom = 8.dp,
+                            ),
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Image(
+                                    painter = painterResource(target.iconRes),
+                                    contentDescription = target.title,
+                                    modifier = Modifier.size(48.dp),
+                                )
+                                MiuixText(
+                                    text = target.title,
+                                    modifier = Modifier.weight(1f).padding(start = 10.dp),
+                                    fontWeight = FontWeight(550),
+                                    color = colorScheme.onSurface,
+                                    maxLines = 1,
+                                )
+                                val layoutDirection = LocalLayoutDirection.current
+                                MiuixIcon(
+                                    modifier = Modifier.graphicsLayer {
+                                        if (layoutDirection == LayoutDirection.Rtl) scaleX = -1f
+                                    }.padding(start = 8.dp).size(width = 10.dp, height = 16.dp),
+                                    imageVector = MiuixIcons.Basic.ArrowRight,
+                                    contentDescription = null,
+                                    tint = colorScheme.onSurfaceVariantActions,
+                                )
+                            }
+                        }
+                    }
+                }
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     Spacer(Modifier.height(bottomContentPadding + 16.dp))
                 }
@@ -299,6 +341,44 @@ private fun StatusPagerMaterial(
                             .graphicsLayer {
                                 alpha = if (lsposedActive) 1f else 0.38f
                             },
+                        content = frameItems,
+                    )
+                }
+                val iconStyleItems: List<@Composable () -> Unit> = StatusIconStyleTarget.entries.map { target ->
+                    {
+                        SegmentedListItem(
+                            enabled = lsposedActive,
+                            onClick = {
+                                if (lsposedActive) navigator.push(Route.StatusIconStyle(target.key))
+                            },
+                            headlineContent = { Text(target.title) },
+                            supportingContent = { Text(target.description) },
+                            leadingContent = {
+                                Image(
+                                    painter = painterResource(target.iconRes),
+                                    contentDescription = target.title,
+                                    modifier = Modifier.size(48.dp),
+                                )
+                            },
+                            trailingContent = {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                    contentDescription = null,
+                                )
+                            },
+                        )
+                    }
+                }
+                val iconStyleFrames = if (shouldShowSplitPane()) {
+                    iconStyleItems.chunked(4)
+                } else {
+                    listOf(iconStyleItems)
+                }
+                iconStyleFrames.forEach { frameItems ->
+                    SegmentedColumn(
+                        modifier = Modifier
+                            .padding(vertical = 8.dp)
+                            .graphicsLayer { alpha = if (lsposedActive) 1f else 0.38f },
                         content = frameItems,
                     )
                 }
