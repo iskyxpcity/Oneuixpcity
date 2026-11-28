@@ -563,10 +563,12 @@ internal object StatusBarSignalIndependentRuntime {
 
         fun refreshOnce() {
             background.post {
-                val next = runCatching {
-                    with(module) { PreferenceProvider.loadPreference() }
-                        ?.systemUI?.statusBar?.signalRuntime
+                val statusBar = runCatching {
+                    with(module) { PreferenceProvider.loadPreference() }?.systemUI?.statusBar
                 }.getOrNull() ?: return@post
+                val next = if (statusBar.iconStyles.mobileEnabled) {
+                    statusBar.signalRuntime.copy(enabled = false)
+                } else statusBar.signalRuntime
                 if (next == previous) return@post
                 previous = next
                 mainHandler.post {
@@ -599,8 +601,11 @@ internal object StatusBarSignalIndependentRuntime {
                             Preference.SystemUI.StatusBar.serializer(), payload,
                         )
                     }.getOrNull() ?: return@post
+                    val next = if (statusBar.iconStyles.mobileEnabled) {
+                        statusBar.signalRuntime.copy(enabled = false)
+                    } else statusBar.signalRuntime
                     mainHandler.post {
-                        config = sanitize(statusBar.signalRuntime)
+                        config = sanitize(next)
                         applyAll()
                     }
                 }
