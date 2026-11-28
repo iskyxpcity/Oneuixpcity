@@ -88,7 +88,6 @@ internal object StatusBarIconStylesRuntime {
     private val batteryOriginalStates = Collections.synchronizedMap(WeakHashMap<ImageView, BatteryOriginalState>())
     private val applyingSignalViews = Collections.newSetFromMap(WeakHashMap<ImageView, Boolean>())
     private val applyingBatteryViews = Collections.newSetFromMap(WeakHashMap<ImageView, Boolean>())
-    private val batteryPercentViews = Collections.synchronizedMap(WeakHashMap<ViewGroup, TextView>())
 
     @Volatile private var moduleRef: XposedModule? = null
     @Volatile private var systemUiContext: Context? = null
@@ -175,6 +174,7 @@ internal object StatusBarIconStylesRuntime {
                             val result = chain.proceed()
                             applyingBatteryViews.remove(imageView)
                             applyBatteryIconSize(imageView)
+                            applyBatteryPercent(meter, imageView)
                             return@intercept result
                         }
                     }
@@ -188,39 +188,7 @@ internal object StatusBarIconStylesRuntime {
         }
     }
 
-    private fun hookBatteryMeterViews(module: XposedModule, classLoader: ClassLoader) {
-        runCatching {
-            val clazz = classLoader.loadClass("com.android.systemui.battery.BatteryMeterView")
-            val updateNames = setOf(
-                "updateColors",
-                "onDarkChanged",
-                "scaleBatteryMeterViewsLegacy",
-                "updatePercentText",
-                "updateShowPercent",
-                "onBatteryLevelChanged",
-            )
-            clazz.declaredMethods.filter { it.name in updateNames }.forEach { method ->
-                runCatching {
-                    module.hook(method).intercept { chain ->
-                        val result = chain.proceed()
-                        val meter = chain.thisObject
-                        main.post { applyBatteryIcon(meter) }
-                        result
-                    }
-                }
-            }
-            clazz.declaredConstructors.forEach { constructor ->
-                runCatching {
-                    module.hook(constructor).intercept { chain ->
-                        val result = chain.proceed()
-                        val meter = chain.thisObject
-                        main.post { applyBatteryIcon(meter) }
-                        result
-                    }
-                }
-            }
-        }
-    }
+
 
     private fun hookSamsungBatteryPercentageIcon(module: XposedModule, classLoader: ClassLoader) {
         runCatching {
@@ -565,6 +533,7 @@ internal object StatusBarIconStylesRuntime {
         applyingBatteryViews.add(imageView)
         runCatching { imageView.setImageDrawable(drawable) }
         applyingBatteryViews.remove(imageView)
+        (drawable as? AnimationDrawable)?.start()
         imageView.adjustViewBounds = false
         imageView.scaleType = ImageView.ScaleType.FIT_CENTER
         imageView.setPadding(0, 0, 0, 0)
