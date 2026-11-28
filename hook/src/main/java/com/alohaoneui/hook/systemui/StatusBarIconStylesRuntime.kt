@@ -88,6 +88,11 @@ internal object StatusBarIconStylesRuntime {
         val width: Int?,
         val height: Int?,
     )
+    private data class BatteryColors(
+        val foreground: Int,
+        val background: Int,
+        val singleTone: Int,
+    )
     private data class SignalIconRequest(
         val kind: String,
         val level: Int,
@@ -104,6 +109,7 @@ internal object StatusBarIconStylesRuntime {
     private val originalDrawables = Collections.synchronizedMap(WeakHashMap<Resources, MutableMap<Int, Drawable>>())
     private val signalViews = Collections.synchronizedMap(WeakHashMap<ImageView, ResourceOrigin>())
     private val batteryMeters = Collections.synchronizedMap(WeakHashMap<Any, Boolean>())
+    private val batteryColors = Collections.synchronizedMap(WeakHashMap<Any, BatteryColors>())
     private val batteryMeterByImageView = Collections.synchronizedMap(WeakHashMap<ImageView, Any>())
     private val batteryOriginalStates = Collections.synchronizedMap(WeakHashMap<ImageView, BatteryOriginalState>())
     private val applyingSignalViews = Collections.newSetFromMap(WeakHashMap<ImageView, Boolean>())
@@ -726,6 +732,8 @@ internal object StatusBarIconStylesRuntime {
         (drawable as? AnimationDrawable)?.start()
         imageView.adjustViewBounds = false
         imageView.scaleType = ImageView.ScaleType.FIT_CENTER
+        imageView.clearColorFilter()
+        imageView.imageTintList = null
         imageView.setPadding(0, 0, 0, 0)
         imageView.visibility = View.VISIBLE
         applyBatteryIconSize(imageView)
@@ -755,7 +763,9 @@ internal object StatusBarIconStylesRuntime {
             val animation = AnimationDrawable().apply { isOneShot = false }
             for (frameLevel in level..100) {
                 val bitmap = loadBatteryBitmap(app, dir, "battery_charge_" + frameLevel + ".png") ?: continue
-                animation.addFrame(BitmapDrawable(app.resources, bitmap), BATTERY_CHARGE_FRAME_DURATION_MS)
+                val frame = BitmapDrawable(app.resources, bitmap)
+                if (shouldTintBatteryBitmap(bitmap)) frame.setTint(currentBatteryTint(meter))
+                animation.addFrame(frame, BATTERY_CHARGE_FRAME_DURATION_MS)
             }
             if (animation.numberOfFrames >= 2) {
                 animation.setBounds(0, 0, animation.intrinsicWidth, animation.intrinsicHeight)
@@ -812,6 +822,7 @@ internal object StatusBarIconStylesRuntime {
     }
 
     private fun currentBatteryTint(meter: Any): Int {
+        batteryColors[meter]?.foreground?.let { return Color.rgb(Color.red(it), Color.green(it), Color.blue(it)) }
         listOf("mIconTint", "mNonAdaptedForegroundColor", "mTextColor", "mDarkTint").forEach { field ->
             val color = getFieldValue(meter, field) as? Int ?: 0
             if (Color.alpha(color) != 0) return Color.rgb(Color.red(color), Color.green(color), Color.blue(color))
