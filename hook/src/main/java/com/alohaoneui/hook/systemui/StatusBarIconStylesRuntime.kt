@@ -689,7 +689,8 @@ internal object StatusBarIconStylesRuntime {
     private fun getFieldValue(target: Any, name: String): Any? {
         var type: Class<*>? = target.javaClass
         while (type != null) {
-            val field = runCatching { type.getDeclaredField(name) }.getOrNull()
+            val currentType = type
+            val field = runCatching { currentType.getDeclaredField(name) }.getOrNull()
             if (field != null) {
                 return runCatching {
                     field.isAccessible = true
