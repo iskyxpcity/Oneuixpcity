@@ -10,6 +10,9 @@ import android.database.ContentObserver
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.RectF
 import android.graphics.drawable.AnimationDrawable
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.ColorDrawable
@@ -54,6 +57,21 @@ internal object StatusBarIconStylesRuntime {
     private const val BATTERY_BASE_WIDTH_DP = 28
     private const val BATTERY_BASE_HEIGHT_DP = 18
     private const val BATTERY_CHARGE_FRAME_DURATION_MS = 55
+    private const val STATUS_GLYPH_NORMALIZED_HEIGHT_PX = 55
+    private const val SIGNAL_ICON_NORMALIZED_HEIGHT_PX = 55
+    private const val STACKED_MOBILE_SIGNAL_WIDTH_PX = 52
+    private const val STACKED_MOBILE_SIGNAL_HEIGHT_PX = 56
+    private const val STACKED_MOBILE_SIGNAL_MAIN_HEIGHT_PX = 36
+    private const val STACKED_MOBILE_SIGNAL_MAIN_TOP_PX = 0
+    private const val STACKED_MOBILE_SIGNAL_VECTOR_SCALE = 4f
+    private val STACKED_MOBILE_SIGNAL_4BAR_PILL_STARTS = floatArrayOf(1.05f, 4.15f, 7.25f, 10.35f)
+    private val STACKED_MOBILE_SIGNAL_5BAR_PILL_STARTS = floatArrayOf(0.9f, 3.35f, 5.8f, 8.25f, 10.7f)
+    private const val STACKED_MOBILE_SIGNAL_4BAR_PILL_WIDTH_VECTOR = 1.6f
+    private const val STACKED_MOBILE_SIGNAL_5BAR_PILL_WIDTH_VECTOR = 1.4f
+    private const val STACKED_MOBILE_SIGNAL_PILL_TOP_VECTOR = 10.44f
+    private const val STACKED_MOBILE_SIGNAL_PILL_BOTTOM_VECTOR = 13f
+    private const val STACKED_MOBILE_SIGNAL_PILL_RADIUS_VECTOR = 0.8f
+    private const val STACKED_MOBILE_SIGNAL_PILL_INACTIVE_ALPHA = 102
     private const val BATTERY_STYLE_PREFIX = "laobai.systemui.battery."
     private const val WIFI_STYLE_PREFIX = "laobai.systemui.wifi_signal."
     private const val MOBILE_STYLE_PREFIX = "laobai.systemui.mobile_signal."
@@ -75,6 +93,8 @@ internal object StatusBarIconStylesRuntime {
         val level: Int,
         val variant: String? = null,
         val fileName: String? = null,
+        val stackedSlot: Int? = null,
+        val maxLevel: Int = 4,
     )
 
     private val installed = AtomicBoolean(false)
@@ -367,21 +387,46 @@ internal object StatusBarIconStylesRuntime {
     }
 
     private fun parseMobileIcon(name: String): SignalIconRequest? {
-        val patterns = listOf(
-            Regex("^ic_mobile_(\\d)_[45]_bar(?:_error)?$"),
-            Regex("^stat_sys_signal_5level_(\\d)(?:_error)?$"),
-            Regex("^stat_sys_signal_sprint_(\\d)(?:_error)?$"),
-            Regex("^stat_sys_signal(?:_5bar)?_dual[12]_(\\d)(?:_error)?$"),
-            Regex("^stat_sys_signal_(\\d)(?:_error)?$"),
-            Regex("^sec_stat_sys_signal(?:_5bar)?(?:_dual[12])?_(\\d)(?:_error)?$"),
-        )
-        patterns.forEach { pattern ->
-            pattern.find(name)?.groupValues?.getOrNull(1)?.toIntOrNull()?.let { level ->
-                if (level in 0..5) return SignalIconRequest("mobile", level)
+        Regex("^ic_mobile_(\\d)_[45]_bar(?:_error)?$").find(name)?.let { match ->
+            normalizeMobileSignalLevel(match.groupValues[1].toIntOrNull() ?: return null)?.let { level ->
+                return SignalIconRequest("mobile", level)
+            }
+        }
+        Regex("^stat_sys_signal_5level_(\\d)(?:_error)?$").find(name)?.let { match ->
+            normalizeMobileSignalLevel(match.groupValues[1].toIntOrNull() ?: return null)?.let { level ->
+                return SignalIconRequest("mobile", level)
+            }
+        }
+        Regex("^stat_sys_signal_sprint_(\\d)(?:_error)?$").find(name)?.let { match ->
+            normalizeMobileSignalLevel(match.groupValues[1].toIntOrNull() ?: return null)?.let { level ->
+                return SignalIconRequest("mobile", level)
+            }
+        }
+        Regex("^stat_sys_signal(_5bar)?_dual([12])_(\\d)(?:_error)?$").find(name)?.let { match ->
+            val maxLevel = if (match.groupValues[1].isNotBlank()) 5 else 4
+            val slot = match.groupValues[2].toIntOrNull()
+            normalizeMobileSignalLevel(match.groupValues[3].toIntOrNull() ?: return null)?.let { level ->
+                return SignalIconRequest("mobile", level, stackedSlot = slot, maxLevel = maxLevel)
+            }
+        }
+        Regex("^stat_sys_signal_(\\d)(?:_error)?$").find(name)?.let { match ->
+            normalizeMobileSignalLevel(match.groupValues[1].toIntOrNull() ?: return null)?.let { level ->
+                return SignalIconRequest("mobile", level)
+            }
+        }
+        Regex("^sec_stat_sys_signal(_5bar)?(?:_dual([12]))?_(\\d)(?:_error)?$").find(name)?.let { match ->
+            val maxLevel = if (match.groupValues[1].isNotBlank()) 5 else 4
+            val slot = match.groupValues.getOrNull(2)?.toIntOrNull()
+            normalizeMobileSignalLevel(match.groupValues[3].toIntOrNull() ?: return null)?.let { level ->
+                return SignalIconRequest("mobile", level, stackedSlot = slot, maxLevel = maxLevel)
             }
         }
         return null
     }
+
+    private fun normalizeMobileSignalLevel(level: Int): Int? =
+        level.takeIf { it in 0..5 }
+
 
     private fun parseBluetoothIcon(name: String): SignalIconRequest? = when (name.lowercase(Locale.US)) {
         "stat_sys_data_bluetooth",
@@ -433,37 +478,182 @@ internal object StatusBarIconStylesRuntime {
             "vpn" -> VPN_ASSET_DIR
             else -> MOBILE_ASSET_DIR
         }
-        val candidates = buildList {
+        val names = buildList {
             if (!request.fileName.isNullOrBlank()) {
                 add(request.fileName)
             } else {
-                val available = runCatching { app.assets.list(assetDir + "/" + dir).orEmpty() }
-                    .getOrDefault(emptyArray())
-                val genericPrefix = request.kind
-                val variantPrefix = request.variant
-                val maxLevel = available.mapNotNull { file ->
-                    val variantLevel = if (variantPrefix != null) {
-                        Regex("^" + Regex.escape(variantPrefix) + "_(\\d)\\.png$").find(file)
-                            ?.groupValues?.getOrNull(1)?.toIntOrNull()
-                    } else null
-                    variantLevel ?: Regex("^" + Regex.escape(genericPrefix) + "_(\\d)\\.png$").find(file)
-                        ?.groupValues?.getOrNull(1)?.toIntOrNull()
-                }.maxOrNull() ?: 4
-                val requested = request.level.coerceIn(0, 5)
-                val mapped = if (maxLevel == 4 && requested == 5) 4 else requested.coerceIn(0, maxLevel)
-                listOf(requested, mapped, maxLevel).distinct().forEach { level ->
-                    if (!variantPrefix.isNullOrBlank()) add(variantPrefix + "_" + level + ".png")
-                    add(genericPrefix + "_" + level + ".png")
+                signalAssetLevelCandidates(app, assetDir, dir, request).forEach { level ->
+                    if (request.kind == "wifi" && !request.variant.isNullOrBlank()) {
+                        add(request.variant + "_" + level + ".png")
+                    }
+                    add(request.kind + "_" + level + ".png")
                 }
             }
         }
-        candidates.forEach { file ->
+        return names.firstNotNullOfOrNull { name ->
             runCatching {
-                app.assets.open(assetDir + "/" + dir + "/" + file).use { BitmapFactory.decodeStream(it) }
-            }.getOrNull()?.let { return it }
+                app.assets.open(assetDir + "/" + dir + "/" + name).use { input ->
+                    val bitmap = BitmapFactory.decodeStream(input) ?: return@use null
+                    prepareSignalBitmap(bitmap, dir, request)
+                }
+            }.getOrElse {
+                runCatching {
+                    app.assets.open("signal_icons/" + dir + "/" + name).use { input ->
+                        val bitmap = BitmapFactory.decodeStream(input) ?: return@use null
+                        prepareSignalBitmap(bitmap, dir, request)
+                    }
+                }.getOrNull()
+            }
         }
-        return null
     }
+
+    private fun signalAssetLevelCandidates(
+        app: Context,
+        assetDir: String,
+        dir: String,
+        request: SignalIconRequest,
+    ): List<Int> {
+        val requested = request.level.coerceIn(0, 5)
+        val availableMax = signalAssetMaxLevel(app, assetDir, dir, request).coerceIn(0, 5)
+        val mappedLevel = when {
+            availableMax <= 0 -> 0
+            requested == 5 -> availableMax
+            availableMax == 5 -> ((requested.coerceIn(0, 4) * 5f) / 4f).roundToInt().coerceIn(0, 5)
+            else -> ((requested.coerceIn(0, 4) * availableMax.toFloat()) / 4f).roundToInt().coerceIn(0, availableMax)
+        }
+        return listOf(requested, mappedLevel, requested.coerceIn(0, availableMax), availableMax).distinct()
+    }
+
+    private fun signalAssetMaxLevel(
+        app: Context,
+        assetDir: String,
+        dir: String,
+        request: SignalIconRequest,
+    ): Int {
+        return runCatching {
+            val genericRegex = Regex("^" + Regex.escape(request.kind) + "_(\\d)\\.png$")
+            val variantRegex = if (request.kind == "wifi" && !request.variant.isNullOrBlank()) {
+                Regex("^" + Regex.escape(request.variant) + "_(\\d)\\.png$")
+            } else null
+            app.assets.list(assetDir + "/" + dir).orEmpty()
+                .asSequence()
+                .mapNotNull { name ->
+                    variantRegex?.find(name)?.groupValues?.getOrNull(1)?.toIntOrNull()
+                        ?: genericRegex.find(name)?.groupValues?.getOrNull(1)?.toIntOrNull()
+                }
+                .maxOrNull()
+        }.getOrNull() ?: 4
+    }
+
+    private fun prepareSignalBitmap(bitmap: Bitmap, dir: String, request: SignalIconRequest): Bitmap {
+        val cropped = cropTransparentBitmap(bitmap, dir)
+        val normalized = if (request.kind == "bluetooth" || request.kind == "vpn") {
+            cleanStatusGlyphBitmap(normalizeStatusGlyphBitmapSize(cropped))
+        } else cropped
+        return if (request.kind == "mobile" && request.stackedSlot != null) {
+            buildOfficialStackedMobileSignalBitmap(normalized, request.stackedSlot, request.level, request.maxLevel)
+        } else normalized
+    }
+
+    private fun cropTransparentBitmap(bitmap: Bitmap, dir: String): Bitmap {
+        var left = bitmap.width
+        var top = bitmap.height
+        var right = -1
+        var bottom = -1
+        for (y in 0 until bitmap.height) {
+            for (x in 0 until bitmap.width) {
+                if (Color.alpha(bitmap.getPixel(x, y)) != 0) {
+                    if (x < left) left = x
+                    if (x > right) right = x
+                    if (y < top) top = y
+                    if (y > bottom) bottom = y
+                }
+            }
+        }
+        if (right < left || bottom < top) return bitmap
+        if (left == 0 && top == 0 && right == bitmap.width - 1 && bottom == bitmap.height - 1) return bitmap
+        val cropped = Bitmap.createBitmap(bitmap, left, top, right - left + 1, bottom - top + 1)
+        val styleNumber = Regex("^style(\\d+)$").find(dir)?.groupValues?.getOrNull(1)?.toIntOrNull()
+        return if (styleNumber != null && styleNumber in 12..61) normalizeNewSignalBitmapSize(cropped) else cropped
+    }
+
+    private fun normalizeNewSignalBitmapSize(bitmap: Bitmap): Bitmap {
+        if (bitmap.height >= SIGNAL_ICON_NORMALIZED_HEIGHT_PX) return bitmap
+        val targetHeight = SIGNAL_ICON_NORMALIZED_HEIGHT_PX
+        val targetWidth = ((bitmap.width.toFloat() / bitmap.height.toFloat()) * targetHeight)
+            .roundToInt().coerceAtLeast(1)
+        return Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true)
+    }
+
+    private fun normalizeStatusGlyphBitmapSize(bitmap: Bitmap): Bitmap {
+        if (bitmap.height >= STATUS_GLYPH_NORMALIZED_HEIGHT_PX) return bitmap
+        val targetHeight = STATUS_GLYPH_NORMALIZED_HEIGHT_PX
+        val targetWidth = ((bitmap.width.toFloat() / bitmap.height.toFloat()) * targetHeight)
+            .roundToInt().coerceAtLeast(1)
+        return Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true)
+    }
+
+    private fun cleanStatusGlyphBitmap(bitmap: Bitmap): Bitmap {
+        val output = Bitmap.createBitmap(bitmap.width, bitmap.height, Bitmap.Config.ARGB_8888)
+        for (y in 0 until bitmap.height) {
+            for (x in 0 until bitmap.width) {
+                val pixel = bitmap.getPixel(x, y)
+                val alpha = Color.alpha(pixel)
+                if (alpha == 0) {
+                    output.setPixel(x, y, Color.TRANSPARENT)
+                    continue
+                }
+                val brightness = maxOf(Color.red(pixel), Color.green(pixel), Color.blue(pixel))
+                val cleanAlpha = when {
+                    brightness < 96 -> 0
+                    brightness > 190 -> alpha
+                    else -> (alpha * ((brightness - 96) / 94f)).roundToInt()
+                }
+                output.setPixel(x, y, Color.argb(cleanAlpha, 255, 255, 255))
+            }
+        }
+        return output
+    }
+
+    private fun buildOfficialStackedMobileSignalBitmap(bitmap: Bitmap, slot: Int, level: Int, maxLevel: Int): Bitmap {
+        val output = Bitmap.createBitmap(
+            STACKED_MOBILE_SIGNAL_WIDTH_PX,
+            STACKED_MOBILE_SIGNAL_HEIGHT_PX,
+            Bitmap.Config.ARGB_8888,
+        )
+        val canvas = Canvas(output)
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG or Paint.DITHER_FLAG)
+        if (slot == 1) {
+            val targetHeight = STACKED_MOBILE_SIGNAL_MAIN_HEIGHT_PX.toFloat()
+            val targetWidth = (bitmap.width.toFloat() / bitmap.height.toFloat()) * targetHeight
+            val left = (STACKED_MOBILE_SIGNAL_WIDTH_PX - targetWidth) / 2f
+            val top = STACKED_MOBILE_SIGNAL_MAIN_TOP_PX.toFloat()
+            canvas.drawBitmap(bitmap, null, RectF(left, top, left + targetWidth, top + targetHeight), paint)
+        } else {
+            drawStackedMobileSignalPills(canvas, paint, level, maxLevel)
+        }
+        return output
+    }
+
+    private fun drawStackedMobileSignalPills(canvas: Canvas, paint: Paint, level: Int, maxLevel: Int) {
+        val pillCount = maxLevel.coerceIn(4, 5)
+        val activeCount = level.coerceIn(0, pillCount)
+        val starts = if (pillCount == 5) STACKED_MOBILE_SIGNAL_5BAR_PILL_STARTS
+        else STACKED_MOBILE_SIGNAL_4BAR_PILL_STARTS
+        val scale = STACKED_MOBILE_SIGNAL_VECTOR_SCALE
+        val width = (if (pillCount == 5) STACKED_MOBILE_SIGNAL_5BAR_PILL_WIDTH_VECTOR
+        else STACKED_MOBILE_SIGNAL_4BAR_PILL_WIDTH_VECTOR) * scale
+        val top = STACKED_MOBILE_SIGNAL_PILL_TOP_VECTOR * scale
+        val bottom = STACKED_MOBILE_SIGNAL_PILL_BOTTOM_VECTOR * scale
+        val radius = STACKED_MOBILE_SIGNAL_PILL_RADIUS_VECTOR * scale
+        starts.forEachIndexed { index, start ->
+            val alpha = if (index < activeCount) 255 else STACKED_MOBILE_SIGNAL_PILL_INACTIVE_ALPHA
+            paint.color = Color.argb(alpha, 255, 255, 255)
+            val x = start * scale
+            canvas.drawRoundRect(RectF(x, top, x + width, bottom), radius, radius, paint)
+        }
+    }
+
 
     private fun appContext(context: Context): Context? {
         appContext?.let { return it }
