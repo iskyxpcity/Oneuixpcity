@@ -289,7 +289,7 @@ private fun SignalIconStyleCards(
     val selected = styles.firstOrNull { it.id == selectedStyleId }
     Box {
         StatusThemeGroup(
-            title = "启用" + target.title + "替换",
+            miuixInsideMargin = PaddingValues(10.dp),
             items = listOf(
                 {
                     SwitchItem(
@@ -324,6 +324,7 @@ private fun SignalIconStyleCards(
     if (target == StatusIconStyleTarget.Mobile && onAuxiliaryChange != null) {
         Box {
             StatusThemeGroup(
+                miuixInsideMargin = PaddingValues(10.dp),
                 items = listOf({
                     SwitchItem(
                         title = "隐藏 4G / 5G 小标",
