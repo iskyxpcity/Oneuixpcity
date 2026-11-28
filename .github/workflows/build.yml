@@ -60,23 +60,23 @@ jobs:
             "https://x-access-token:${UPSTREAM_REPO_TOKEN}@github.com/iskyxpcity/App20261018Aloha.git" \
             "$SOURCE_DIR"
           git -C "$SOURCE_DIR" sparse-checkout set \
-            src/main/assets/battery_icons \
-            src/main/assets/wifi_signal_icons \
-            src/main/assets/mobile_signal_icons \
-            src/main/assets/bluetooth_status_icons \
-            src/main/assets/vpn_status_icons
+            app/src/main/assets/battery_icons \
+            app/src/main/assets/wifi_signal_icons \
+            app/src/main/assets/mobile_signal_icons \
+            app/src/main/assets/bluetooth_status_icons \
+            app/src/main/assets/vpn_status_icons
           mkdir -p app/src/main/assets
           for asset_dir in battery_icons wifi_signal_icons mobile_signal_icons bluetooth_status_icons vpn_status_icons; do
-            cp -a "$SOURCE_DIR/src/main/assets/$asset_dir" app/src/main/assets/
+            cp -a "$SOURCE_DIR/app/src/main/assets/$asset_dir" app/src/main/assets/
           done
-          test -f app/src/main/assets/battery_icons/manifest.json
-          test -d app/src/main/assets/wifi_signal_icons
-          test -d app/src/main/assets/mobile_signal_icons
-          test -d app/src/main/assets/bluetooth_status_icons
-          test -d app/src/main/assets/vpn_status_icons
+          test -f app/app/src/main/assets/battery_icons/manifest.json
+          test -d app/app/src/main/assets/wifi_signal_icons
+          test -d app/app/src/main/assets/mobile_signal_icons
+          test -d app/app/src/main/assets/bluetooth_status_icons
+          test -d app/app/src/main/assets/vpn_status_icons
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add app/src/main/assets/battery_icons app/src/main/assets/wifi_signal_icons app/src/main/assets/mobile_signal_icons app/src/main/assets/bluetooth_status_icons app/src/main/assets/vpn_status_icons
+          git add app/app/src/main/assets/battery_icons app/app/src/main/assets/wifi_signal_icons app/app/src/main/assets/mobile_signal_icons app/app/src/main/assets/bluetooth_status_icons app/app/src/main/assets/vpn_status_icons
           if ! git diff --cached --quiet; then
             git commit -m "assets: import original status icon style resources"
             git push origin "HEAD:${GITHUB_REF_NAME}"
