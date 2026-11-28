@@ -270,7 +270,7 @@ data class Preference(
             val batteryChargingAnimationEnabled: Boolean = true,
             val batteryPercentEnabled: Boolean = false,
             val batteryPercentPosition: Int = 0,
-            val batteryBackgroundEnabled: Boolean = false,
+            val batteryBackgroundEnabled: Boolean = true,
             val wifiEnabled: Boolean = false,
             val wifiStyleId: String = "",
             val hideWifiActivityArrows: Boolean = false,
