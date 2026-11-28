@@ -155,14 +155,6 @@ private fun StatusCategoryContent(
                 StatusNotificationCategoryControls(
                     uiState = preference.systemUI.statusBar,
                     onEvent = toolsViewModel::onSystemUIEvent,
-                    onChange = { updated ->
-                        toolsViewModel.updateData { current ->
-                            current.copy(
-                                systemUI = current.systemUI.copy(statusBar = updated),
-                            )
-                        }
-                    },
-                    onApply = toolsViewModel::applyNow,
                 )
             }
         }
