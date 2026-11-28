@@ -257,6 +257,53 @@ data class Preference(
             val hideOnLockscreen: Boolean = false,
         )
 
+        /** Independent settings for the five upstream status-bar icon catalogs. */
+        @Serializable
+        data class StatusBarBatteryIconStyle(
+            val enabled: Boolean = false,
+            val styleId: String = "",
+            val chargingAnimationEnabled: Boolean = true,
+            val sizePercent: Int = 100,
+            // left / right; percentage stays in the native position when empty.
+            val percentagePosition: String = "right",
+            val showBatteryBackground: Boolean = true,
+        )
+
+        @Serializable
+        data class StatusBarWifiIconStyle(
+            val enabled: Boolean = false,
+            val styleId: String = "",
+            val hideActivityArrows: Boolean = false,
+        )
+
+        @Serializable
+        data class StatusBarMobileIconStyle(
+            val enabled: Boolean = false,
+            val styleId: String = "",
+            val hideDataTypeBadge: Boolean = false,
+        )
+
+        @Serializable
+        data class StatusBarBluetoothIconStyle(
+            val enabled: Boolean = false,
+            val styleId: String = "",
+        )
+
+        @Serializable
+        data class StatusBarVpnIconStyle(
+            val enabled: Boolean = false,
+            val styleId: String = "",
+        )
+
+        @Serializable
+        data class StatusBarIconStylesRuntime(
+            val battery: StatusBarBatteryIconStyle = StatusBarBatteryIconStyle(),
+            val wifi: StatusBarWifiIconStyle = StatusBarWifiIconStyle(),
+            val mobile: StatusBarMobileIconStyle = StatusBarMobileIconStyle(),
+            val bluetooth: StatusBarBluetoothIconStyle = StatusBarBluetoothIconStyle(),
+            val vpn: StatusBarVpnIconStyle = StatusBarVpnIconStyle(),
+        )
+
         @Serializable
         data class StatusBar(
             val modifyStatusBarLeftPadding: Boolean = false,
@@ -284,6 +331,7 @@ data class Preference(
             val wifiRuntime: StatusBarWifiRuntime = StatusBarWifiRuntime(),
             val bluetoothRuntime: StatusBarBluetoothRuntime = StatusBarBluetoothRuntime(),
             val signalRuntime: StatusBarSignalRuntime = StatusBarSignalRuntime(),
+            val iconStylesRuntime: StatusBarIconStylesRuntime = StatusBarIconStylesRuntime(),
             val networkSpeedRuntime: StatusBarNetworkSpeedRuntime = StatusBarNetworkSpeedRuntime(),
             val supportRealTimeNetworkSpeed: Boolean = true,
             val showSeparateUpDownNetworkSpeeds: Boolean = false,
