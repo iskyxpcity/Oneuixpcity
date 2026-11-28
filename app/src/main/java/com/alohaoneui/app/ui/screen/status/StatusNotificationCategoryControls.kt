@@ -111,6 +111,8 @@ fun StatusNotificationCategoryControls(
         )
     }
 
+    // Keep all five upstream icon-style detail entries inside the Status bar notifications page.
+    // The shared StatusThemeGroup renders native Miuix Cards or Material SegmentedColumns per UI mode.
     ResponsiveCardGrid(
         content = StatusIconStyleTarget.entries.map { target ->
             {
