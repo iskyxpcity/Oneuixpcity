@@ -153,8 +153,14 @@ private fun BatteryIconStyleCards(
 
     Box {
         StatusThemeGroup(
-            title = "官方电池设置",
+            miuixInsideMargin = PaddingValues(10.dp),
             items = listOf(
+                {
+                    StatusThemeChildItem(
+                        title = "官方电池设置",
+                        summary = "未启用自定义电池时，百分比走系统原版；启用自定义电池后，可选择百分比在图标左侧或右侧。",
+                    ) {}
+                },
                 {
                     SwitchItem(
                         title = "电池背景",
@@ -197,7 +203,7 @@ private fun BatteryIconStyleCards(
 
     Box {
         StatusThemeGroup(
-            title = "启用电池图标替换",
+            miuixInsideMargin = PaddingValues(10.dp),
             items = listOf(
                 {
                     SwitchItem(
@@ -302,6 +308,7 @@ private fun SignalIconStyleCards(
     if (target == StatusIconStyleTarget.Wifi && onAuxiliaryChange != null) {
         Box {
             StatusThemeGroup(
+                miuixInsideMargin = PaddingValues(10.dp),
                 items = listOf({
                     SwitchItem(
                         title = "隐藏 WiFi 上下箭头",
@@ -384,7 +391,7 @@ private fun styleRows(
                         else MiuixTheme.colorScheme.primary
                     } else if (LocalUiMode.current == UiMode.Material) {
                         MaterialTheme.colorScheme.outlineVariant
-                    } else MiuixTheme.colorScheme.outline,
+                    } else MiuixTheme.colorScheme.onSurface.copy(alpha = 0.16f),
                     shape = RoundedCornerShape(22.dp),
                 ),
                 miuixInsideMargin = PaddingValues(10.dp),
