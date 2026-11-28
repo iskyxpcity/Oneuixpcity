@@ -47,11 +47,13 @@ jobs:
           ref: ${{ github.ref == 'refs/heads/migration/alohaoneui-rename-20261020' && github.ref_name || github.sha }}
           fetch-depth: 0
       - name: Import original status icon resources from App20261018Aloha
+        env:
+          UPSTREAM_REPO_TOKEN: ${{ secrets.UPSTREAM_REPO_TOKEN }}
         run: |
           set -euo pipefail
           SOURCE_DIR="$(mktemp -d)"
           git clone --depth 1 --filter=blob:none --sparse --branch main \
-            "https://github.com/iskyxpcity/App20261018Aloha.git" \
+            "https://iskyxpcity:${UPSTREAM_REPO_TOKEN}@github.com/iskyxpcity/App20261018Aloha.git" \
             "$SOURCE_DIR"
           git -C "$SOURCE_DIR" sparse-checkout set \
             app/src/main/assets/battery_icons \
