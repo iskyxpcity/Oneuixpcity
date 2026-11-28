@@ -81,10 +81,14 @@ private fun StatusIconStyleContent(
     ) {
         StatusBarIconStylesCategoryControls(
             target = target,
-            uiState = preference.systemUI.statusBar,
+            iconStyles = preference.systemUI.statusBar.iconStyles,
             onChange = { updated ->
                 toolsViewModel.updateData { current ->
-                    current.copy(systemUI = current.systemUI.copy(statusBar = updated))
+                    current.copy(
+                        systemUI = current.systemUI.copy(
+                            statusBar = current.systemUI.statusBar.copy(iconStyles = updated),
+                        ),
+                    )
                 }
             },
             onApply = toolsViewModel::applyNow,
