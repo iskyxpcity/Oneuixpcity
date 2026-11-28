@@ -104,10 +104,12 @@ internal object StatusBarBluetoothRuntime {
 
         fun refreshOnce() {
             background.post {
-                val current = runCatching {
-                    with(module) { PreferenceProvider.loadPreference() }
-                        ?.systemUI?.statusBar?.bluetoothRuntime
+                val statusBar = runCatching {
+                    with(module) { PreferenceProvider.loadPreference() }?.systemUI?.statusBar
                 }.getOrNull() ?: return@post
+                val current = if (statusBar.iconStyles.bluetoothEnabled) {
+                    statusBar.bluetoothRuntime.copy(enabled = false)
+                } else statusBar.bluetoothRuntime
                 if (current == previous) return@post
                 previous = current
                 mainHandler.post { updateRuntime(current) }
@@ -140,7 +142,9 @@ internal object StatusBarBluetoothRuntime {
                             payload,
                         )
                     }.getOrNull() ?: return@post
-                    val current = statusBar.bluetoothRuntime
+                    val current = if (statusBar.iconStyles.bluetoothEnabled) {
+                        statusBar.bluetoothRuntime.copy(enabled = false)
+                    } else statusBar.bluetoothRuntime
                     previous = current
                     mainHandler.post { updateRuntime(current) }
                 }
