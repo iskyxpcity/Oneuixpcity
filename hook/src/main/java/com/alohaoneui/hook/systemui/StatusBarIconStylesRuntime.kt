@@ -112,6 +112,7 @@ internal object StatusBarIconStylesRuntime {
     private val batteryColors = Collections.synchronizedMap(WeakHashMap<Any, BatteryColors>())
     private val batteryMeterByImageView = Collections.synchronizedMap(WeakHashMap<ImageView, Any>())
     private val batteryOriginalStates = Collections.synchronizedMap(WeakHashMap<ImageView, BatteryOriginalState>())
+    private val batteryCustomDrawables = Collections.newSetFromMap(WeakHashMap<Drawable, Boolean>())
     private val applyingSignalViews = Collections.newSetFromMap(WeakHashMap<ImageView, Boolean>())
     private val applyingBatteryViews = Collections.newSetFromMap(WeakHashMap<ImageView, Boolean>())
 
@@ -193,8 +194,14 @@ internal object StatusBarIconStylesRuntime {
                 if (imageView != null && incoming != null && !applyingBatteryViews.contains(imageView)) {
                     val meter = batteryMeterByImageView[imageView]
                     if (meter != null && config.batteryEnabled) {
+                        if (!batteryCustomDrawables.contains(incoming)) {
+                            batteryOriginalStates[imageView]?.let { original ->
+                                batteryOriginalStates[imageView] = original.copy(drawable = incoming)
+                            }
+                        }
                         val replacement = buildBatteryDrawable(imageView.context, meter)
                         if (replacement != null) {
+                            batteryCustomDrawables.add(replacement)
                             applyingBatteryViews.add(imageView)
                             chain.args[0] = replacement
                             val result = chain.proceed()
@@ -726,6 +733,7 @@ internal object StatusBarIconStylesRuntime {
             )
         }
         val drawable = buildBatteryDrawable(imageView.context, meter) ?: return
+        batteryCustomDrawables.add(drawable)
         applyingBatteryViews.add(imageView)
         runCatching { imageView.setImageDrawable(drawable) }
         applyingBatteryViews.remove(imageView)
