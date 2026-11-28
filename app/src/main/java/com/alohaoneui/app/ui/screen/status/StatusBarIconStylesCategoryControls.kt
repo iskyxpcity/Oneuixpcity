@@ -560,13 +560,19 @@ private fun styleRows(
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             IconAssetPreview(style)
-                            Text(
-                                text = style.label,
-                                modifier = Modifier.weight(1f),
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = if (LocalUiMode.current == UiMode.Material) MaterialTheme.colorScheme.onSurface
-                                else MiuixTheme.colorScheme.onSurface,
-                            )
+                            when (LocalUiMode.current) {
+                                UiMode.Material -> Text(
+                                    text = style.label,
+                                    modifier = Modifier.weight(1f),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                                UiMode.Miuix -> top.yukonga.miuix.kmp.basic.Text(
+                                    text = style.label,
+                                    modifier = Modifier.weight(1f),
+                                    color = MiuixTheme.colorScheme.onSurface,
+                                )
+                            }
                             IconStyleSelectionBadge(selected = selectedId == style.id)
                         }
                     }
@@ -589,7 +595,12 @@ private fun IconAssetPreview(style: IconPackStyle) {
         Box(
             Modifier.size(if (style.batteryPreview) 34.dp else 78.dp, if (style.batteryPreview) 34.dp else 38.dp),
             contentAlignment = Alignment.Center,
-        ) { Text("—") }
+        ) {
+            when (LocalUiMode.current) {
+                UiMode.Material -> Text("—", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                UiMode.Miuix -> top.yukonga.miuix.kmp.basic.Text("—", color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
+            }
+        }
         return
     }
     val surface = if (LocalUiMode.current == UiMode.Material) MaterialTheme.colorScheme.surfaceVariant
