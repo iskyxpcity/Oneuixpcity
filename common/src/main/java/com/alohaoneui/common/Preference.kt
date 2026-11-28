@@ -257,7 +257,7 @@ data class Preference(
             val hideOnLockscreen: Boolean = false,
         )
 
-        /** Independent settings for the five upstream status-bar icon catalogs. */
+        /** Independent, persisted settings for the five upstream status-bar icon catalogs. */
         @Serializable
         data class StatusBarBatteryIconStyle(
             val enabled: Boolean = false,
