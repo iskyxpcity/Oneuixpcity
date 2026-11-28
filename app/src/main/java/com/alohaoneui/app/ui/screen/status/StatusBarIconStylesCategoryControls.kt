@@ -257,7 +257,7 @@ private fun BatteryIconStyleCards(
         )
     }
 
-    Box(Modifier.responsiveGridFullSpan()) {
+    Box(Modifier.responsiveGridFullSpan().alpha(if (config.batteryEnabled) 1f else 0.42f)) {
         when (LocalUiMode.current) {
             UiMode.Material -> Text(
                 text = "内置样式",
@@ -272,7 +272,12 @@ private fun BatteryIconStyleCards(
             )
         }
     }
-    styleRows(styles, config.batteryStyleId, config.batteryEnabled) {
+    styleRows(
+        styles = styles,
+        selectedId = config.batteryStyleId,
+        enabled = config.batteryEnabled,
+        emptyMessage = "没有找到内置电池图标资源",
+    ) {
         onChange(config.copy(batteryEnabled = true, batteryStyleId = it))
     }
 }
@@ -340,7 +345,7 @@ private fun SignalIconStyleCards(
         }
     }
 
-    Box(Modifier.responsiveGridFullSpan()) {
+    Box(Modifier.responsiveGridFullSpan().alpha(if (enabled) 1f else 0.42f)) {
         val title = when (target) {
             StatusIconStyleTarget.Wifi -> "WiFi 样式"
             StatusIconStyleTarget.Mobile -> "移动信号样式"
@@ -362,7 +367,13 @@ private fun SignalIconStyleCards(
             )
         }
     }
-    styleRows(styles, selectedStyleId, enabled, onStyleChange)
+    styleRows(
+        styles = styles,
+        selectedId = selectedStyleId,
+        enabled = enabled,
+        emptyMessage = "没有找到内置图标资源",
+        onSelected = onStyleChange,
+    )
 }
 
 @Composable
@@ -510,8 +521,20 @@ private fun styleRows(
     styles: List<IconPackStyle>,
     selectedId: String,
     enabled: Boolean,
+    emptyMessage: String,
     onSelected: (String) -> Unit,
 ) {
+    if (styles.isEmpty()) {
+        Box {
+            StatusThemeGroup(
+                miuixInsideMargin = PaddingValues(10.dp),
+                items = listOf({
+                    StatusThemeChildItem(title = emptyMessage) {}
+                }),
+            )
+        }
+        return
+    }
     styles.forEach { style ->
         Box(Modifier.alpha(if (enabled) 1f else 0.42f)) {
             StatusThemeGroup(
