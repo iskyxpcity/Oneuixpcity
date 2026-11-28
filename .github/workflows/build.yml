@@ -46,33 +46,6 @@ jobs:
         with:
           ref: ${{ github.ref == 'refs/heads/migration/alohaoneui-rename-20261020' && github.ref_name || github.sha }}
           fetch-depth: 0
-      - name: Fetch complete upstream status icon resources
-        uses: actions/checkout@v4
-        with:
-          repository: iskyxpcity/App20261018Aloha
-          ref: main
-          token: ${{ secrets.UPSTREAM_REPO_TOKEN }}
-          path: upstream-aloha-source
-          sparse-checkout: |
-            app/src/main/assets/battery_icons
-            app/src/main/assets/wifi_signal_icons
-            app/src/main/assets/mobile_signal_icons
-            app/src/main/assets/bluetooth_status_icons
-            app/src/main/assets/vpn_status_icons
-          sparse-checkout-cone-mode: false
-      - name: Install upstream status icon resources into Aloha OneUI
-        run: |
-          set -euo pipefail
-          SOURCE_ASSETS="upstream-aloha-source/app/src/main/assets"
-          TARGET_ASSETS="app/src/main/assets"
-          for directory in battery_icons wifi_signal_icons mobile_signal_icons bluetooth_status_icons vpn_status_icons; do
-            test -d "$SOURCE_ASSETS/$directory"
-            rm -rf "$TARGET_ASSETS/$directory"
-            cp -a "$SOURCE_ASSETS/$directory" "$TARGET_ASSETS/$directory"
-          done
-          test -s "$TARGET_ASSETS/battery_icons/manifest.json"
-          echo "Installed all five upstream status icon resource packs."
-
       - name: Enforce fixed app version on test branches
         if: startsWith(github.ref, 'refs/heads/test/')
         run: |
