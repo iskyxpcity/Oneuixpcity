@@ -271,6 +271,7 @@ class Main : XposedModule() {
                 StatusBarBurnInProtectionRuntime.install(this@Main, param)
                 StatusBarComboStyleOneRuntime.install(this@Main, param)
                 StatusBarSignalIndependentRuntime.install(this@Main, param)
+                StatusBarIconStylesRuntime.install(this@Main, param)
 
                 if (preference.android.setBlockableNotificationChannel) {
                     Android.setBlockableNotificationChannel()
@@ -318,7 +319,9 @@ class Main : XposedModule() {
                     StatusBar.hideBatteryPercentageSign()
                 }
 
-                if (preference.systemUI.statusBar.hideBatteryIcon) {
+                if (preference.systemUI.statusBar.hideBatteryIcon &&
+                    !preference.systemUI.statusBar.iconStyles.batteryEnabled
+                ) {
                     HideBatteryIcon.apply()
                 }
 
