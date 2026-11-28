@@ -143,12 +143,15 @@ internal object StatusBarWifiRuntime {
                     with(module) { PreferenceProvider.loadPreference() }?.systemUI?.statusBar
                 }.getOrNull() ?: return@post
                 val current = statusBar.wifiRuntime
-                val comboOwnsWifi = statusBar.comboStyleOneRuntime.enabled &&
-                    statusBar.comboStyleOneRuntime.showWifi
+                val iconPackOwnsWifi = statusBar.iconStyles.wifiEnabled
+                val comboOwnsWifi = (statusBar.comboStyleOneRuntime.enabled &&
+                    statusBar.comboStyleOneRuntime.showWifi) || iconPackOwnsWifi
                 if (current == previous && comboOwnsWifi == previousComboOwnsWifi) return@post
                 previous = current
                 previousComboOwnsWifi = comboOwnsWifi
-                mainHandler.post { updateRuntime(current) }
+                mainHandler.post {
+                    updateRuntime(if (iconPackOwnsWifi) current.copy(enabled = false) else current)
+                }
             }
         }
 
@@ -179,13 +182,16 @@ internal object StatusBarWifiRuntime {
                         )
                     }.getOrNull() ?: return@post
                     val current = statusBar.wifiRuntime
-                    val comboOwnsWifi = statusBar.comboStyleOneRuntime.enabled &&
-                        statusBar.comboStyleOneRuntime.showWifi
+                    val iconPackOwnsWifi = statusBar.iconStyles.wifiEnabled
+                    val comboOwnsWifi = (statusBar.comboStyleOneRuntime.enabled &&
+                        statusBar.comboStyleOneRuntime.showWifi) || iconPackOwnsWifi
                     val ownershipChanged = comboOwnsWifi != previousComboOwnsWifi
                     previous = current
                     previousComboOwnsWifi = comboOwnsWifi
                     if (current != config || ownershipChanged) {
-                        mainHandler.post { updateRuntime(current) }
+                        mainHandler.post {
+                            updateRuntime(if (iconPackOwnsWifi) current.copy(enabled = false) else current)
+                        }
                     }
                 }
             }

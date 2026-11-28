@@ -171,6 +171,8 @@ jobs:
           echo "Aloha OneUI API101 single-entry migration validated; full AlohaOneUI functional hooks enabled"
 
       - name: Compile Aloha OneUI before the owner-signing gate
+        env:
+          UPSTREAM_REPO_TOKEN: ${{ secrets.UPSTREAM_REPO_TOKEN }}
         run: |
           set -euo pipefail
           mkdir -p diagnostics
@@ -201,6 +203,7 @@ jobs:
 
       - name: Build owner-signed Aloha OneUI APK
         env:
+          UPSTREAM_REPO_TOKEN: ${{ secrets.UPSTREAM_REPO_TOKEN }}
           ALOHAONEUI_KEYSTORE_PATH: ${{ github.workspace }}/app/owner.keystore
           ALOHAONEUI_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           ALOHAONEUI_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}

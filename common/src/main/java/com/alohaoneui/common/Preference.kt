@@ -257,8 +257,35 @@ data class Preference(
             val hideOnLockscreen: Boolean = false,
         )
 
+        /**
+         * Complete user-selected icon packs migrated from App20261018Aloha.
+         * The preference model is theme-neutral; Miuix and Material render their
+         * own independent controls for the same persisted values.
+         */
+        @Serializable
+        data class StatusBarIconStyles(
+            val batteryEnabled: Boolean = false,
+            val batteryStyleId: String = "",
+            val batterySizePercent: Int = 120,
+            val batteryChargingAnimationEnabled: Boolean = true,
+            val batteryPercentEnabled: Boolean = false,
+            val batteryPercentPosition: Int = 0,
+            val batteryBackgroundEnabled: Boolean = true,
+            val wifiEnabled: Boolean = false,
+            val wifiStyleId: String = "",
+            val hideWifiActivityArrows: Boolean = false,
+            val mobileEnabled: Boolean = false,
+            val mobileStyleId: String = "",
+            val hideMobileNetworkType: Boolean = false,
+            val bluetoothEnabled: Boolean = false,
+            val bluetoothStyleId: String = "",
+            val vpnEnabled: Boolean = false,
+            val vpnStyleId: String = "",
+        )
+
         @Serializable
         data class StatusBar(
+            val iconStyles: StatusBarIconStyles = StatusBarIconStyles(),
             val modifyStatusBarLeftPadding: Boolean = false,
             val statusBarLeftPaddingDp: Float = 0f,
             val modifyStatusBarRightPadding: Boolean = false,

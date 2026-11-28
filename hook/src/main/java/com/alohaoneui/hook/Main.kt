@@ -14,6 +14,7 @@ import com.alohaoneui.hook.systemui.QS
 import com.alohaoneui.hook.systemui.StatusBar
 import com.alohaoneui.hook.systemui.StatusBarComboStyleOneRuntime
 import com.alohaoneui.hook.systemui.StatusBarSignalIndependentRuntime
+import com.alohaoneui.hook.systemui.StatusBarIconStylesRuntime
 import com.alohaoneui.hook.systemui.StatusBarBurnInProtectionRuntime
 import com.alohaoneui.hook.systemui.OfficialMainStatusBarMod
 import com.alohaoneui.hook.systemui.powermenu.PowerMenu
@@ -271,6 +272,7 @@ class Main : XposedModule() {
                 StatusBarBurnInProtectionRuntime.install(this@Main, param)
                 StatusBarComboStyleOneRuntime.install(this@Main, param)
                 StatusBarSignalIndependentRuntime.install(this@Main, param)
+                StatusBarIconStylesRuntime.install(this@Main, param)
 
                 if (preference.android.setBlockableNotificationChannel) {
                     Android.setBlockableNotificationChannel()
@@ -318,7 +320,9 @@ class Main : XposedModule() {
                     StatusBar.hideBatteryPercentageSign()
                 }
 
-                if (preference.systemUI.statusBar.hideBatteryIcon) {
+                if (preference.systemUI.statusBar.hideBatteryIcon &&
+                    !preference.systemUI.statusBar.iconStyles.batteryEnabled
+                ) {
                     HideBatteryIcon.apply()
                 }
 
