@@ -330,6 +330,7 @@ internal object StatusBarIconStylesRuntime {
         val changed = config != next
         config = next
         applyBatterySystemSettings()
+        applyForcedVisibleStatusIcons()
         if (!changed) return
         reapplySignalViews()
         applyAllBatteryMeters()
@@ -360,6 +361,30 @@ internal object StatusBarIconStylesRuntime {
                 "display_battery_percentage",
                 if (showPercent) 1 else 0,
             )
+        }
+    }
+
+    private fun applyForcedVisibleStatusIcons() {
+        val context = systemUiContext ?: return
+        val tokens = buildSet {
+            if (config.bluetoothEnabled && config.bluetoothStyleId.isNotBlank()) {
+                add("bluetooth")
+                add("bluetooth_connected")
+            }
+            if (config.vpnEnabled && config.vpnStyleId.isNotBlank()) add("vpn")
+        }
+        if (tokens.isEmpty()) return
+        runCatching {
+            val currentValue = Settings.Secure.getString(context.contentResolver, "icon_blacklist")
+                ?.takeUnless { it == "null" }
+                .orEmpty()
+            val updated = currentValue.split(',')
+                .map(String::trim)
+                .filter { it.isNotEmpty() && it !in tokens }
+                .joinToString(",")
+            if (updated != currentValue) {
+                Settings.Secure.putString(context.contentResolver, "icon_blacklist", updated)
+            }
         }
     }
 
