@@ -245,6 +245,9 @@ fun StatusThemeChildItem(
         }
 
         UiMode.Miuix -> {
+            // Preserve caller modifiers (including navigation click targets) on the
+            // outer row. Previously this branch silently dropped them, so child
+            // detail cards looked interactive but could not open their detail pages.
             Column(modifier = modifier.fillMaxWidth()) {
                 if (!title.isNullOrBlank() || summary != null || icon != null) {
                     AlohaOneUIInfoItem(
