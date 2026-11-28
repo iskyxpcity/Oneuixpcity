@@ -43,7 +43,7 @@ enum class StatusIconStyleTarget(
         title = "VPN 图标",
         description = "替换状态栏 VPN 图标。",
         detailDescription = "替换状态栏 VPN 图标。",
-        iconRes = R.drawable.flux_status_lockscreen,
+        iconRes = R.drawable.vpn,
     );
 
     companion object {
