@@ -189,7 +189,9 @@ internal object StatusBarWifiRuntime {
                     previous = current
                     previousComboOwnsWifi = comboOwnsWifi
                     if (current != config || ownershipChanged) {
-                        mainHandler.post { updateRuntime(current) }
+                        mainHandler.post {
+                            updateRuntime(if (iconPackOwnsWifi) current.copy(enabled = false) else current)
+                        }
                     }
                 }
             }
