@@ -39,6 +39,7 @@ import com.alohaoneui.mod.ui.component.SelectItem
 import com.alohaoneui.mod.ui.component.SwitchItem
 import org.json.JSONArray
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import kotlin.math.roundToInt
 
 private enum class IconPackTarget { Battery, Wifi, Mobile, Bluetooth, Vpn }
 private data class IconPackStyle(val id: String, val label: String, val assetPath: String, val tintPreview: Boolean)
@@ -234,7 +235,7 @@ fun StatusBarIconStylesCategoryControls(
                     title = "VPN 图标",
                     summary = if (current.vpnEnabled) styles.getValue(IconPackTarget.Vpn).firstOrNull { it.id == current.vpnStyleId }?.label?.let { "已启用：$it" } ?: "已启用"
                         else "替换状态栏 VPN 图标。",
-                    icon = ImageVector.vectorResource(id = R.drawable.vpn_key),
+                    icon = ImageVector.vectorResource(id = R.drawable.flux_status_lockscreen),
                     clickable = true, showChildIndicator = true, expanded = vpnExpanded,
                     onClick = { vpnExpanded = !vpnExpanded }, checked = current.vpnEnabled,
                     onCheckedChange = { enabled ->
