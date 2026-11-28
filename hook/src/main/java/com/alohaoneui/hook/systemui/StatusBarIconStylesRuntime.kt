@@ -23,6 +23,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
+import android.provider.Settings
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
@@ -234,7 +235,7 @@ internal object StatusBarIconStylesRuntime {
             val clazz = classLoader.loadClass("com.android.systemui.battery.SamsungBatteryMeterDrawable")
             clazz.declaredMethods.filter { it.name == "shouldShowPercentageIcon" }.forEach { method ->
                 module.hook(method).intercept { chain ->
-                    if (config.batteryEnabled || !config.batteryPercentEnabled) {
+                    if (isCustomBatteryEnabled() || !isSystemBatteryPercentEnabled()) {
                         false
                     } else chain.proceed()
                 }
@@ -326,10 +327,40 @@ internal object StatusBarIconStylesRuntime {
     }
 
     private fun updateConfig(next: Preference.SystemUI.StatusBarIconStyles) {
-        if (config == next) return
+        val changed = config != next
         config = next
+        applyBatterySystemSettings()
+        if (!changed) return
         reapplySignalViews()
         applyAllBatteryMeters()
+    }
+
+    private fun isCustomBatteryEnabled(): Boolean =
+        config.batteryEnabled && config.batteryStyleId.startsWith(BATTERY_STYLE_PREFIX)
+
+    private fun isSystemBatteryPercentEnabled(): Boolean =
+        !isCustomBatteryEnabled() &&
+            !config.batteryBackgroundEnabled &&
+            config.batteryPercentEnabled
+
+    private fun applyBatterySystemSettings() {
+        val context = systemUiContext ?: return
+        val showBackground = !isCustomBatteryEnabled() && config.batteryBackgroundEnabled
+        val showPercent = isSystemBatteryPercentEnabled()
+        runCatching {
+            Settings.System.putInt(
+                context.contentResolver,
+                "show_battery_background",
+                if (showBackground) 1 else 0,
+            )
+        }
+        runCatching {
+            Settings.System.putInt(
+                context.contentResolver,
+                "display_battery_percentage",
+                if (showPercent) 1 else 0,
+            )
+        }
     }
 
     private fun reapplySignalViews() {
@@ -725,7 +756,7 @@ internal object StatusBarIconStylesRuntime {
         val imageView = getFieldValue(meter, "mBatteryIconView") as? ImageView ?: return
         batteryMeters[meter] = true
         batteryMeterByImageView[imageView] = meter
-        if (!config.batteryEnabled || !config.batteryStyleId.startsWith(BATTERY_STYLE_PREFIX)) {
+        if (!isCustomBatteryEnabled()) {
             restoreBatteryIcon(imageView)
             applyBatteryPercent(meter, null)
             return
@@ -857,7 +888,7 @@ internal object StatusBarIconStylesRuntime {
 
     private fun applyBatteryPercent(meter: Any, imageView: ImageView?) {
         val group = meter as? ViewGroup ?: return
-        val enabled = config.batteryEnabled && config.batteryPercentEnabled
+        val enabled = isCustomBatteryEnabled() && config.batteryPercentEnabled
         if (!enabled) {
             (group.findViewWithTag<View>(BATTERY_PERCENT_TAG) as? TextView)?.visibility = View.GONE
             return
