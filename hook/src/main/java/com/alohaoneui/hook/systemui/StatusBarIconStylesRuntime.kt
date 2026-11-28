@@ -206,6 +206,12 @@ internal object StatusBarIconStylesRuntime {
                             chain.args[0] = replacement
                             val result = chain.proceed()
                             applyingBatteryViews.remove(imageView)
+                            (replacement as? AnimationDrawable)?.start()
+                            imageView.adjustViewBounds = false
+                            imageView.scaleType = ImageView.ScaleType.FIT_CENTER
+                            imageView.clearColorFilter()
+                            imageView.imageTintList = null
+                            imageView.setPadding(0, 0, 0, 0)
                             applyBatteryIconSize(imageView)
                             applyBatteryPercent(meter, imageView)
                             return@intercept result
