@@ -7,6 +7,7 @@ import java.io.File
 import javax.imageio.ImageIO
 import kotlin.math.roundToInt
 import java.util.Locale
+import java.util.Base64
 
 plugins {
     alias(libs.plugins.agp.app)
@@ -185,7 +186,7 @@ val prepareStatusBarIconAssets = tasks.register("prepareStatusBarIconAssets") {
             ?: throw GradleException(
                 "App20261018Aloha is private. Add the UPSTREAM_REPO_TOKEN Actions secret with read-only Contents access to that repository.",
             )
-        val authHeader = java.util.Base64.getEncoder()
+        val authHeader = Base64.getEncoder()
             .encodeToString(("x-access-token:" + upstreamToken).toByteArray(Charsets.UTF_8))
 
         fun runGit(directory: File, vararg arguments: String) {
